@@ -14,10 +14,23 @@ export default function EditPatientPage({ params }: { params: { id: string } }) 
   const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState('')
   const [patient, setPatient] = useState<any>(null)
+  const [patientId, setPatientId] = useState<string>('')
+
+  // Extract ID from params (Next.js 15+ compatibility)
+  useEffect(() => {
+    Promise.resolve(params).then((resolvedParams) => {
+      const id = typeof resolvedParams === 'object' && 'id' in resolvedParams
+        ? resolvedParams.id
+        : params.id
+      setPatientId(id)
+    })
+  }, [params])
 
   // Fetch patient data
   useEffect(() => {
-    fetch(`/api/patients/${params.id}`)
+    if (!patientId) return
+
+    fetch(`/api/patients/${patientId}`)
       .then((res) => res.json())
       .then((data) => {
         setPatient(data)
@@ -27,7 +40,7 @@ export default function EditPatientPage({ params }: { params: { id: string } }) 
         setError('Failed to load patient')
         setIsFetching(false)
       })
-  }, [params.id])
+  }, [patientId])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -51,7 +64,7 @@ export default function EditPatientPage({ params }: { params: { id: string } }) 
     }
 
     try {
-      const response = await fetch(`/api/patients/${params.id}`, {
+      const response = await fetch(`/api/patients/${patientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -62,7 +75,7 @@ export default function EditPatientPage({ params }: { params: { id: string } }) 
         throw new Error(error.message || 'Failed to update patient')
       }
 
-      router.push(`/dashboard/patients/${params.id}`)
+      router.push(`/dashboard/patients/${patientId}`)
       router.refresh()
     } catch (err: any) {
       setError(err.message)
@@ -93,7 +106,7 @@ export default function EditPatientPage({ params }: { params: { id: string } }) 
       {/* Header */}
       <div className="mb-6">
         <Link
-          href={`/dashboard/patients/${params.id}`}
+          href={`/dashboard/patients/${patientId}`}
           className="mb-4 inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
         >
           <ArrowLeftIcon className="h-4 w-4" />
@@ -271,7 +284,7 @@ export default function EditPatientPage({ params }: { params: { id: string } }) 
           {/* Form Actions */}
           <div className="flex justify-end gap-4 border-t border-gray-200 pt-6">
             <Link
-              href={`/dashboard/patients/${params.id}`}
+              href={`/dashboard/patients/${patientId}`}
               className="rounded-lg border border-gray-300 px-6 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
             >
               Cancel

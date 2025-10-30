@@ -11,8 +11,11 @@ import { ArrowLeftIcon, PencilIcon, EnvelopeIcon, PhoneIcon, MapPinIcon } from '
 export default async function PatientDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  // Await params (Next.js 15+ requirement)
+  const { id } = await params
+
   const session = await getServerSession(authOptions)
 
   if (!session) {
@@ -32,7 +35,7 @@ export default async function PatientDetailPage({
   // Fetch patient
   const patient = await prisma.patient.findFirst({
     where: {
-      id: params.id,
+      id: id,
       therapistId: user.therapist.id,
     },
     include: {
@@ -88,7 +91,7 @@ export default async function PatientDetailPage({
             </p>
           </div>
           <Link
-            href={`/dashboard/patients/${patient.id}/edit`}
+            href={`/dashboard/patients/${id}/edit`}
             className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
           >
             <PencilIcon className="h-4 w-4" />
