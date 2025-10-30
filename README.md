@@ -64,14 +64,22 @@ TherapyHub is a modern, HIPAA-compliant practice management system built specifi
    - HIPAA compliance checklist
    - Quick start commands
 
-2. **[PLATFORM_PLANNING.md](./PLATFORM_PLANNING.md)** - Long-term vision (12-month SaaS plan)
+2. **[PLUG_AND_PLAY_STRATEGY.md](./PLUG_AND_PLAY_STRATEGY.md)** - **API Integration Guide** 🔌
+   - Which APIs to use vs. build custom
+   - Daily.co (video) - saves 5-7 days!
+   - Stripe Checkout (payments) - 1 hour setup
+   - SendGrid (email) - 2 hour setup
+   - Cost breakdown by service
+   - Updated timeline with plug & play
+
+3. **[PLATFORM_PLANNING.md](./PLATFORM_PLANNING.md)** - Long-term vision (12-month SaaS plan)
    - Research findings (TherapyNotes.com analysis, open-source alternatives)
    - Complete feature requirements (10 core modules)
    - Architecture overview for enterprise scale
    - Cost estimates and revenue model
    - Comprehensive compliance considerations
 
-3. **[TECH_STACK_DECISION.md](./TECH_STACK_DECISION.md)** - Technology deep dive
+4. **[TECH_STACK_DECISION.md](./TECH_STACK_DECISION.md)** - Technology deep dive
    - Full stack recommendations
    - Alternative options and trade-offs
    - Performance targets
