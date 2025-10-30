@@ -55,35 +55,35 @@ TherapyHub is a modern, HIPAA-compliant practice management system built specifi
 
 ### 📘 Planning Documents
 
-1. **[MVP_2_WEEK_PLAN.md](./MVP_2_WEEK_PLAN.md)** - **START HERE** ⭐
-   - 2-4 week aggressive build plan
-   - Week-by-week breakdown
-   - Technology stack optimized for speed
-   - Simplified database schema
-   - GCP deployment strategy
-   - HIPAA compliance checklist
-   - Quick start commands
+1. **[FINAL_REALISTIC_PLAN.md](./FINAL_REALISTIC_PLAN.md)** - **START HERE** ⭐⭐⭐
+   - 3-4 week realistic implementation plan
+   - Based on actual Russell Mental Health practice details
+   - **Insurance billing is MUST-HAVE** (Office Ally integration)
+   - Custom WebRTC video (you have experience)
+   - Google Workspace integration (Gmail, Calendar, Meet)
+   - Patient calendar isolation design
+   - Complete architecture & timeline
 
-2. **[PLUG_AND_PLAY_STRATEGY.md](./PLUG_AND_PLAY_STRATEGY.md)** - **API Integration Guide** 🔌
+2. **[SPECIALIZED_FEATURES.md](./SPECIALIZED_FEATURES.md)** - **Practice-Specific** 🎯
+   - Dr. Russell's specialized services
+   - Cryptocurrency payments (Bitcoin, Ethereum)
+   - ASD assessments (ADOS-2, MIGDAS)
+   - Immigration evaluations
+   - Play therapy documentation
+   - MVP vs V2 feature planning
+
+3. **[PLUG_AND_PLAY_STRATEGY.md](./PLUG_AND_PLAY_STRATEGY.md)** - **API Guide** 🔌
    - Which APIs to use vs. build custom
-   - Daily.co (video) - saves 5-7 days!
-   - Stripe Checkout (payments) - 1 hour setup
-   - SendGrid (email) - 2 hour setup
+   - Office Ally (insurance) - FREE!
+   - Custom WebRTC vs Google Meet API
+   - Stripe + crypto payment options
    - Cost breakdown by service
-   - Updated timeline with plug & play
 
-3. **[PLATFORM_PLANNING.md](./PLATFORM_PLANNING.md)** - Long-term vision (12-month SaaS plan)
-   - Research findings (TherapyNotes.com analysis, open-source alternatives)
-   - Complete feature requirements (10 core modules)
-   - Architecture overview for enterprise scale
-   - Cost estimates and revenue model
-   - Comprehensive compliance considerations
+4. **[MVP_2_WEEK_PLAN.md](./MVP_2_WEEK_PLAN.md)** - Initial MVP approach (superseded by FINAL plan)
 
-4. **[TECH_STACK_DECISION.md](./TECH_STACK_DECISION.md)** - Technology deep dive
-   - Full stack recommendations
-   - Alternative options and trade-offs
-   - Performance targets
-   - Security best practices
+5. **[PLATFORM_PLANNING.md](./PLATFORM_PLANNING.md)** - Long-term SaaS vision (reference)
+
+6. **[TECH_STACK_DECISION.md](./TECH_STACK_DECISION.md)** - Technology details (reference)
 
 ---
 
