@@ -37,6 +37,9 @@ yarn-error.log*
 service-account-key.json
 *service-account*.json
 
+# cloud sql proxy binary
+cloud-sql-proxy
+
 # vercel
 .vercel
 
