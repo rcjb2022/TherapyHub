@@ -1,0 +1,577 @@
+// Russell Mental Health - Database Schema
+// HIPAA-compliant practice management system
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  role          Role      @default(PATIENT)
+  password      String?   // Hashed password (for therapist)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  accounts      Account[]
+  sessions      Session[]
+  patient       Patient?  // If user is a patient
+  therapist     Therapist? // If user is a therapist
+  auditLogs     AuditLog[]
+}
+
+enum Role {
+  THERAPIST
+  PATIENT
+  ADMIN
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================================================
+// THERAPIST & PATIENT
+// ============================================================================
+
+model Therapist {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  npi         String   @unique // National Provider Identifier: 1336918325
+  license     String?  // LMHC license number
+  credentials String?  // Ph.D., LMHC, RPT, NCC
+  specialty   String?  // Play Therapy, ASD Assessments, etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patients     Patient[]
+  appointments Appointment[]
+  videoSessions VideoSession[]
+  clinicalNotes ClinicalNote[]
+}
+
+model Patient {
+  id         String   @id @default(cuid())
+  userId     String?  @unique
+  therapistId String
+
+  // Demographics
+  firstName  String
+  lastName   String
+  email      String
+  phone      String?
+  dateOfBirth DateTime
+  address    Json?    // {street, city, state, zip}
+
+  // Insurance
+  insurancePrimary    Insurance?  @relation("PrimaryInsurance")
+  insuranceSecondary  Insurance?  @relation("SecondaryInsurance")
+
+  // Status
+  onboardingComplete Boolean @default(false)
+  status            PatientStatus @default(ACTIVE)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relationships
+  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  therapist     Therapist     @relation(fields: [therapistId], references: [id])
+  appointments  Appointment[]
+  documents     Document[]
+  payments      Payment[]
+  videoSessions VideoSession[]
+  clinicalNotes ClinicalNote[]
+  forms         FormSubmission[]
+
+  @@index([therapistId])
+  @@index([email])
+}
+
+enum PatientStatus {
+  ACTIVE
+  INACTIVE
+  DISCHARGED
+}
+
+// ============================================================================
+// INSURANCE
+// ============================================================================
+
+model Insurance {
+  id                String   @id @default(cuid())
+  patientIdPrimary  String?  @unique
+  patientIdSecondary String? @unique
+
+  // Insurance Details
+  payerName         String   // Aetna, Florida Blue, Cigna, Medicare, UnitedHealthcare, etc.
+  payerId           String?  // Office Ally payer ID
+  memberId          String
+  groupNumber       String?
+  policyHolder      String
+  relationshipToPatient String // Self, Spouse, Child, Other
+
+  // Eligibility
+  lastVerified      DateTime?
+  eligibilityStatus Json?    // Store 270/271 response
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relationships
+  primaryFor    Patient? @relation("PrimaryInsurance", fields: [patientIdPrimary], references: [id], onDelete: Cascade)
+  secondaryFor  Patient? @relation("SecondaryInsurance", fields: [patientIdSecondary], references: [id], onDelete: Cascade)
+  claims        Claim[]
+}
+
+// ============================================================================
+// APPOINTMENTS & SCHEDULING
+// ============================================================================
+
+model Appointment {
+  id          String    @id @default(cuid())
+  patientId   String
+  therapistId String
+
+  // Timing
+  startTime   DateTime
+  endTime     DateTime
+  duration    Int       // minutes
+
+  // Type & Status
+  appointmentType AppointmentType
+  status          AppointmentStatus @default(SCHEDULED)
+
+  // Session details
+  sessionType     SessionType @default(INDIVIDUAL)
+  cptCode         String?     // 90834, 90837, 90846, 90847, etc.
+
+  // Video
+  videoRoomId     String?     @unique
+
+  // Notes
+  notes           String?     @db.Text
+  cancellationReason String?
+
+  // Reminders
+  reminderSent    Boolean   @default(false)
+  reminderSentAt  DateTime?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  patient       Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  therapist     Therapist     @relation(fields: [therapistId], references: [id])
+  videoSession  VideoSession?
+  clinicalNote  ClinicalNote?
+  claim         Claim?
+  payment       Payment?
+
+  @@index([patientId])
+  @@index([therapistId])
+  @@index([startTime])
+}
+
+enum AppointmentType {
+  INITIAL_CONSULTATION
+  THERAPY_SESSION
+  FOLLOW_UP
+  ASD_ASSESSMENT
+  IMMIGRATION_EVALUATION
+  COURT_EVALUATION
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum SessionType {
+  INDIVIDUAL
+  COUPLES
+  FAMILY
+  GROUP
+}
+
+// ============================================================================
+// VIDEO SESSIONS (WebRTC)
+// ============================================================================
+
+model VideoSession {
+  id            String    @id @default(cuid())
+  appointmentId String    @unique
+  patientId     String
+  therapistId   String
+
+  // Video details
+  roomId        String    @unique
+  roomUrl       String
+
+  // Session tracking
+  startedAt     DateTime?
+  endedAt       DateTime?
+  duration      Int?      // actual duration in minutes
+
+  // WebRTC connection details
+  signalingData Json?     // Store ICE candidates, SDP offers/answers if needed
+
+  // Recording (optional - HIPAA considerations)
+  recordingUrl  String?
+  recordingConsent Boolean @default(false)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient     Patient     @relation(fields: [patientId], references: [id])
+  therapist   Therapist   @relation(fields: [therapistId], references: [id])
+
+  @@index([roomId])
+  @@index([patientId])
+}
+
+// ============================================================================
+// CLINICAL DOCUMENTATION
+// ============================================================================
+
+model ClinicalNote {
+  id            String    @id @default(cuid())
+  appointmentId String    @unique
+  patientId     String
+  therapistId   String
+
+  // SOAP format
+  subjective    String?   @db.Text  // What patient reported
+  objective     String?   @db.Text  // Therapist observations
+  assessment    String?   @db.Text  // Clinical assessment
+  plan          String?   @db.Text  // Treatment plan
+
+  // Diagnoses (ICD-10)
+  diagnoses     Json?     // Array of {code: string, description: string}
+
+  // CPT/Billing
+  cptCode       String?   // 90834, 90837, etc.
+  modifiers     String?   // Billing modifiers
+
+  // Special notes
+  riskAssessment String?  @db.Text
+  safetyPlan     String?  @db.Text
+
+  // Timestamps
+  sessionDate   DateTime
+  signedAt      DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient     Patient     @relation(fields: [patientId], references: [id])
+  therapist   Therapist   @relation(fields: [therapistId], references: [id])
+
+  @@index([patientId])
+  @@index([sessionDate])
+}
+
+// ============================================================================
+// DOCUMENTS & FORMS
+// ============================================================================
+
+model Document {
+  id        String   @id @default(cuid())
+  patientId String
+
+  // File details
+  name      String
+  type      DocumentType
+  gcsPath   String   // Google Cloud Storage path
+  url       String?  // Signed URL (temporary, regenerated as needed)
+  mimeType  String
+  size      Int      // bytes
+
+  // E-signature
+  requiresSignature Boolean @default(false)
+  signedAt          DateTime?
+  signatureData     String?  @db.Text // Base64 signature image
+
+  // Metadata
+  uploadedBy String? // therapist or patient
+  tags       String[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relationships
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([type])
+}
+
+enum DocumentType {
+  INTAKE_FORM
+  CONSENT_FORM
+  INSURANCE_CARD
+  ID_DOCUMENT
+  TREATMENT_PLAN
+  PROGRESS_NOTE
+  ASSESSMENT_REPORT
+  IMMIGRATION_EVAL
+  COURT_REPORT
+  OTHER
+}
+
+model FormSubmission {
+  id        String   @id @default(cuid())
+  patientId String
+
+  // Form details
+  formType  String   // intake, consent, assessment, etc.
+  formData  Json     // Structured form data
+
+  // Status
+  status    FormStatus @default(DRAFT)
+  completedAt DateTime?
+
+  // Signature
+  signedAt  DateTime?
+  signatureData String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([formType])
+}
+
+enum FormStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWED
+  APPROVED
+}
+
+// ============================================================================
+// BILLING & PAYMENTS
+// ============================================================================
+
+model Payment {
+  id            String    @id @default(cuid())
+  patientId     String
+  appointmentId String?   @unique
+
+  // Amount
+  amount        Int       // cents (e.g., 15000 = $150.00)
+  currency      String    @default("usd")
+
+  // Payment method
+  paymentMethod PaymentMethod
+  status        PaymentStatus
+
+  // Stripe
+  stripePaymentIntentId String? @unique
+  stripePaymentMethodId String?
+
+  // Crypto (for V2)
+  cryptoTransactionId String?
+  cryptoCurrency      String? // BTC, ETH
+
+  // Details
+  description   String?
+  receiptUrl    String?
+
+  // Refunds
+  refundedAt    DateTime?
+  refundAmount  Int?      // cents
+  refundReason  String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  patient     Patient      @relation(fields: [patientId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+
+  @@index([patientId])
+  @@index([status])
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  INSURANCE
+  CRYPTOCURRENCY
+  CHECK
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+// ============================================================================
+// INSURANCE CLAIMS (Office Ally Integration)
+// ============================================================================
+
+model Claim {
+  id            String    @id @default(cuid())
+  appointmentId String    @unique
+  insuranceId   String
+  patientId     String
+
+  // Claim details
+  claimNumber   String?   @unique
+
+  // EDI 837 data
+  edi837Data    Json?     // Store the generated 837 file data
+  submittedData Json?     // Office Ally submission payload
+
+  // Service details
+  serviceDate   DateTime
+  cptCode       String    // 90834, 90837, etc.
+  modifiers     String?
+  diagnosisCodes String[] // ICD-10 codes
+  chargeAmount  Int       // cents
+
+  // Claim status
+  status        ClaimStatus @default(DRAFT)
+  submittedAt   DateTime?
+
+  // Office Ally response
+  officeAllyClaimId String?
+  officeAllyStatus  String?
+
+  // ERA (835) data
+  eraReceived   Boolean   @default(false)
+  eraData       Json?     // EDI 835 response
+  paidAmount    Int?      // cents
+  adjustments   Json?     // Adjustments from payer
+
+  // Denial handling
+  denialReason  String?
+  denialCode    String?
+  appealStatus  String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relationships
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+  insurance   Insurance   @relation(fields: [insuranceId], references: [id])
+
+  @@index([insuranceId])
+  @@index([status])
+  @@index([serviceDate])
+}
+
+enum ClaimStatus {
+  DRAFT
+  PENDING_SUBMISSION
+  SUBMITTED
+  ACCEPTED
+  PAID
+  DENIED
+  APPEALED
+  VOIDED
+}
+
+// ============================================================================
+// AUDIT LOGGING (HIPAA Requirement)
+// ============================================================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+
+  // Action details
+  action     String   // READ, CREATE, UPDATE, DELETE
+  resource   String   // Patient, Document, Appointment, etc.
+  resourceId String
+
+  // PHI access tracking
+  phi        Boolean  @default(false) // Was PHI accessed?
+  details    Json?    // Additional context
+
+  // Request metadata
+  ipAddress  String?
+  userAgent  String?
+
+  createdAt  DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+model SystemConfig {
+  id    String @id @default(cuid())
+  key   String @unique
+  value Json
+
+  updatedAt DateTime @updatedAt
+}
