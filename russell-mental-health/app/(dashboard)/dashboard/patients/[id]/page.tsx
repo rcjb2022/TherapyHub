@@ -358,11 +358,14 @@ export default async function PatientDetailPage({
                       </div>
                     </div>
                     {hasDoc ? (
-                      <span className="text-xs font-medium text-green-600">Uploaded</span>
+                      <span className="text-xs font-medium text-green-600">Completed</span>
                     ) : (
-                      <button className="text-xs font-medium text-blue-600 hover:text-blue-700">
-                        Upload
-                      </button>
+                      <Link
+                        href={`/dashboard/patients/${id}/forms`}
+                        className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        Complete Form
+                      </Link>
                     )}
                   </div>
                 )

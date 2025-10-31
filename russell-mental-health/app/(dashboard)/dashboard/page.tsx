@@ -4,6 +4,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import Link from 'next/link'
 import { UsersIcon, CalendarIcon, ClipboardDocumentCheckIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
 
 export default async function DashboardPage() {
@@ -39,6 +40,7 @@ export default async function DashboardPage() {
       icon: UsersIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
+      href: '/dashboard/patients',
     },
     {
       name: 'Upcoming Appointments',
@@ -46,6 +48,7 @@ export default async function DashboardPage() {
       icon: CalendarIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
+      href: '/dashboard/calendar',
     },
     {
       name: 'Pending Claims',
@@ -53,6 +56,7 @@ export default async function DashboardPage() {
       icon: ClipboardDocumentCheckIcon,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
+      href: '/dashboard/claims',
     },
     {
       name: 'Monthly Revenue',
@@ -60,6 +64,7 @@ export default async function DashboardPage() {
       icon: CurrencyDollarIcon,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
+      href: '/dashboard/billing',
     },
   ]
 
@@ -76,9 +81,10 @@ export default async function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         {statCards.map((stat) => (
-          <div
+          <Link
             key={stat.name}
-            className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+            href={stat.href}
+            className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:shadow-md hover:border-gray-300 cursor-pointer"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -89,7 +95,7 @@ export default async function DashboardPage() {
                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

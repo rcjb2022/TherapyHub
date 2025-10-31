@@ -11,23 +11,33 @@ import Link from 'next/link'
 export default function EditPatientPage() {
   const router = useRouter()
   const params = useParams()
-  const patientId = params.id as string
+  const [patientId, setPatientId] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState('')
   const [patient, setPatient] = useState<any>(null)
 
+  // Extract patientId from params
+  useEffect(() => {
+    if (params?.id) {
+      setPatientId(params.id as string)
+    }
+  }, [params])
+
   // Fetch patient data
   useEffect(() => {
     if (!patientId) return
 
+    console.log('Fetching patient with ID:', patientId)
     fetch(`/api/patients/${patientId}`)
       .then((res) => res.json())
       .then((data) => {
+        console.log('Loaded patient:', data)
         setPatient(data)
         setIsFetching(false)
       })
       .catch((err) => {
+        console.error('Error loading patient:', err)
         setError('Failed to load patient')
         setIsFetching(false)
       })
@@ -54,6 +64,7 @@ export default function EditPatientPage() {
       },
     }
 
+    console.log('Submitting update for patient:', patientId, data)
     try {
       const response = await fetch(`/api/patients/${patientId}`, {
         method: 'PUT',
