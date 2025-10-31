@@ -55,25 +55,39 @@ export default function PatientInformationFormPage() {
     setIsLoading(true)
     setError('')
 
+    console.log('Submitting patient information form...', { patientId, formData })
+
     try {
+      const payload = {
+        formType: 'patient-information',
+        formData: formData,
+        status: 'SUBMITTED',
+      }
+
+      console.log('Form payload:', payload)
+
       const response = await fetch(`/api/patients/${patientId}/forms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          formType: 'patient-information',
-          formData: formData,
-          status: 'SUBMITTED',
-        }),
+        body: JSON.stringify(payload),
       })
 
+      console.log('Form submission response status:', response.status)
+
       if (!response.ok) {
-        throw new Error('Failed to save form')
+        const errorData = await response.json()
+        console.error('Form submission error:', errorData)
+        throw new Error(errorData.error || errorData.message || 'Failed to save form')
       }
+
+      const result = await response.json()
+      console.log('Form saved successfully:', result)
 
       router.push(`/dashboard/patients/${patientId}/forms`)
       router.refresh()
     } catch (err: any) {
-      setError(err.message)
+      console.error('Error submitting form:', err)
+      setError(err.message || 'An unexpected error occurred')
       setIsLoading(false)
     }
   }

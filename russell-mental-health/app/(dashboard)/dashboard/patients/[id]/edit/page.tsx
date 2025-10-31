@@ -15,7 +15,20 @@ export default function EditPatientPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState('')
-  const [patient, setPatient] = useState<any>(null)
+
+  // Form state - controlled components
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    status: 'ACTIVE',
+    street: '',
+    city: '',
+    state: '',
+    zip: '',
+  })
 
   // Extract patientId from params
   useEffect(() => {
@@ -29,11 +42,33 @@ export default function EditPatientPage() {
     if (!patientId) return
 
     console.log('Fetching patient with ID:', patientId)
-    fetch(`/api/patients/${patientId}`)
+    setIsFetching(true)
+
+    fetch(`/api/patients/${patientId}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    })
       .then((res) => res.json())
       .then((data) => {
-        console.log('Loaded patient:', data)
-        setPatient(data)
+        console.log('Loaded patient data:', data)
+
+        // Update form with patient data
+        const address = data.address || {}
+        setFormData({
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split('T')[0] : '',
+          status: data.status || 'ACTIVE',
+          street: address.street || '',
+          city: address.city || '',
+          state: address.state || '',
+          zip: address.zip || '',
+        })
+
         setIsFetching(false)
       })
       .catch((err) => {
@@ -43,24 +78,31 @@ export default function EditPatientPage() {
       })
   }, [patientId])
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError('')
     setIsLoading(true)
 
-    const formData = new FormData(e.currentTarget)
     const data = {
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
-      email: formData.get('email'),
-      phone: formData.get('phone') || null,
-      dateOfBirth: formData.get('dateOfBirth'),
-      status: formData.get('status'),
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone || null,
+      dateOfBirth: formData.dateOfBirth,
+      status: formData.status,
       address: {
-        street: formData.get('street'),
-        city: formData.get('city'),
-        state: formData.get('state'),
-        zip: formData.get('zip'),
+        street: formData.street,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zip,
       },
     }
 
@@ -74,12 +116,13 @@ export default function EditPatientPage() {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.message || 'Failed to update patient')
+        throw new Error(error.error || 'Failed to update patient')
       }
 
       router.push(`/dashboard/patients/${patientId}`)
       router.refresh()
     } catch (err: any) {
+      console.error('Error updating patient:', err)
       setError(err.message)
       setIsLoading(false)
     }
@@ -93,15 +136,13 @@ export default function EditPatientPage() {
     )
   }
 
-  if (!patient) {
+  if (!formData.firstName && !isFetching) {
     return (
       <div className="flex items-center justify-center py-12">
         <p className="text-red-600">Patient not found</p>
       </div>
     )
   }
-
-  const address = patient.address || {}
 
   return (
     <div>
@@ -116,13 +157,13 @@ export default function EditPatientPage() {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">Edit Patient</h1>
         <p className="mt-1 text-sm text-gray-600">
-          Update patient information
+          Update patient information for {formData.firstName} {formData.lastName}
         </p>
       </div>
 
       {/* Form */}
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        <form key={patient.id} onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="p-6">
           {/* Error Message */}
           {error && (
             <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
@@ -143,7 +184,8 @@ export default function EditPatientPage() {
                   id="firstName"
                   name="firstName"
                   required
-                  defaultValue={patient.firstName}
+                  value={formData.firstName}
+                  onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -157,7 +199,8 @@ export default function EditPatientPage() {
                   id="lastName"
                   name="lastName"
                   required
-                  defaultValue={patient.lastName}
+                  value={formData.lastName}
+                  onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -171,7 +214,8 @@ export default function EditPatientPage() {
                   id="email"
                   name="email"
                   required
-                  defaultValue={patient.email}
+                  value={formData.email}
+                  onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -184,7 +228,8 @@ export default function EditPatientPage() {
                   type="tel"
                   id="phone"
                   name="phone"
-                  defaultValue={patient.phone || ''}
+                  value={formData.phone}
+                  onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -198,7 +243,8 @@ export default function EditPatientPage() {
                   id="dateOfBirth"
                   name="dateOfBirth"
                   required
-                  defaultValue={new Date(patient.dateOfBirth).toISOString().split('T')[0]}
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -211,7 +257,8 @@ export default function EditPatientPage() {
                   id="status"
                   name="status"
                   required
-                  defaultValue={patient.status}
+                  value={formData.status}
+                  onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="ACTIVE">Active</option>
@@ -234,7 +281,8 @@ export default function EditPatientPage() {
                   type="text"
                   id="street"
                   name="street"
-                  defaultValue={address.street || ''}
+                  value={formData.street}
+                  onChange={handleChange}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -248,7 +296,8 @@ export default function EditPatientPage() {
                     type="text"
                     id="city"
                     name="city"
-                    defaultValue={address.city || ''}
+                    value={formData.city}
+                    onChange={handleChange}
                     className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -261,7 +310,8 @@ export default function EditPatientPage() {
                     type="text"
                     id="state"
                     name="state"
-                    defaultValue={address.state || ''}
+                    value={formData.state}
+                    onChange={handleChange}
                     className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     maxLength={2}
                   />
@@ -275,7 +325,8 @@ export default function EditPatientPage() {
                     type="text"
                     id="zip"
                     name="zip"
-                    defaultValue={address.zip || ''}
+                    value={formData.zip}
+                    onChange={handleChange}
                     className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

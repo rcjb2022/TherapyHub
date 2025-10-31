@@ -52,7 +52,15 @@ export async function GET(
       },
     })
 
-    return NextResponse.json(patient)
+    console.log('GET /api/patients/[id] - Returning patient:', { id: patient.id, firstName: patient.firstName, lastName: patient.lastName })
+
+    return NextResponse.json(patient, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
