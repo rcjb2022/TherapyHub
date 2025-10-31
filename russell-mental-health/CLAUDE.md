@@ -41,6 +41,44 @@
 
 ---
 
+## 🗄️ Development Environment
+
+### Database Setup
+- **Database:** PostgreSQL (via Google Cloud SQL)
+- **Instance:** `therapyconnect-brrphd:us-east1:rmh-db`
+- **Database Name:** `russell_mental_health`
+- **Connection:** Via Cloud SQL Proxy
+
+### Starting the Database (Required for Development)
+
+**Terminal 1 - Start Cloud SQL Proxy:**
+```bash
+cd russell-mental-health
+./cloud-sql-proxy therapyconnect-brrphd:us-east1:rmh-db
+```
+Keep this running! It will show:
+```
+Listening on 127.0.0.1:5432
+The proxy has started successfully and is ready for new connections!
+```
+
+**Terminal 2 - Run Dev Server:**
+```bash
+cd russell-mental-health
+npm run dev
+```
+
+### Database Schema Updates
+
+When updating Prisma schema:
+1. Make sure Cloud SQL Proxy is running
+2. Run `npx prisma db push` to sync schema with database
+3. Restart dev server if needed
+
+**Important:** Always keep the Cloud SQL Proxy running while developing!
+
+---
+
 ## 📚 Daily Documentation Requirements
 
 ### End of Each Session - ALWAYS Update:
