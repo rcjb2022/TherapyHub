@@ -298,7 +298,7 @@ export default async function PatientDetailPage({
                         <p className="text-sm font-medium text-gray-900">
                           {formNames[form.formType] || form.formType}
                         </p>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-gray-600" suppressHydrationWarning>
                           Submitted {new Date(form.updatedAt).toLocaleDateString()} at{' '}
                           {new Date(form.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
