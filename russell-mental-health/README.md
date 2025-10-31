@@ -194,9 +194,13 @@ See `prisma/schema.prisma` for full schema.
 - Authentication system
 - Dashboard and navigation
 - Patient management CRUD
-- All 7 intake forms
-- Universal review component
-- Pending forms workflow
+- All 7 intake forms created
+- **Therapist Review & Complete Workflow:**
+  - Pending forms dashboard card
+  - Universal review component (all 7 forms)
+  - Edit and complete submitted forms
+  - Status tracking (SUBMITTED → COMPLETED)
+  - Reviewer and timestamp tracking
 
 **Day 3 (Nov 1, 2025):** 🚧 In Progress
 - Patient portal testing
