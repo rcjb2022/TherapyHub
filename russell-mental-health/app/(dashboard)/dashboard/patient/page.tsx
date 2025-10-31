@@ -94,7 +94,7 @@ export default async function PatientDashboardPage() {
           Welcome, {patient.firstName}!
         </h1>
         <p className="mt-1 text-sm text-gray-600">
-          Your therapist: Dr. {patient.therapist.user.name}
+          Your therapist: {patient.therapist.user.name}
         </p>
       </div>
 

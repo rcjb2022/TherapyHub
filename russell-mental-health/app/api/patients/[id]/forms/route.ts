@@ -21,11 +21,31 @@ export async function GET(
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      include: { therapist: true },
+      include: {
+        therapist: true,
+        patient: true,
+      },
     })
 
-    if (!user?.therapist) {
-      return NextResponse.json({ error: 'Therapist not found' }, { status: 404 })
+    // Authorization check
+    if (user?.role === 'THERAPIST') {
+      // Therapist must own the patient
+      if (!user.therapist) {
+        return NextResponse.json({ error: 'Therapist profile not found' }, { status: 404 })
+      }
+      const patient = await prisma.patient.findFirst({
+        where: { id: id, therapistId: user.therapist.id },
+      })
+      if (!patient) {
+        return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+      }
+    } else if (user?.role === 'PATIENT') {
+      // Patient can only access their own forms
+      if (!user.patient || user.patient.id !== id) {
+        return NextResponse.json({ error: 'Unauthorized - You can only access your own forms' }, { status: 403 })
+      }
+    } else {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     // Check for formType query parameter
@@ -63,28 +83,38 @@ export async function POST(
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      include: { therapist: true },
+      include: {
+        therapist: true,
+        patient: true,
+      },
     })
-
-    if (!user?.therapist) {
-      return NextResponse.json({ error: 'Therapist not found' }, { status: 404 })
-    }
 
     const body = await request.json()
     const { formType, formData, status } = body
 
-    console.log('Received form submission:', { formType, patientId: id, status })
+    console.log('Received form submission:', { formType, patientId: id, status, userRole: user?.role })
 
-    // Verify patient exists and belongs to therapist
-    const patient = await prisma.patient.findFirst({
-      where: {
-        id: id,
-        therapistId: user.therapist.id,
-      },
-    })
-
-    if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+    // Authorization check
+    let patient
+    if (user?.role === 'THERAPIST') {
+      // Therapist must own the patient
+      if (!user.therapist) {
+        return NextResponse.json({ error: 'Therapist profile not found' }, { status: 404 })
+      }
+      patient = await prisma.patient.findFirst({
+        where: { id: id, therapistId: user.therapist.id },
+      })
+      if (!patient) {
+        return NextResponse.json({ error: 'Patient not found or not authorized' }, { status: 404 })
+      }
+    } else if (user?.role === 'PATIENT') {
+      // Patient can only submit their own forms
+      if (!user.patient || user.patient.id !== id) {
+        return NextResponse.json({ error: 'Unauthorized - You can only submit your own forms' }, { status: 403 })
+      }
+      patient = user.patient
+    } else {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     // Check if form already exists for this patient
@@ -104,6 +134,7 @@ export async function POST(
         data: {
           formData,
           status,
+          submittedBy: status === 'SUBMITTED' ? user.id : existingForm.submittedBy,
           completedAt: status === 'SUBMITTED' || status === 'APPROVED' ? new Date() : null,
         },
       })
@@ -116,6 +147,7 @@ export async function POST(
           formType,
           formData,
           status,
+          submittedBy: status === 'SUBMITTED' ? user.id : null,
           completedAt: status === 'SUBMITTED' || status === 'APPROVED' ? new Date() : null,
         },
       })
