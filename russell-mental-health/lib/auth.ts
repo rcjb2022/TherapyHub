@@ -34,6 +34,7 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
           include: {
             therapist: true,
+            patient: true,
           },
         })
 
@@ -41,9 +42,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Invalid credentials')
         }
 
-        // Only allow therapists and admins to login
-        if (user.role !== 'THERAPIST' && user.role !== 'ADMIN') {
-          throw new Error('Unauthorized - Therapist access only')
+        // Allow therapists, admins, and patients to login
+        if (user.role !== 'THERAPIST' && user.role !== 'ADMIN' && user.role !== 'PATIENT') {
+          throw new Error('Unauthorized - Invalid user role')
         }
 
         // Verify password
