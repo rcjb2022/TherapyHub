@@ -54,8 +54,15 @@ export default async function PatientFormsPage({
     {
       id: 'medical-history',
       name: 'Medical History',
-      description: 'Complete medical and mental health history',
+      description: 'Physical health, current medications, allergies, surgeries',
       type: 'medical-history',
+      icon: DocumentTextIcon,
+    },
+    {
+      id: 'mental-health-history',
+      name: 'Mental Health History',
+      description: 'Psychiatric history, therapist/psychiatrist visits, mental health medications',
+      type: 'mental-health-history',
       icon: DocumentTextIcon,
     },
     {
@@ -68,15 +75,15 @@ export default async function PatientFormsPage({
     {
       id: 'hipaa-authorization',
       name: 'HIPAA Authorization',
-      description: 'Authorization to use and disclose health information',
+      description: 'Consent for treatment, telehealth, and privacy policies',
       type: 'hipaa-authorization',
       icon: DocumentTextIcon,
     },
     {
-      id: 'parental-consent',
-      name: 'Parental Consent',
-      description: 'Consent for treatment of minor (if applicable)',
-      type: 'parental-consent',
+      id: 'payment-information',
+      name: 'Payment Information',
+      description: 'Credit card on file and billing information',
+      type: 'payment-information',
       icon: DocumentTextIcon,
     },
   ]
