@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
-import { UsersIcon, CalendarIcon, ClipboardDocumentCheckIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import { UsersIcon, CalendarIcon, ClipboardDocumentCheckIcon, CurrencyDollarIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -29,9 +29,10 @@ export default async function DashboardPage() {
       },
       _sum: { amount: true },
     }),
+    prisma.formSubmission.count({ where: { status: 'SUBMITTED' } }),
   ])
 
-  const [activePatients, upcomingAppointments, pendingClaims, monthlyRevenue] = stats
+  const [activePatients, upcomingAppointments, pendingClaims, monthlyRevenue, pendingForms] = stats
 
   const statCards = [
     {
@@ -49,6 +50,14 @@ export default async function DashboardPage() {
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       href: '/dashboard/calendar',
+    },
+    {
+      name: 'Pending Forms',
+      value: pendingForms.toString(),
+      icon: DocumentTextIcon,
+      color: 'text-yellow-600',
+      bgColor: 'bg-yellow-50',
+      href: '/dashboard/pending-forms',
     },
     {
       name: 'Pending Claims',
