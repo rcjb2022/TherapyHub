@@ -114,23 +114,39 @@ All patients must complete these forms:
 
 ### Forms Workflow - CRITICAL
 
-**Two-Step Process:**
+**Standard Forms (6 Required) - Two Workflows:**
 
-1. **Patient Fills Out Form** (or Therapist fills on behalf of patient)
-   - Form submitted with status: `SUBMITTED`
-   - Goes to therapist for review
+**Workflow A: Patient Fills Out Form**
+1. Patient fills and submits → Status: `SUBMITTED`
+2. Form data stored but NOT applied to patient record yet
+3. Therapist reviews form (can edit if needed)
+4. Therapist clicks "Complete & Save" → Status: `COMPLETED`
+5. Data now updates patient record
 
-2. **Therapist Reviews & Approves**
-   - Therapist sees form with "Accept & Save" button
-   - Therapist can edit if needed
-   - On approval: status changes to `APPROVED`
-   - Only then does data update patient record
+**Workflow B: Therapist Fills Out Form**
+1. Therapist fills form on behalf of patient
+2. Therapist saves → Status: `COMPLETED` immediately
+3. Data updates patient record (no review needed)
+
+**Standard Form Statuses:**
+- `DRAFT` - Patient started but didn't submit
+- `SUBMITTED` - Patient submitted, pending therapist review
+- `COMPLETED` - Final status, data saved to patient record
+- `REJECTED` - Therapist rejected, patient must resubmit
+
+**Where Therapist Reviews Forms:**
+- **Priority:** On patient detail page (pending forms section)
+- **Ideal:** Both patient page AND dedicated review queue at `/dashboard/pending-forms`
+- If dashboard card created, make it clickable (consistency!)
+
+**Diagnostic/Additional Forms - Different Workflow:**
 
 **Form Statuses:**
 - `DRAFT` - Patient started but didn't submit
-- `SUBMITTED` - Patient submitted, pending therapist review
-- `APPROVED` - Therapist approved, data saved to patient record
-- `REJECTED` - Therapist rejected, patient must resubmit
+- `SUBMITTED` - Patient submitted to therapist
+- `REVIEWED` - Therapist reviewed and saved (final status)
+
+These forms track clinical progress over time, so "REVIEWED" indicates therapist has assessed the diagnostic results.
 
 ### Form Update Requirements
 
@@ -148,8 +164,70 @@ All patients must complete these forms:
 - Opens "Update Patient Information" form
 - Form shows all current data
 - Patient changes only address fields
-- Submits for therapist approval
+- Submits for therapist to complete
 - Other fields remain unchanged
+
+### Payment Information Form - Special Rules
+
+**Auto-Update (No Therapist Review):**
+- Patient submits payment form → Stripe tokenizes card
+- If Stripe issues token successfully → Auto-update to `COMPLETED`
+- Data updates patient record immediately (no therapist review needed)
+
+**Alerts for Therapist:**
+- ⚠️ Alert if payment fails (Stripe rejects card)
+- ⚠️ Alert if patient removes ALL payment methods
+- 💳 Show last 4 digits of card only (PCI compliance)
+
+**Storage:**
+- Never store actual card numbers in database
+- Store Stripe token + last 4 digits + expiration date
+- Stripe handles all sensitive card data
+
+### Insurance Information Form - Confirmation Required
+
+**Current Implementation (V1):**
+- Patient submits insurance info → Status: `SUBMITTED`
+- Therapist reviews and confirms → Status: `COMPLETED`
+- Updates Insurance table in database
+
+**Future Integration (V2):**
+- Office Ally will perform automatic insurance verification
+- Real-time eligibility checks (EDI 270/271)
+- Auto-verify benefits and coverage
+
+**Design Note:** Build with future Office Ally integration in mind, but manual confirmation for now.
+
+### Version History & Change Tracking
+
+**Standard Forms (6 Required):**
+- ✅ Track WHO made changes (Patient vs Therapist + user ID)
+- ✅ Track WHEN changes were made (timestamp)
+- ✅ Track WHAT changed (change log: "address.street changed from X to Y")
+- ❌ Do NOT store full form versions
+- Purpose: HIPAA compliance and audit trail
+
+**Diagnostic/Additional Forms:**
+- ✅ Store full timestamped versions of each submission
+- ✅ Track when each version was submitted
+- ✅ Track who submitted (patient or therapist)
+- ❌ Do NOT need detailed change logs
+- Purpose: Show clinical progress/regression over time
+
+**Example - Standard Form:**
+```
+Patient Information - Change Log:
+- 2025-10-31 10:30 AM - Patient updated address.street: "123 Old St" → "456 New Ave"
+- 2025-10-31 10:35 AM - Therapist completed form
+```
+
+**Example - Diagnostic Form (PHQ-9):**
+```
+PHQ-9 Depression Screening:
+- Version 1: 2025-09-15 - Score: 18 (Moderate-Severe Depression)
+- Version 2: 2025-10-15 - Score: 12 (Moderate Depression) ← Improvement
+- Version 3: 2025-11-15 - Score: 8 (Mild Depression) ← Continued progress
+```
 
 ### Diagnostic Forms Library (Version 1 Foundation, Version 2 Content)
 
@@ -324,18 +402,30 @@ All patients must complete these forms:
 ## 🎯 Current Priorities (as of Oct 31, 2025)
 
 ### Immediate (Nov 1 Session):
-1. Fix form update functionality (pre-populate existing data)
-2. Implement therapist review/approval workflow
-3. Build Medical History form
-4. Build Insurance Information form
-5. Build HIPAA Authorization form
-6. Build Parental Consent form (conditional)
-7. Build Payment Information form (Stripe)
 
-### Next Priority:
-1. Build diagnostic forms library infrastructure
-2. Appointment scheduling system
-3. Patient portal login
+**Phase 1: Fix Current Patient Information Form**
+1. Add form pre-population for updates (loads existing data)
+2. Implement therapist review/complete workflow
+3. Add change tracking (who, when, what changed)
+4. Test thoroughly with both patient and therapist workflows
+
+**Phase 2: Build Remaining Standard Forms**
+5. Medical History form (same pattern as Patient Info)
+6. Insurance Information form (updates Insurance table, requires confirmation)
+7. HIPAA Authorization form (with e-signature capability)
+8. Parental Consent form (conditional: only if patient under 18)
+9. Payment Information form (Stripe integration, auto-complete if token issued)
+
+**Phase 3: Build Forms Library Infrastructure**
+10. Diagnostic forms library table/system
+11. Form assignment functionality (therapist assigns to patient)
+12. Version tracking for diagnostic forms
+13. Ready for diagnostic form content in V2
+
+### After Forms Complete (Week 2):
+1. Appointment scheduling system
+2. Patient portal login (separate from therapist)
+3. Calendar integration and reminders
 
 ---
 
