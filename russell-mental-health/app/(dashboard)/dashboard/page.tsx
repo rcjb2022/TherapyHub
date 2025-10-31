@@ -4,11 +4,21 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { UsersIcon, CalendarIcon, ClipboardDocumentCheckIcon, CurrencyDollarIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
+
+  if (!session) {
+    redirect('/login')
+  }
+
+  // Redirect patients to their own dashboard
+  if (session.user.role === 'PATIENT') {
+    redirect('/dashboard/patient')
+  }
 
   // Fetch dashboard statistics
   const stats = await Promise.all([
