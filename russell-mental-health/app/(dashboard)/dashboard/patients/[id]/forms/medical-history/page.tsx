@@ -4,11 +4,12 @@
 import MedicalHistoryForm from './MedicalHistoryForm'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function MedicalHistoryPage({ params }: PageProps) {
-  return <MedicalHistoryForm patientId={params.id} />
+export default async function MedicalHistoryPage({ params }: PageProps) {
+  const { id } = await params
+  return <MedicalHistoryForm patientId={id} />
 }

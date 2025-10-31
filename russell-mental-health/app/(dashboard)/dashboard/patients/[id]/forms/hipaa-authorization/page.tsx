@@ -4,11 +4,12 @@
 import HipaaAuthorizationForm from './HipaaAuthorizationForm'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function HipaaAuthorizationPage({ params }: PageProps) {
-  return <HipaaAuthorizationForm patientId={params.id} />
+export default async function HipaaAuthorizationPage({ params }: PageProps) {
+  const { id } = await params
+  return <HipaaAuthorizationForm patientId={id} />
 }

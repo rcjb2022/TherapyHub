@@ -4,11 +4,12 @@
 import MentalHealthHistoryForm from './MentalHealthHistoryForm'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function MentalHealthHistoryPage({ params }: PageProps) {
-  return <MentalHealthHistoryForm patientId={params.id} />
+export default async function MentalHealthHistoryPage({ params }: PageProps) {
+  const { id } = await params
+  return <MentalHealthHistoryForm patientId={id} />
 }

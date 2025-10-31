@@ -1,7 +1,7 @@
 // Server Component (default in App Router)
 // Renders the client component, passing patientId from params
 
-import InsuranceInformationForm from './InsuranceInformationForm'
+import ParentalConsentForm from './ParentalConsentForm'
 
 interface PageProps {
   params: Promise<{
@@ -9,7 +9,7 @@ interface PageProps {
   }>
 }
 
-export default async function InsuranceInformationPage({ params }: PageProps) {
+export default async function ParentalConsentPage({ params }: PageProps) {
   const { id } = await params
-  return <InsuranceInformationForm patientId={id} />
+  return <ParentalConsentForm patientId={id} />
 }

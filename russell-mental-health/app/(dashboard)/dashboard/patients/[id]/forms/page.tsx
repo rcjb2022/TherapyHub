@@ -86,6 +86,13 @@ export default async function PatientFormsPage({
       type: 'payment-information',
       icon: DocumentTextIcon,
     },
+    {
+      id: 'parental-consent',
+      name: 'Parental Consent',
+      description: 'Consent for treatment of minor (required if patient is under 18)',
+      type: 'parental-consent',
+      icon: DocumentTextIcon,
+    },
   ]
 
   return (

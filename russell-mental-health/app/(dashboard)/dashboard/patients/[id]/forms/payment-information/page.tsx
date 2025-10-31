@@ -4,11 +4,12 @@
 import PaymentInformationForm from './PaymentInformationForm'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function PaymentInformationPage({ params }: PageProps) {
-  return <PaymentInformationForm patientId={params.id} />
+export default async function PaymentInformationPage({ params }: PageProps) {
+  const { id } = await params
+  return <PaymentInformationForm patientId={id} />
 }
