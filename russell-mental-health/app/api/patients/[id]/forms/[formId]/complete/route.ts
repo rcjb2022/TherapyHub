@@ -51,7 +51,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { formData, therapistId } = body
+    const { formData } = body
 
     // Update form submission to COMPLETED
     const updatedForm = await prisma.formSubmission.update({
@@ -60,7 +60,7 @@ export async function PATCH(
         formData: formData,
         status: 'COMPLETED',
         completedAt: new Date(),
-        reviewedBy: therapistId,
+        reviewedBy: user.therapist.id, // Use therapist ID from authenticated session
       },
     })
 

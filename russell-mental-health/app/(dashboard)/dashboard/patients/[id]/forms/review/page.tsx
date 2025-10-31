@@ -66,7 +66,6 @@ export default async function UniversalFormReviewPage({ params, searchParams }: 
     <UniversalFormReview
       patientId={id}
       formSubmission={formSubmission}
-      therapistId={user.therapist.id}
     />
   )
 }

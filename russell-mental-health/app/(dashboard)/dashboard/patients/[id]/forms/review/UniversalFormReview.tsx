@@ -11,7 +11,6 @@ import Link from 'next/link'
 interface UniversalFormReviewProps {
   patientId: string
   formSubmission: any
-  therapistId: string
 }
 
 const FORM_NAMES: Record<string, string> = {
@@ -166,7 +165,6 @@ const FIELD_LABELS: Record<string, string> = {
 export default function UniversalFormReview({
   patientId,
   formSubmission,
-  therapistId
 }: UniversalFormReviewProps) {
   const router = useRouter()
 
@@ -197,7 +195,6 @@ export default function UniversalFormReview({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           formData: formData,
-          therapistId: therapistId,
         }),
       })
 
