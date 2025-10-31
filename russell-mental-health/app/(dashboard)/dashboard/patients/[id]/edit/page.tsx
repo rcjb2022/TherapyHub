@@ -4,27 +4,18 @@
 // Form for updating patient information
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 
-export default function EditPatientPage({ params }: { params: { id: string } }) {
+export default function EditPatientPage() {
   const router = useRouter()
+  const params = useParams()
+  const patientId = params.id as string
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState('')
   const [patient, setPatient] = useState<any>(null)
-  const [patientId, setPatientId] = useState<string>('')
-
-  // Extract ID from params (Next.js 15+ compatibility)
-  useEffect(() => {
-    Promise.resolve(params).then((resolvedParams) => {
-      const id = typeof resolvedParams === 'object' && 'id' in resolvedParams
-        ? resolvedParams.id
-        : params.id
-      setPatientId(id)
-    })
-  }, [params])
 
   // Fetch patient data
   useEffect(() => {

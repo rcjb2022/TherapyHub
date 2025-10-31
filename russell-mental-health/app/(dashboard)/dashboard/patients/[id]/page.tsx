@@ -39,6 +39,8 @@ export default async function PatientDetailPage({
       therapistId: user.therapist.id,
     },
     include: {
+      insurancePrimary: true,
+      insuranceSecondary: true,
       appointments: {
         orderBy: { startTime: 'desc' },
         take: 5,
@@ -48,6 +50,10 @@ export default async function PatientDetailPage({
         take: 5,
       },
       documents: {
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      },
+      payments: {
         orderBy: { createdAt: 'desc' },
         take: 5,
       },
@@ -181,6 +187,72 @@ export default async function PatientDetailPage({
               </div>
             </div>
           </div>
+
+          {/* Insurance Information */}
+          <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">Insurance Information</h2>
+            {patient.insurancePrimary ? (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-medium uppercase text-gray-500">Primary Insurance</p>
+                  <p className="mt-1 text-sm font-medium text-gray-900">{patient.insurancePrimary.payerName}</p>
+                  <p className="text-xs text-gray-600">Member ID: {patient.insurancePrimary.memberId}</p>
+                  {patient.insurancePrimary.groupNumber && (
+                    <p className="text-xs text-gray-600">Group: {patient.insurancePrimary.groupNumber}</p>
+                  )}
+                </div>
+                {patient.insuranceSecondary && (
+                  <div className="pt-4 border-t border-gray-200">
+                    <p className="text-xs font-medium uppercase text-gray-500">Secondary Insurance</p>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{patient.insuranceSecondary.payerName}</p>
+                    <p className="text-xs text-gray-600">Member ID: {patient.insuranceSecondary.memberId}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600">No insurance information on file</p>
+            )}
+          </div>
+
+          {/* Payment Information */}
+          <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">Payment Information</h2>
+            {patient.payments && patient.payments.length > 0 ? (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Recent Payments</p>
+                  <div className="mt-2 space-y-2">
+                    {patient.payments.slice(0, 3).map((payment: any) => (
+                      <div key={payment.id} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">
+                          {new Date(payment.createdAt).toLocaleDateString()}
+                        </span>
+                        <span className="font-medium text-gray-900">
+                          ${(payment.amount / 100).toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">Credit card on file: Not configured</p>
+                  <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">
+                    Add payment method
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600">No payments on record</p>
+                <div className="pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">Credit card on file: None</p>
+                  <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">
+                    Add payment method
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Main Content Area */}
@@ -237,9 +309,70 @@ export default async function PatientDetailPage({
             )}
           </div>
 
-          {/* Documents */}
+          {/* Required Documents Checklist */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">Documents</h2>
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">Required Documents</h2>
+            <div className="space-y-3">
+              {[
+                { name: 'Patient Information', type: 'INTAKE_FORM' },
+                { name: 'Patient Medical History', type: 'INTAKE_FORM' },
+                { name: 'Patient Insurance Information', type: 'INSURANCE_CARD' },
+                { name: 'Patient HIPAA Authorization', type: 'CONSENT_FORM' },
+                { name: 'Parental Consent (if applicable)', type: 'CONSENT_FORM' },
+              ].map((requiredDoc, index) => {
+                const hasDoc = patient.documents.some(
+                  (doc) => doc.type === requiredDoc.type && doc.name.toLowerCase().includes(requiredDoc.name.toLowerCase().split(' ')[1])
+                )
+                return (
+                  <div
+                    key={index}
+                    className={`flex items-center justify-between rounded-lg border p-3 ${
+                      hasDoc
+                        ? 'border-green-200 bg-green-50'
+                        : 'border-gray-200 bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                          hasDoc
+                            ? 'bg-green-500 text-white'
+                            : 'border-2 border-gray-300 bg-white'
+                        }`}
+                      >
+                        {hasDoc && (
+                          <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      <div>
+                        <p className={`text-sm font-medium ${hasDoc ? 'text-green-900' : 'text-gray-900'}`}>
+                          {requiredDoc.name}
+                        </p>
+                        <p className="text-xs text-gray-600">{requiredDoc.type.replace('_', ' ')}</p>
+                      </div>
+                    </div>
+                    {hasDoc ? (
+                      <span className="text-xs font-medium text-green-600">Uploaded</span>
+                    ) : (
+                      <button className="text-xs font-medium text-blue-600 hover:text-blue-700">
+                        Upload
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* All Documents */}
+          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">All Documents</h2>
             {patient.documents.length > 0 ? (
               <div className="space-y-3">
                 {patient.documents.map((doc) => (
