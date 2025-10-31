@@ -28,8 +28,17 @@ export async function GET(
       return NextResponse.json({ error: 'Therapist not found' }, { status: 404 })
     }
 
+    // Check for formType query parameter
+    const { searchParams } = new URL(request.url)
+    const formType = searchParams.get('formType')
+
+    const whereClause: any = { patientId: id }
+    if (formType) {
+      whereClause.formType = formType
+    }
+
     const forms = await prisma.formSubmission.findMany({
-      where: { patientId: id },
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
     })
 

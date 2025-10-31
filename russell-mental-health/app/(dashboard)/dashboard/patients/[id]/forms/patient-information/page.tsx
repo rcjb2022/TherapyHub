@@ -13,7 +13,10 @@ export default function PatientInformationFormPage() {
   const params = useParams()
   const patientId = params.id as string
   const [isLoading, setIsLoading] = useState(false)
+  const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState('')
+  const [existingFormId, setExistingFormId] = useState<string | null>(null)
+  const [isUpdate, setIsUpdate] = useState(false)
   const [formData, setFormData] = useState({
     // Personal Information
     firstName: '',
@@ -42,6 +45,68 @@ export default function PatientInformationFormPage() {
     employer: '',
     referredBy: '',
   })
+
+  // Load existing form data if it exists
+  useEffect(() => {
+    const loadExistingForm = async () => {
+      try {
+        setIsFetching(true)
+        console.log('Checking for existing patient information form...')
+
+        const response = await fetch(`/api/patients/${patientId}/forms?formType=patient-information`)
+
+        if (response.ok) {
+          const forms = await response.json()
+          console.log('Existing forms:', forms)
+
+          // Find the most recent patient-information form
+          const existingForm = forms.find((f: any) => f.formType === 'patient-information')
+
+          if (existingForm) {
+            console.log('Found existing form, pre-populating...', existingForm)
+            setExistingFormId(existingForm.id)
+            setIsUpdate(true)
+
+            // Pre-populate form with existing data
+            if (existingForm.formData) {
+              setFormData({
+                firstName: existingForm.formData.firstName || '',
+                lastName: existingForm.formData.lastName || '',
+                middleName: existingForm.formData.middleName || '',
+                preferredName: existingForm.formData.preferredName || '',
+                dateOfBirth: existingForm.formData.dateOfBirth || '',
+                ssn: existingForm.formData.ssn || '',
+                gender: existingForm.formData.gender || '',
+                email: existingForm.formData.email || '',
+                phone: existingForm.formData.phone || '',
+                alternatePhone: existingForm.formData.alternatePhone || '',
+                street: existingForm.formData.street || '',
+                city: existingForm.formData.city || '',
+                state: existingForm.formData.state || '',
+                zip: existingForm.formData.zip || '',
+                emergencyContactName: existingForm.formData.emergencyContactName || '',
+                emergencyContactPhone: existingForm.formData.emergencyContactPhone || '',
+                emergencyContactRelationship: existingForm.formData.emergencyContactRelationship || '',
+                maritalStatus: existingForm.formData.maritalStatus || '',
+                occupation: existingForm.formData.occupation || '',
+                employer: existingForm.formData.employer || '',
+                referredBy: existingForm.formData.referredBy || '',
+              })
+            }
+          } else {
+            console.log('No existing form found, this is a new submission')
+          }
+        }
+      } catch (err) {
+        console.error('Error loading existing form:', err)
+        // Continue with empty form if there's an error
+      } finally {
+        setIsFetching(false)
+      }
+    }
+
+    loadExistingForm()
+  }, [patientId])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -92,6 +157,16 @@ export default function PatientInformationFormPage() {
     }
   }
 
+  if (isFetching) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-center py-12">
+          <p className="text-gray-600">Loading form...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
@@ -103,10 +178,22 @@ export default function PatientInformationFormPage() {
           <ArrowLeftIcon className="h-4 w-4" />
           Back to Forms
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Patient Information Form</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {isUpdate ? 'Update Patient Information' : 'Patient Information Form'}
+        </h1>
         <p className="mt-1 text-sm text-gray-600">
-          Complete your demographic and contact information
+          {isUpdate
+            ? 'Update your demographic and contact information'
+            : 'Complete your demographic and contact information'}
         </p>
+        {isUpdate && (
+          <div className="mt-2 inline-flex items-center gap-2 rounded-md bg-blue-50 px-3 py-1 text-sm text-blue-700">
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            Updating existing information
+          </div>
+        )}
       </div>
 
       {/* Form */}
@@ -470,7 +557,7 @@ export default function PatientInformationFormPage() {
             disabled={isLoading}
             className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Saving...' : 'Save and Complete Form'}
+            {isLoading ? 'Saving...' : isUpdate ? 'Update Information' : 'Submit for Review'}
           </button>
         </div>
       </form>

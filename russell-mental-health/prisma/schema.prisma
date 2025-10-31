@@ -31,6 +31,8 @@ model User {
   patient       Patient?  // If user is a patient
   therapist     Therapist? // If user is a therapist
   auditLogs     AuditLog[]
+  submittedForms FormSubmission[] @relation("FormSubmitter")
+  reviewedForms  FormSubmission[] @relation("FormReviewer")
 }
 
 enum Role {
@@ -384,6 +386,11 @@ model FormSubmission {
   status    FormStatus @default(DRAFT)
   completedAt DateTime?
 
+  // Change tracking (for standard forms)
+  submittedBy   String?  // UserId who submitted the form
+  reviewedBy    String?  // UserId who reviewed/completed the form
+  changes       Json?    // Change log: [{field, oldValue, newValue, changedBy, changedAt}]
+
   // Signature
   signedAt  DateTime?
   signatureData String? @db.Text
@@ -393,16 +400,20 @@ model FormSubmission {
 
   // Relationships
   patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  submitter User? @relation("FormSubmitter", fields: [submittedBy], references: [id])
+  reviewer  User? @relation("FormReviewer", fields: [reviewedBy], references: [id])
 
   @@index([patientId])
   @@index([formType])
+  @@index([status])
 }
 
 enum FormStatus {
-  DRAFT
-  SUBMITTED
-  REVIEWED
-  APPROVED
+  DRAFT        // Patient started but didn't submit
+  SUBMITTED    // Patient submitted, pending review
+  COMPLETED    // Final status for standard forms (therapist completed)
+  REVIEWED     // Final status for diagnostic forms (therapist reviewed)
+  REJECTED     // Therapist rejected, patient must resubmit
 }
 
 // ============================================================================
