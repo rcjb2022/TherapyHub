@@ -9,9 +9,10 @@ import { prisma } from '@/lib/prisma'
 // GET /api/patients/[id] - Get single patient
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session) {
@@ -31,7 +32,7 @@ export async function GET(
     // Fetch patient
     const patient = await prisma.patient.findFirst({
       where: {
-        id: params.id,
+        id: id,
         therapistId: user.therapist.id,
       },
     })
@@ -69,9 +70,10 @@ export async function GET(
 // PUT /api/patients/[id] - Update patient
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session) {
@@ -94,7 +96,7 @@ export async function PUT(
     // Verify patient belongs to this therapist
     const existingPatient = await prisma.patient.findFirst({
       where: {
-        id: params.id,
+        id: id,
         therapistId: user.therapist.id,
       },
     })
@@ -105,7 +107,7 @@ export async function PUT(
 
     // Update patient
     const patient = await prisma.patient.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         firstName,
         lastName,
@@ -139,9 +141,10 @@ export async function PUT(
 // DELETE /api/patients/[id] - Delete patient (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session) {
@@ -161,7 +164,7 @@ export async function DELETE(
     // Verify patient belongs to this therapist
     const existingPatient = await prisma.patient.findFirst({
       where: {
-        id: params.id,
+        id: id,
         therapistId: user.therapist.id,
       },
     })
@@ -172,7 +175,7 @@ export async function DELETE(
 
     // Soft delete - set status to DISCHARGED
     const patient = await prisma.patient.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { status: 'DISCHARGED' },
     })
 

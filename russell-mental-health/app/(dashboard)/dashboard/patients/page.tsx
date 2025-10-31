@@ -16,8 +16,9 @@ interface SearchParams {
 export default async function PatientsPage({
   searchParams,
 }: {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }) {
+  const params = await searchParams
   const session = await getServerSession(authOptions)
 
   if (!session) {
@@ -35,8 +36,8 @@ export default async function PatientsPage({
   }
 
   // Build search query
-  const searchQuery = searchParams.search || ''
-  const statusFilter = searchParams.status || 'ACTIVE'
+  const searchQuery = params.search || ''
+  const statusFilter = params.status || 'ACTIVE'
 
   // Fetch patients with search and filter
   const patients = await prisma.patient.findMany({

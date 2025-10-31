@@ -9,9 +9,10 @@ import { prisma } from '@/lib/prisma'
 // GET /api/patients/[id]/forms - Get all forms for a patient
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session) {
@@ -28,7 +29,7 @@ export async function GET(
     }
 
     const forms = await prisma.formSubmission.findMany({
-      where: { patientId: params.id },
+      where: { patientId: id },
       orderBy: { createdAt: 'desc' },
     })
 
@@ -41,9 +42,10 @@ export async function GET(
 // POST /api/patients/[id]/forms - Create or update a form submission
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session) {
@@ -62,12 +64,12 @@ export async function POST(
     const body = await request.json()
     const { formType, formData, status } = body
 
-    console.log('Received form submission:', { formType, patientId: params.id, status })
+    console.log('Received form submission:', { formType, patientId: id, status })
 
     // Verify patient exists and belongs to therapist
     const patient = await prisma.patient.findFirst({
       where: {
-        id: params.id,
+        id: id,
         therapistId: user.therapist.id,
       },
     })
@@ -79,7 +81,7 @@ export async function POST(
     // Check if form already exists for this patient
     const existingForm = await prisma.formSubmission.findFirst({
       where: {
-        patientId: params.id,
+        patientId: id,
         formType: formType,
       },
     })
@@ -101,7 +103,7 @@ export async function POST(
       // Create new form submission
       formSubmission = await prisma.formSubmission.create({
         data: {
-          patientId: params.id,
+          patientId: id,
           formType,
           formData,
           status,
@@ -115,7 +117,7 @@ export async function POST(
     if (formType === 'patient-information' && formData) {
       console.log('Updating patient record with form data...')
       await prisma.patient.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           firstName: formData.firstName,
           lastName: formData.lastName,
@@ -141,7 +143,7 @@ export async function POST(
         resource: 'FormSubmission',
         resourceId: formSubmission.id,
         phi: true,
-        details: { formType, patientId: params.id },
+        details: { formType, patientId: id },
       },
     })
 
