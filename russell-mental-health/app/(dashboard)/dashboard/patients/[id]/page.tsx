@@ -41,6 +41,9 @@ export default async function PatientDetailPage({
     include: {
       insurancePrimary: true,
       insuranceSecondary: true,
+      forms: {
+        orderBy: { createdAt: 'desc' },
+      },
       appointments: {
         orderBy: { startTime: 'desc' },
         take: 5,
@@ -59,6 +62,9 @@ export default async function PatientDetailPage({
       },
     },
   })
+
+  // Get pending forms (SUBMITTED status)
+  const pendingForms = patient?.forms.filter((f) => f.status === 'SUBMITTED') || []
 
   if (!patient) {
     notFound()
@@ -257,6 +263,59 @@ export default async function PatientDetailPage({
 
         {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Pending Forms Review */}
+          {pendingForms.length > 0 && (
+            <div className="rounded-lg border-2 border-yellow-300 bg-yellow-50 p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Pending Forms Review
+                  <span className="ml-2 inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+                    {pendingForms.length}
+                  </span>
+                </h2>
+              </div>
+              <p className="text-sm text-gray-700 mb-4">
+                The following forms have been submitted by the patient and are awaiting your review and completion.
+              </p>
+              <div className="space-y-3">
+                {pendingForms.map((form) => {
+                  const formNames: Record<string, string> = {
+                    'patient-information': 'Patient Information',
+                    'medical-history': 'Medical History',
+                    'mental-health-history': 'Mental Health History',
+                    'insurance-information': 'Insurance Information',
+                    'hipaa-authorization': 'HIPAA Authorization',
+                    'payment-information': 'Payment Information',
+                    'parental-consent': 'Parental Consent',
+                  }
+
+                  return (
+                    <div
+                      key={form.id}
+                      className="flex items-center justify-between rounded-lg border border-yellow-200 bg-white p-4"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {formNames[form.formType] || form.formType}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          Submitted {new Date(form.updatedAt).toLocaleDateString()} at{' '}
+                          {new Date(form.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/dashboard/patients/${id}/forms/${form.formType}/review?formId=${form.id}`}
+                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                      >
+                        Review & Complete
+                      </Link>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Recent Appointments */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">Recent Appointments</h2>
