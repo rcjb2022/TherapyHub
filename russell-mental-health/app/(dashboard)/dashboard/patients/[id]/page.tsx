@@ -304,7 +304,7 @@ export default async function PatientDetailPage({
                         </p>
                       </div>
                       <Link
-                        href={`/dashboard/patients/${id}/forms/${form.formType}/review?formId=${form.id}`}
+                        href={`/dashboard/patients/${id}/forms/review?formId=${form.id}&formType=${form.formType}`}
                         className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                       >
                         Review & Complete
