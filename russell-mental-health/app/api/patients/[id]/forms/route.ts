@@ -62,6 +62,20 @@ export async function POST(
     const body = await request.json()
     const { formType, formData, status } = body
 
+    console.log('Received form submission:', { formType, patientId: params.id, status })
+
+    // Verify patient exists and belongs to therapist
+    const patient = await prisma.patient.findFirst({
+      where: {
+        id: params.id,
+        therapistId: user.therapist.id,
+      },
+    })
+
+    if (!patient) {
+      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
+    }
+
     // Check if form already exists for this patient
     const existingForm = await prisma.formSubmission.findFirst({
       where: {
@@ -82,6 +96,7 @@ export async function POST(
           completedAt: status === 'SUBMITTED' || status === 'APPROVED' ? new Date() : null,
         },
       })
+      console.log('Updated existing form submission:', formSubmission.id)
     } else {
       // Create new form submission
       formSubmission = await prisma.formSubmission.create({
@@ -93,6 +108,29 @@ export async function POST(
           completedAt: status === 'SUBMITTED' || status === 'APPROVED' ? new Date() : null,
         },
       })
+      console.log('Created new form submission:', formSubmission.id)
+    }
+
+    // Update patient record with form data if it's a patient information form
+    if (formType === 'patient-information' && formData) {
+      console.log('Updating patient record with form data...')
+      await prisma.patient.update({
+        where: { id: params.id },
+        data: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone || null,
+          dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined,
+          address: {
+            street: formData.street || null,
+            city: formData.city || null,
+            state: formData.state || null,
+            zip: formData.zip || null,
+          },
+        },
+      })
+      console.log('Patient record updated successfully')
     }
 
     // Create audit log
@@ -110,6 +148,10 @@ export async function POST(
     return NextResponse.json(formSubmission, { status: existingForm ? 200 : 201 })
   } catch (error: any) {
     console.error('Error saving form:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Error stack:', error.stack)
+    return NextResponse.json({
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 })
   }
 }

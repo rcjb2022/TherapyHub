@@ -203,7 +203,7 @@ export default function PatientInformationFormPage() {
                 <option value="">Select...</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
-                <option value="non-binary">Non-binary</option>
+                <option value="other">Other</option>
                 <option value="prefer-not-to-say">Prefer not to say</option>
               </select>
             </div>

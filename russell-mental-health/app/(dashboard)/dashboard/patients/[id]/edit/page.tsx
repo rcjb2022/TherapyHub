@@ -122,7 +122,7 @@ export default function EditPatientPage() {
 
       {/* Form */}
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        <form onSubmit={handleSubmit} className="p-6">
+        <form key={patient.id} onSubmit={handleSubmit} className="p-6">
           {/* Error Message */}
           {error && (
             <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-4">
