@@ -60,7 +60,7 @@ export async function PATCH(
         formData: formData,
         status: 'COMPLETED',
         completedAt: new Date(),
-        reviewedBy: user.therapist.id, // Use therapist ID from authenticated session
+        reviewedBy: user.id, // Use User ID (not Therapist ID) - foreign key is to User table
       },
     })
 
