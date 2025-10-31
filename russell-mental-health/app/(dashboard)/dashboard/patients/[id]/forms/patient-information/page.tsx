@@ -12,6 +12,11 @@ export default function PatientInformationFormPage() {
   const router = useRouter()
   const params = useParams()
   const patientId = params.id as string
+
+  console.log('=== FORM PAGE RENDERING ===')
+  console.log('Patient ID:', patientId)
+  console.log('Params:', params)
+
   const [isLoading, setIsLoading] = useState(false)
   const [isFetching, setIsFetching] = useState(true)
   const [error, setError] = useState('')
@@ -48,6 +53,8 @@ export default function PatientInformationFormPage() {
 
   // Load existing form data if it exists
   useEffect(() => {
+    console.log('*** useEffect RUNNING ***', patientId)
+
     const loadExistingForm = async () => {
       try {
         setIsFetching(true)
