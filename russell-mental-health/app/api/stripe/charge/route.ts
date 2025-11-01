@@ -124,8 +124,22 @@ export async function POST(request: NextRequest) {
       })
     } catch (attachError: any) {
       // Payment method might already be attached, that's okay
-      if (attachError.code !== 'resource_already_exists') {
-        console.warn('Payment method attach warning:', attachError.message)
+      if (attachError.code === 'resource_already_exists') {
+        // Already attached, continue
+      } else if (attachError.code === 'payment_method_not_available') {
+        // Payment method was used without customer and can't be reused
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Payment method expired',
+            message: 'This payment method can no longer be used. Please ask the patient to update their payment method.',
+            needsNewPaymentMethod: true,
+          },
+          { status: 400 }
+        )
+      } else {
+        console.error('Payment method attach error:', attachError)
+        throw attachError
       }
     }
 

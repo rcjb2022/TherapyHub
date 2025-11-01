@@ -58,6 +58,12 @@ export default async function PatientsPage({
     take: 50,
   })
 
+  // Convert Decimal balance to plain number for client components
+  const serializedPatients = patients.map(patient => ({
+    ...patient,
+    balance: Number(patient.balance.toString()),
+  }))
+
   return (
     <div>
       {/* Page Header */}
@@ -117,14 +123,14 @@ export default async function PatientsPage({
       {/* Patient Count */}
       <div className="mb-4">
         <p className="text-sm text-gray-600">
-          Found {patients.length} patient{patients.length !== 1 ? 's' : ''}
+          Found {serializedPatients.length} patient{serializedPatients.length !== 1 ? 's' : ''}
         </p>
       </div>
 
       {/* Patient Table */}
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        {patients.length > 0 ? (
-          <PatientTable patients={patients} />
+        {serializedPatients.length > 0 ? (
+          <PatientTable patients={serializedPatients} />
         ) : (
           <div className="p-12 text-center">
             <p className="text-gray-600">No patients found</p>

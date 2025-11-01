@@ -56,7 +56,13 @@ export function ChargeCardForm({
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || data.error || 'Charge failed')
+        // Check if payment method needs to be updated
+        if (data.needsNewPaymentMethod) {
+          setError(`${data.message} Click here to update: /dashboard/patients/${patientId}/forms/payment-information`)
+        } else {
+          setError(data.message || data.error || 'Charge failed')
+        }
+        return
       }
 
       setSuccess(`Successfully charged $${amountNum.toFixed(2)}!`)
