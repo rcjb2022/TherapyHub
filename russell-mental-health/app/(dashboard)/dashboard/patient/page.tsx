@@ -138,17 +138,31 @@ export default async function PatientDashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <Link
+          href="/dashboard/patient/billing"
+          className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Outstanding Balance</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">$0</p>
+              <p className={`mt-2 text-3xl font-bold ${Number(patient.balance) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                ${Number(patient.balance).toFixed(2)}
+              </p>
+              {Number(patient.balance) > 0 ? (
+                <p className="mt-2 text-xs font-medium text-blue-600">
+                  Pay Now →
+                </p>
+              ) : (
+                <p className="mt-2 text-xs font-medium text-green-600">
+                  All paid up! ✓
+                </p>
+              )}
             </div>
-            <div className="rounded-full bg-emerald-50 p-3">
-              <CurrencyDollarIcon className="h-6 w-6 text-emerald-600" />
+            <div className={`rounded-full p-3 ${Number(patient.balance) > 0 ? 'bg-red-50' : 'bg-emerald-50'}`}>
+              <CurrencyDollarIcon className={`h-6 w-6 ${Number(patient.balance) > 0 ? 'text-red-600' : 'text-emerald-600'}`} />
             </div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Forms to Complete */}

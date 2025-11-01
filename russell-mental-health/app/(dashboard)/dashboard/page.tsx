@@ -40,9 +40,26 @@ export default async function DashboardPage() {
       _sum: { amount: true },
     }),
     prisma.formSubmission.count({ where: { status: 'SUBMITTED' } }),
+    // Outstanding balances
+    prisma.patient.findMany({
+      where: {
+        status: 'ACTIVE',
+        balance: { gt: 0 },
+      },
+      select: {
+        balance: true,
+      },
+    }),
   ])
 
-  const [activePatients, upcomingAppointments, pendingClaims, monthlyRevenue, pendingForms] = stats
+  const [activePatients, upcomingAppointments, pendingClaims, monthlyRevenue, pendingForms, patientsWithBalances] = stats
+
+  // Calculate total outstanding balances
+  const totalOutstanding = patientsWithBalances.reduce(
+    (sum, p) => sum + Number(p.balance),
+    0
+  )
+  const patientsWithBalanceCount = patientsWithBalances.length
 
   const statCards = [
     {
@@ -78,6 +95,15 @@ export default async function DashboardPage() {
       href: '/dashboard/claims',
     },
     {
+      name: 'Outstanding Balances',
+      value: `$${totalOutstanding.toFixed(2)}`,
+      subtitle: `${patientsWithBalanceCount} patients`,
+      icon: CurrencyDollarIcon,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+      href: '/dashboard/billing',
+    },
+    {
       name: 'Monthly Revenue',
       value: `$${((monthlyRevenue._sum.amount || 0) / 100).toLocaleString()}`,
       icon: CurrencyDollarIcon,
@@ -108,7 +134,10 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
+                <p className={`mt-2 text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+                {'subtitle' in stat && (
+                  <p className="mt-1 text-xs text-gray-500">{stat.subtitle}</p>
+                )}
               </div>
               <div className={`rounded-full p-3 ${stat.bgColor}`}>
                 <stat.icon className={`h-6 w-6 ${stat.color}`} />

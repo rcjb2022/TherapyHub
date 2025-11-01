@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { stripe } from '@/lib/stripe'
+import { sendFailedChargeNotification } from '@/lib/email'
 import { Decimal } from '@prisma/client/runtime/library'
 
 export async function POST(request: NextRequest) {
@@ -247,8 +248,16 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // TODO: Send email notification to patient about failed charge
-      // This will be implemented in step 13
+      // Send failed charge notifications to therapist and patient
+      await sendFailedChargeNotification({
+        patientEmail: patient.email,
+        patientName: `${patient.firstName} ${patient.lastName}`,
+        therapistEmail: user.email!,
+        therapistName: user.name!,
+        amount,
+        errorMessage: stripeError.message || 'Unknown error',
+        patientId: patient.id,
+      })
 
       return NextResponse.json(
         {
