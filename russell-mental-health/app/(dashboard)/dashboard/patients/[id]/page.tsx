@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeftIcon, PencilIcon, EnvelopeIcon, PhoneIcon, MapPinIcon } from '@heroicons/react/24/outline'
+import { ChargeCardForm } from '@/components/ChargeCardForm'
 
 export default async function PatientDetailPage({
   params,
@@ -284,6 +285,40 @@ export default async function PatientDetailPage({
             ) : (
               <div className="pt-3 border-t border-gray-200">
                 <p className="text-sm text-gray-600">No payments on record</p>
+              </div>
+            )}
+          </div>
+
+          {/* Billing Section */}
+          <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">Billing</h2>
+
+            {/* Outstanding Balance */}
+            <div className="mb-4 rounded-lg bg-blue-50 p-4 border border-blue-200">
+              <p className="text-sm font-medium text-gray-700">Outstanding Balance</p>
+              <p className={`text-3xl font-bold ${Number(patient.balance) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                ${Number(patient.balance).toFixed(2)}
+              </p>
+            </div>
+
+            {/* Charge Card Form */}
+            {hasPaymentMethod ? (
+              <ChargeCardForm
+                patientId={patient.id}
+                currentBalance={Number(patient.balance)}
+                cardLast4={paymentMethodData.cardLast4}
+              />
+            ) : (
+              <div className="rounded-lg bg-gray-50 p-4 text-center">
+                <p className="text-sm text-gray-600 mb-2">
+                  Patient must add a payment method before charges can be processed.
+                </p>
+                <Link
+                  href={`/dashboard/patients/${id}/forms/payment-information`}
+                  className="inline-block text-sm text-blue-600 hover:text-blue-700 underline"
+                >
+                  Add payment method
+                </Link>
               </div>
             )}
           </div>
