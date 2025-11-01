@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import { FormSuccessMessage, determineNextForm } from '../formHelpers'
 
 interface PaymentInformationFormProps {
   patientId: string
@@ -21,6 +22,9 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
   const [error, setError] = useState('')
   const [existingFormId, setExistingFormId] = useState<string | null>(null)
   const [isUpdate, setIsUpdate] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [nextForm, setNextForm] = useState<{ type: string; title: string } | null>(null)
+  const [completedCount, setCompletedCount] = useState(0)
   const [formData, setFormData] = useState({
     // Billing Name & Address
     billingName: '',
@@ -140,8 +144,12 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
         throw new Error(errorData.error || errorData.message || 'Failed to save form')
       }
 
-      router.push(`/dashboard/patients/${patientId}/forms`)
-      router.refresh()
+      // Determine next form and show success message
+      const { next, completedCount: count } = await determineNextForm(patientId)
+      setNextForm(next)
+      setCompletedCount(count)
+      setShowSuccess(true)
+      setIsLoading(false)
     } catch (err: any) {
       console.error('Error submitting form:', err)
       setError(err.message || 'An unexpected error occurred')
@@ -157,6 +165,11 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
         </div>
       </div>
     )
+  }
+
+  // Show success message after submission
+  if (showSuccess) {
+    return <FormSuccessMessage patientId={patientId} nextForm={nextForm} completedCount={completedCount} />
   }
 
   return (
