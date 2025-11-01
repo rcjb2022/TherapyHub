@@ -129,6 +129,7 @@ model Patient {
   appointments  Appointment[]
   documents     Document[]
   payments      Payment[]
+  transactions  Transaction[]
   videoSessions VideoSession[]
   clinicalNotes ClinicalNote[]
   forms         FormSubmission[]
@@ -477,6 +478,40 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   CANCELLED
+}
+
+// Transaction model for new billing system
+model Transaction {
+  id              String   @id @default(cuid())
+  patientId       String
+  patient         Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  // Amount - ALWAYS POSITIVE, type field determines direction
+  amount          Decimal  @db.Decimal(10, 2)
+  type            String   // "charge" | "payment" | "refund"
+  status          String   // "succeeded" | "failed" | "pending"
+
+  // Stripe integration
+  stripeChargeId  String?  @unique // Stripe PaymentIntent ID
+  stripeError     String?  @db.Text // Error message if failed
+  cardLast4       String?
+
+  // Transaction details
+  description     String?  @db.Text
+
+  // Refund tracking
+  refundedFromId  String?  // If this is a refund, links to original charge
+  refundedFrom    Transaction? @relation("RefundRelation", fields: [refundedFromId], references: [id], onDelete: SetNull)
+  refunds         Transaction[] @relation("RefundRelation")
+
+  // Audit trail
+  createdBy       String   // userId who initiated (therapist or patient)
+  createdAt       DateTime @default(now())
+
+  @@index([patientId])
+  @@index([createdAt])
+  @@index([type])
+  @@index([status])
 }
 
 // ============================================================================
