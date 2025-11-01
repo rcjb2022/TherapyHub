@@ -135,7 +135,7 @@ export async function POST(
           formData,
           status,
           submittedBy: status === 'SUBMITTED' ? user.id : existingForm.submittedBy,
-          completedAt: status === 'SUBMITTED' || status === 'APPROVED' ? new Date() : null,
+          completedAt: status === 'SUBMITTED' || status === 'COMPLETED' || status === 'APPROVED' ? new Date() : null,
         },
       })
       console.log('Updated existing form submission:', formSubmission.id)
@@ -148,7 +148,7 @@ export async function POST(
           formData,
           status,
           submittedBy: status === 'SUBMITTED' ? user.id : null,
-          completedAt: status === 'SUBMITTED' || status === 'APPROVED' ? new Date() : null,
+          completedAt: status === 'SUBMITTED' || status === 'COMPLETED' || status === 'APPROVED' ? new Date() : null,
         },
       })
       console.log('Created new form submission:', formSubmission.id)
