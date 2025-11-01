@@ -1,0 +1,221 @@
+'use client'
+
+import { useState } from 'react'
+
+interface PayBillFormProps {
+  patientId: string
+  currentBalance: number
+  cardLast4: string
+  onSuccess?: () => void
+}
+
+export function PayBillForm({
+  patientId,
+  currentBalance,
+  cardLast4,
+  onSuccess,
+}: PayBillFormProps) {
+  const [amount, setAmount] = useState('')
+  const [showCustomAmount, setShowCustomAmount] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  // Max payment: Math.max(balance, $500)
+  const maxPayment = Math.max(currentBalance, 500)
+
+  // Default payment button amount (balance or $500, whichever is less)
+  const defaultPaymentAmount = Math.min(currentBalance, 500)
+
+  const handlePayFull = async () => {
+    await processPayment(defaultPaymentAmount)
+  }
+
+  const handlePayCustom = async () => {
+    const amountNum = parseFloat(amount)
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setError('Please enter a valid amount')
+      return
+    }
+
+    if (amountNum > maxPayment) {
+      setError(`Payment cannot exceed ${maxPayment > currentBalance ? '$500.00' : `$${currentBalance.toFixed(2)}`}`)
+      return
+    }
+
+    await processPayment(amountNum)
+  }
+
+  const processPayment = async (amountToPay: number) => {
+    try {
+      setLoading(true)
+      setError(null)
+      setSuccess(null)
+
+      const response = await fetch('/api/stripe/charge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId,
+          amount: amountToPay,
+          description: 'Patient payment',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || data.error || 'Payment failed')
+      }
+
+      setSuccess(`Payment of $${amountToPay.toFixed(2)} processed successfully!`)
+      setAmount('')
+      setShowCustomAmount(false)
+
+      // Call onSuccess callback after short delay
+      setTimeout(() => {
+        if (onSuccess) onSuccess()
+      }, 1500)
+    } catch (err: any) {
+      console.error('Payment error:', err)
+      setError(err.message || 'Failed to process payment')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (currentBalance <= 0) {
+    return (
+      <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
+        <p className="text-lg font-semibold text-green-900">All Paid Up! ✓</p>
+        <p className="mt-1 text-sm text-green-700">
+          You have no outstanding balance.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Error Message */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm font-medium text-red-800">{error}</p>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+          <p className="text-sm font-medium text-green-800">{success}</p>
+        </div>
+      )}
+
+      {/* Current Balance */}
+      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-600">Outstanding Balance</p>
+            <p className="text-3xl font-bold text-red-600">
+              ${currentBalance.toFixed(2)}
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-600">Card on File</p>
+            <p className="text-lg font-medium text-gray-900">•••• {cardLast4}</p>
+            <a
+              href={`/dashboard/patient/forms/payment-information`}
+              className="text-xs text-blue-600 hover:text-blue-700"
+            >
+              Update Card
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Multiple Payments Warning */}
+      {currentBalance > 500 && (
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+          <p className="text-sm text-yellow-800">
+            ℹ️ Your balance exceeds $500. Maximum single payment is $500. You may
+            need to make multiple payments.
+          </p>
+        </div>
+      )}
+
+      {/* Pay Full Balance Button */}
+      <div>
+        <button
+          onClick={handlePayFull}
+          disabled={loading}
+          className="w-full rounded-lg bg-blue-600 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+        >
+          {loading ? (
+            'Processing...'
+          ) : (
+            <>
+              {currentBalance > 500
+                ? 'Pay $500.00 Now'
+                : `Pay Full Balance ($${currentBalance.toFixed(2)})`}
+            </>
+          )}
+        </button>
+        <p className="mt-2 text-center text-xs text-gray-500">
+          You will receive an email receipt after payment
+        </p>
+      </div>
+
+      {/* Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <button
+            onClick={() => setShowCustomAmount(!showCustomAmount)}
+            className="bg-white px-2 text-gray-500 hover:text-gray-700"
+          >
+            {showCustomAmount ? 'Hide' : 'Pay'} Other Amount
+          </button>
+        </div>
+      </div>
+
+      {/* Custom Amount Section */}
+      {showCustomAmount && (
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="custom-amount" className="block text-sm font-medium text-gray-700">
+              Enter Amount
+            </label>
+            <div className="mt-1 flex items-center">
+              <span className="text-xl font-semibold text-gray-700">$</span>
+              <input
+                type="number"
+                id="custom-amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                step="0.01"
+                min="0.01"
+                max={maxPayment}
+                disabled={loading}
+                className="ml-2 block w-full rounded-md border-gray-300 px-3 py-2 text-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Maximum: ${maxPayment.toFixed(2)}
+            </p>
+          </div>
+
+          <button
+            onClick={handlePayCustom}
+            disabled={loading || !amount}
+            className="w-full rounded-lg bg-gray-800 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-gray-900 disabled:cursor-not-allowed disabled:bg-gray-400"
+          >
+            {loading ? 'Processing...' : 'Pay Custom Amount'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
