@@ -434,6 +434,39 @@ PHQ-9 Depression Screening:
 - Don't use mock/fake data
 - Don't move on before testing
 - Don't commit broken code
+- **Don't assume files don't exist - ALWAYS check first**
+- **Don't overwrite existing configuration files without asking**
+- **Don't recreate files that might already exist**
+
+### CRITICAL: Verify Before Creating/Modifying
+**ALWAYS follow this protocol:**
+
+1. **Check if file exists:**
+   ```bash
+   test -f filename && echo "EXISTS" || echo "DOES NOT EXIST"
+   ```
+
+2. **If file exists, ASK before modifying:**
+   - "I see you have a .env.local file. Would you like me to add the Stripe keys to it, or do you want to add them manually?"
+   - "There's an existing configuration. Should I update it or create a new one?"
+
+3. **Read existing file before modifications:**
+   - Always read the full file first
+   - Understand what's already there
+   - Only modify what's necessary
+
+4. **When unsure, ASK:**
+   - "Do you already have this set up?"
+   - "Should I proceed with creating this, or does it exist already?"
+   - Better to ask than to overwrite
+
+**Examples of What to Verify:**
+- `.env` or `.env.local` files
+- Configuration files
+- Package files already in place
+- Existing database connections
+- API keys or credentials already configured
+- Any file that might contain user-specific data
 
 ---
 
