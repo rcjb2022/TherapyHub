@@ -118,7 +118,7 @@ export default async function PatientFormsPage({
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {forms.map((form) => {
           const submission = patient.forms.find((f) => f.formType === form.type)
-          const isComplete = submission?.status === 'SUBMITTED' || submission?.status === 'APPROVED'
+          const isComplete = submission?.status === 'SUBMITTED' || submission?.status === 'COMPLETED' || submission?.status === 'APPROVED'
 
           return (
             <Link
