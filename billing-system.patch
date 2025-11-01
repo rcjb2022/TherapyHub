@@ -1,0 +1,2172 @@
+From 25aaa2e45a459b36a57a2b3e443063f15c23f4b8 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 1 Nov 2025 20:32:33 +0000
+Subject: [PATCH 1/9] Add comprehensive TODO_NOV_1_2025.md documenting all
+ billing work completed and remaining
+
+---
+ russell-mental-health/TODO.md            | 113 ++++--
+ russell-mental-health/TODO_NOV_1_2025.md | 465 +++++++++++++++++++++++
+ 2 files changed, 547 insertions(+), 31 deletions(-)
+ create mode 100644 russell-mental-health/TODO_NOV_1_2025.md
+
+diff --git a/russell-mental-health/TODO.md b/russell-mental-health/TODO.md
+index e2edfbb..489031f 100644
+--- a/russell-mental-health/TODO.md
++++ b/russell-mental-health/TODO.md
+@@ -1,12 +1,31 @@
+ # Russell Mental Health Platform - TODO List
+ 
+-**Version:** 0.3.1
+-**Last Updated:** November 1, 2025 (End of Day 3)
+-**Status:** Patient Forms Workflow COMPLETE ✅ - Full End-to-End Working
++**Version:** 0.4.0
++**Last Updated:** November 1, 2025 (Day 4 - In Progress)
++**Status:** Billing & Payment System IN PROGRESS 🟡 (36% complete - 5/14 tasks done)
+ 
+ ---
+ 
+-## ✅ Completed Today (Day 3 - Nov 1, 2025)
++## ✅ Completed Today (Day 4 - Nov 1, 2025)
++
++### Complete Billing & Payment System 💳 (5/14 tasks complete)
++- [x] Created Transaction model in Prisma schema
++  - All amounts stored as positive numbers
++  - Type field: "charge", "payment", "refund"
++  - Refund tracking with relations
++  - Full audit trail
++- [x] Added Patient balance tracking (Decimal field)
++- [x] Added Stripe Customer integration (stripeCustomerId field)
++- [x] Created /api/stripe/charge endpoint (therapist charges patient)
++- [x] Created /api/stripe/refund endpoint (therapist refunds charges)
++- [x] Built ChargeCardForm component (therapist UI)
++- [x] Updated therapist patient detail page with billing section
++- [x] Fixed Decimal serialization issues
++- [x] Tested charge functionality - WORKING ✅
++
++---
++
++## ✅ Completed Earlier (Day 3 - Nov 1, 2025)
+ 
+ ### Patient Forms Success Messages ✅
+ - [x] Created shared FormSuccessMessage component
+@@ -34,35 +53,67 @@
+ 
+ ---
+ 
+-## 🎯 Immediate Priorities (Day 4 - Nov 2)
++## 🎯 Immediate Priorities (Continue Day 4 - Nov 1)
++
++### 1. Complete Billing System (9 remaining tasks) 💳
++**Priority:** HIGH - Core feature for practice revenue
++
++**Backend:**
++- [ ] **Create /api/payments/history endpoint**
++  - GET endpoint with pagination
++  - Access control (therapist sees all, patient sees only their own)
++  - Returns transaction history sorted by date
++
++**Shared Components:**
++- [ ] **Build PaymentHistoryTable component**
++  - Works for both patient and therapist views
++  - Shows: Date, Type, Amount, Card, Status, Running Balance
++  - Color-coded rows (charges red, payments green, refunds yellow)
++  - Refund button for therapists
++  - Retry button for failed charges
++
++**Patient-Side:**
++- [ ] **Build PayBillForm component**
++  - Patient pays their outstanding balance
++  - Max payment: Math.max(balance, $500)
++  - Validation and error handling
++
++- [ ] **Update patient dashboard card**
++  - Show outstanding balance
++  - Link to patient billing page
++
++- [ ] **Create patient billing page**
++  - Route: /patient/billing
++  - PayBillForm + PaymentHistoryTable
++
++**Therapist-Side:**
++- [ ] **Create therapist billing page**
++  - Route: /dashboard/billing
++  - See all patients with balances
++  - Quick charge functionality
++  - All payment history across patients
++
++- [ ] **Update therapist dashboard card**
++  - Show total outstanding balances
++  - Count of patients with balances
++  - Link to billing page
++
++**Additional:**
++- [ ] **Add email notifications for failed charges**
++  - SendGrid integration
++  - Notify therapist and patient
++
++- [ ] **Test complete payment flow**
++  - Charge, payment, refund, failures
+ 
+ ### 2. Stripe Payment Integration 💳
+-**Priority:** HIGH - Core feature for practice
+-
+-- [ ] **Install and configure Stripe**
+-  - [ ] `npm install @stripe/stripe-js @stripe/react-stripe-js`
+-  - [ ] Set up Stripe provider in app layout
+-  - [ ] Configure test API keys (already have them in .env.local)
+-  - [ ] Create Stripe webhook endpoint for events
+-
+-- [ ] **Create PaymentMethodInput component**
+-  - [ ] Use Stripe CardElement for secure input
+-  - [ ] Style to match existing form design
+-  - [ ] Add validation and error handling
+-  - [ ] Loading states
+-
+-- [ ] **Update Payment Information form**
+-  - [ ] Replace placeholder card fields with Stripe Elements
+-  - [ ] Tokenize card on submit (NEVER store actual card numbers!)
+-  - [ ] Store Stripe token + last 4 digits + expiration
+-  - [ ] Auto-complete form when Stripe succeeds
+-  - [ ] Handle Stripe errors with user-friendly messages
+-
+-- [ ] **Test Stripe integration**
+-  - [ ] Test card 4242 4242 4242 4242 (success)
+-  - [ ] Test card 4000 0000 0000 0002 (decline)
+-  - [ ] Verify no card data in database (PCI compliance)
+-  - [ ] Test error handling
++**Priority:** COMPLETE ✅ (Done in Day 3-4)
++
++- [x] Install and configure Stripe
++- [x] Create PaymentMethodInput component
++- [x] Update Payment Information form
++- [x] Test Stripe integration
++- [x] PCI compliance verified
+ 
+ ### 3. Forms Text Review & Polish ✨
+ **Priority:** MEDIUM - Needs user input
+diff --git a/russell-mental-health/TODO_NOV_1_2025.md b/russell-mental-health/TODO_NOV_1_2025.md
+new file mode 100644
+index 0000000..24adda6
+--- /dev/null
++++ b/russell-mental-health/TODO_NOV_1_2025.md
+@@ -0,0 +1,465 @@
++# TODO List - November 1, 2025
++
++## ✅ COMPLETED TODAY - Day 4 Success!
++
++### Phase 1: Complete Billing & Payment System ⚡ (IN PROGRESS - 5/14 tasks complete)
++**Goal:** Full billing system with charges, refunds, payment history, and patient payments
++
++#### ✅ Database & Backend Infrastructure (COMPLETE)
++- [x] **Created Transaction model in Prisma schema**
++  - All amounts stored as positive numbers
++  - Type field determines direction: "charge", "payment", "refund"
++  - Status tracking: "succeeded", "failed", "pending"
++  - Refund tracking with `refundedFromId` relation
++  - Audit trail with `createdBy` field
++  - Indexes on patientId, createdAt, type, status
++
++- [x] **Added Patient balance tracking**
++  - Added `balance` Decimal field to Patient model
++  - Tracks outstanding balance in USD
++  - Updates automatically on successful charges/payments
++
++- [x] **Added Stripe Customer integration**
++  - Added `stripeCustomerId` field to Patient model
++  - Automatic customer creation on first charge
++  - Payment methods attached to customers for reuse
++  - Fixed: "PaymentMethod cannot be used without Customer" error
++
++#### ✅ API Endpoints (3/3 COMPLETE)
++- [x] **Created `/api/stripe/charge` endpoint**
++  - Therapist-only: charge patient's card on file
++  - Input: `{ patientId, amount, description }`
++  - Validation:
++    - Therapist can only charge their own patients
++    - Patient must have payment method on file
++    - Amount must be > 0
++  - Success flow:
++    - Creates or retrieves Stripe Customer
++    - Attaches payment method to customer
++    - Creates charge with `off_session: true`
++    - Creates Transaction record (type: "charge", status: "succeeded")
++    - Updates Patient.balance
++    - Stripe sends automatic receipt email
++    - Creates audit log
++  - Failure handling:
++    - Creates failed Transaction with error message
++    - Does NOT update balance
++    - Returns 402 status with helpful error
++    - Detects expired payment methods
++
++- [x] **Created `/api/stripe/refund` endpoint**
++  - Therapist-only: process refunds for charges
++  - Input: `{ transactionId, amount?, reason? }`
++  - Validation:
++    - Can only refund succeeded charges
++    - Partial refunds supported
++    - Cannot exceed original charge amount
++  - Success flow:
++    - Creates Stripe refund
++    - Creates refund Transaction record
++    - Updates Patient.balance (increases what they owe)
++    - Links refund to original transaction
++  - Failure handling:
++    - Creates failed refund Transaction with error
++    - Returns clear error messages
++
++- [x] **Stripe server library created**
++  - `lib/stripe.ts` initializes Stripe SDK
++  - Uses STRIPE_SECRET_KEY from environment
++  - Shared by all Stripe API endpoints
++
++#### ✅ UI Components - Therapist Side (2/4 COMPLETE)
++- [x] **Created ChargeCardForm component**
++  - Props: `{ patientId, currentBalance, cardLast4, onSuccess }`
++  - Features:
++    - Amount input field with validation
++    - Description textarea (optional)
++    - Shows card last 4 before charging
++    - Confirmation dialog before submitting
++    - Loading state during charge
++    - Success: Toast notification + refresh + clear form
++    - Error: Detailed error message + option to retry
++    - Detects expired payment methods with helpful message
++  - Located: `components/ChargeCardForm.tsx`
++
++- [x] **Updated therapist patient detail page**
++  - Added "Billing" section with:
++    - Outstanding Balance display (prominent, color-coded)
++    - ChargeCardForm for quick charges
++    - Shows if patient has no payment method
++  - Fixed Decimal serialization issues
++  - Balance updates automatically after charge
++  - Located: `app/(dashboard)/dashboard/patients/[id]/page.tsx`
++
++#### ✅ Bug Fixes & Improvements
++- [x] **Fixed Decimal serialization errors**
++  - Issue: Prisma Decimal objects can't be passed to client components
++  - Fix: Convert to plain number with `Number(balance.toString())`
++  - Applied to: Patient detail page, patient list page
++
++- [x] **Fixed Stripe Customer integration**
++  - Issue: PaymentMethods can't be reused without Customer attachment
++  - Fix: Create/retrieve Stripe Customer on first charge
++  - Save Customer ID to `patient.stripeCustomerId`
++  - Attach payment method to customer
++  - Use `off_session: true` for future charges
++
++- [x] **Fixed payment method error handling**
++  - Better error messages for expired payment methods
++  - Detects `payment_method_not_available` error
++  - Shows link to update payment method
++  - Handles "resource_already_exists" when attaching
++
++#### ✅ Testing Results
++- [x] **Charge functionality tested and working**
++  - Tested with new patient: SUCCESS ✅
++  - Patient receives automatic email receipt from Stripe ✅
++  - Balance updates correctly after charge ✅
++  - Transaction record created in database ✅
++  - Stripe Customer created and payment method attached ✅
++
++---
++
++## 🚧 NOT COMPLETED TODAY (Remaining 9/14 tasks)
++
++### Phase 1 Continued: Complete Billing System
++
++#### Backend - Payment History (1 task)
++- [ ] **Create `/api/payments/history` endpoint**
++  - GET endpoint with query params: `?patientId=xyz&limit=50&offset=0`
++  - Returns: Array of transactions sorted by createdAt DESC
++  - Access control:
++    - Therapists can view any patient
++    - Patients can only view their own
++  - Includes: date, type, amount, status, card last 4, description, created by
++
++#### UI Components - Shared (1 task)
++- [ ] **Build PaymentHistoryTable component**
++  - Props: `{ patientId, viewerRole: 'patient' | 'therapist' }`
++  - Columns:
++    - Date/Time
++    - Description
++    - Type (Charge/Payment/Refund with colored badges)
++    - Amount (always positive, with +/- indicator)
++    - Card (last 4)
++    - Status (badge: green=succeeded, red=failed, yellow=pending)
++    - Running Balance (calculated column)
++    - Actions (therapist only: Refund button)
++  - Features:
++    - Color rows: Charges (red tint), Payments (green tint), Refunds (yellow tint)
++    - Failed charges have "Retry" button
++    - Refunds show link to original transaction
++    - Empty state: "No payment history yet"
++  - Located: `components/PaymentHistoryTable.tsx`
++
++#### UI Components - Patient Side (3 tasks)
++- [ ] **Build PayBillForm component**
++  - Props: `{ currentBalance, cardLast4 }`
++  - Display:
++    - Current balance prominently
++    - Card on file: •••• {cardLast4}
++    - Max payment info if balance > $500
++  - Actions:
++    - "Pay Full Balance" button (or "Pay $500" if balance > 500)
++    - "Pay Other Amount" expandable section:
++      - Amount input with validation
++      - Max: Math.max(currentBalance, 500)
++    - "Update Payment Method" link
++  - Validation:
++    - Amount > 0
++    - Amount <= Math.max(currentBalance, 500)
++    - If balance > 500, show: "Multiple payments may be required"
++  - Located: `components/PayBillForm.tsx`
++
++- [ ] **Update patient dashboard card to show balance**
++  - Show outstanding balance with color coding (red if > 0, green if 0)
++  - Clickable card navigates to `/patient/billing`
++  - Shows "Pay Now →" button if balance > 0
++  - Shows "All paid up! ✓" if balance = 0
++  - Located: `app/(dashboard)/dashboard/patient/page.tsx`
++
++- [ ] **Create patient billing page**
++  - Route: `/patient/billing`
++  - Layout:
++    - Header: "Billing & Payments"
++    - Section 1: Current Balance
++      - Large number display (color-coded)
++      - Card on file info (last 4, expiration, "Update" link)
++      - PayBillForm component
++    - Section 2: Payment History
++      - PaymentHistoryTable component (viewerRole="patient")
++  - Located: `app/(dashboard)/dashboard/patient/billing/page.tsx`
++
++#### UI Components - Therapist Side (2 tasks)
++- [ ] **Create therapist billing page**
++  - Route: `/dashboard/billing`
++  - Layout:
++    - Header: "Billing & Outstanding Balances"
++    - Summary Cards (row):
++      - Total Outstanding
++      - Patients with Balances
++      - Failed Charges (need retry)
++    - Tabs:
++      - Tab 1: "Outstanding Balances"
++        - Table: Name | Balance | Card | Last Payment | Actions
++        - Quick charge: Inline form on each row
++        - Click name → patient detail page
++        - Filter/search by patient name
++      - Tab 2: "All Payments"
++        - PaymentHistoryTable across all patients
++        - Filterable by patient, date range, type
++        - Export to CSV button (future)
++  - Located: `app/(dashboard)/dashboard/billing/page.tsx`
++
++- [ ] **Update therapist dashboard card**
++  - Show "Outstanding Balances" card with:
++    - Total outstanding amount across all patients
++    - Number of patients with balances
++    - Clickable → navigates to `/dashboard/billing`
++  - Query: Sum all patient balances, count patients with balance > 0
++  - Located: `app/(dashboard)/dashboard/page.tsx`
++
++#### Additional Features (2 tasks)
++- [ ] **Add email notifications for failed charges**
++  - When charge fails:
++    - Notify therapist: In-app toast + email
++    - Notify patient: Email with update payment method link
++  - Use SendGrid API
++  - Email templates:
++    - Therapist: "Charge failed for {patient name}: {error reason}"
++    - Patient: "Payment method issue - please update your card"
++
++- [ ] **Test complete payment flow**
++  - Test scenarios:
++    - ✅ Successful charge (DONE)
++    - ✅ Balance updates (DONE)
++    - ✅ Email receipts (DONE via Stripe)
++    - [ ] Patient makes payment
++    - [ ] Payment history displays correctly
++    - [ ] Refund processes successfully
++    - [ ] Failed charge handling
++    - [ ] Retry failed charge
++    - [ ] Multiple payments (balance > $500)
++    - [ ] Overpayment protection
++    - [ ] Patient dashboard card shows balance
++    - [ ] Therapist dashboard card shows total outstanding
++    - [ ] Therapist billing page works
++    - [ ] Patient billing page works
++
++---
++
++## 📊 Technical Achievements
++
++### Architecture Decisions
++- **Amount Storage:** All positive numbers, `type` field determines direction (clearer for humans reading DB)
++- **Payment Cap:** Math.max(balance, $500) - patient can pay up to balance OR $500, whichever is greater
++- **Email Receipts:** Stripe handles automatically (no SendGrid needed for successful charges)
++- **Refund Support:** Full and partial refunds supported from day 1
++- **Customer Integration:** Stripe Customers created automatically on first charge
++- **Audit Trail:** Every transaction tracks who initiated it (therapist or patient)
++
++### Balance Calculation Logic
++```typescript
++function calculateBalance(transactions: Transaction[]): number {
++  let balance = 0;
++  transactions.forEach(tx => {
++    if (tx.status !== 'succeeded') return; // Skip failed/pending
++
++    if (tx.type === 'charge') {
++      balance += Number(tx.amount); // Add to what they owe
++    } else if (tx.type === 'payment') {
++      balance -= Number(tx.amount); // Subtract from what they owe
++    } else if (tx.type === 'refund') {
++      balance += Number(tx.amount); // Add back (they owe more after refund)
++    }
++  });
++  return balance;
++}
++```
++
++### Code Quality
++- **Type Safety:** Full TypeScript throughout
++- **Error Handling:** Comprehensive error messages and logging
++- **Security:** Therapist authorization checks, PCI compliance via Stripe
++- **User Experience:** Loading states, success messages, error feedback
++- **Decimal Handling:** Fixed serialization issues for client components
++
++### Files Created/Modified Today
++**New Files:**
++- `prisma/schema.prisma` - Transaction model + Patient.balance + Patient.stripeCustomerId
++- `lib/stripe.ts` - Stripe server SDK initialization
++- `app/api/stripe/charge/route.ts` - Charge endpoint (156 lines)
++- `app/api/stripe/refund/route.ts` - Refund endpoint (164 lines)
++- `components/ChargeCardForm.tsx` - Charge form component (159 lines)
++
++**Modified Files:**
++- `app/(dashboard)/dashboard/patients/[id]/page.tsx` - Added billing section
++- `app/(dashboard)/dashboard/patients/page.tsx` - Fixed Decimal serialization
++
++**Total Lines Added:** ~650 lines of production-ready code
++
++---
++
++## 🎯 SUCCESS CRITERIA RESULTS
++
++**Minimum (Must Have) - Phase 1:**
++- ✅ Transaction model with refund support
++- ✅ Charge API working with Stripe
++- ✅ Refund API working with Stripe
++- ✅ Balance tracking on Patient model
++- ✅ ChargeCardForm for therapists
++- ✅ Billing section on patient detail page
++- ⏸️ Payment history endpoint
++- ⏸️ PaymentHistoryTable component
++- ⏸️ Patient can pay their bill
++- ⏸️ Dashboard cards show balances
++- ⏸️ Therapist billing page
++- ⏸️ Patient billing page
++- ⏸️ Failed charge notifications
++- ⏸️ Complete end-to-end testing
++
++**Overall Day 4 Progress:** 36% (5/14 tasks complete)
++
++---
++
++## 📝 NOTES FOR NEXT SESSION
++
++### What's Working Perfectly:
++- ✅ Therapists can charge patient cards
++- ✅ Stripe Customer integration working
++- ✅ Balance updates after charges
++- ✅ Email receipts sent automatically by Stripe
++- ✅ Transaction records created correctly
++- ✅ Refund API ready (needs UI testing)
++- ✅ Error handling for expired payment methods
++- ✅ Decimal serialization fixed
++
++### What Needs to Be Built:
++1. Payment history API and table component (shared)
++2. Patient payment form (PayBillForm)
++3. Patient billing page
++4. Patient dashboard card update
++5. Therapist billing page (with all patients)
++6. Therapist dashboard card update
++7. Failed charge email notifications
++8. Complete end-to-end testing
++
++### Next Priorities (Continue Day 4):
++1. **Build payment history endpoint** - GET /api/payments/history
++2. **Build PaymentHistoryTable component** - Works for both patient and therapist
++3. **Build PayBillForm component** - Patient can pay their bill
++4. **Create patient billing page** - Full payment interface for patients
++5. **Update patient dashboard card** - Show balance, link to billing page
++6. **Create therapist billing page** - See all patient balances, quick charge
++7. **Update therapist dashboard card** - Show total outstanding balances
++8. **Add failed charge notifications** - Email therapist and patient
++9. **Test complete flow** - Charge, payment, refund, failures
++
++### Known Issues:
++- Payment methods created before Stripe Customer integration cannot be reused
++  - **Solution:** Patient must re-add payment method to create with customer
++  - **Prevention:** Future payment methods will be created with customer from start
++
++### Database Setup:
++**Terminal 1 - Start Cloud SQL Proxy:**
++```bash
++cd russell-mental-health
++./cloud-sql-proxy therapyconnect-brrphd:us-east1:rmh-db
++```
++
++**Terminal 2 - Run Dev Server:**
++```bash
++cd russell-mental-health
++npm run dev
++```
++
++**Run migrations (if not done):**
++```bash
++npx prisma db push
++npx prisma generate
++```
++
++**Access Application:**
++- Local: http://localhost:3000
++- Database Browser: `npx prisma studio` → http://localhost:5555
++
++**Test Credentials:**
++- Therapist Email: drbethany@russellmentalhealth.com
++- Therapist Password: (set during Day 1)
++- Patient: Create via dashboard, link with user account
++
++---
++
++## 🐛 Bugs Fixed Today
++
++### 1. Decimal Serialization Error
++**Error:** `Only plain objects can be passed to Client Components from Server Components. Decimal objects are not supported.`
++
++**Root Cause:** Prisma returns `Decimal` objects for `Patient.balance`, which can't be serialized to client components.
++
++**Fix:**
++```typescript
++// Convert Decimal to plain number before passing to client
++currentBalance={Number(patient.balance.toString())}
++```
++
++**Files Fixed:**
++- `app/(dashboard)/dashboard/patients/[id]/page.tsx`
++- `app/(dashboard)/dashboard/patients/page.tsx`
++
++### 2. Stripe PaymentMethod Reuse Error
++**Error:** `The provided PaymentMethod was previously used with a PaymentIntent without Customer attachment... It may not be used again.`
++
++**Root Cause:** Stripe payment methods created without a Customer cannot be reused.
++
++**Fix:**
++1. Added `stripeCustomerId` field to Patient model
++2. Create/retrieve Stripe Customer on first charge
++3. Attach payment method to customer
++4. Use `off_session: true` for charging without customer present
++5. Store Customer ID for future charges
++
++**Files Fixed:**
++- `prisma/schema.prisma` (added stripeCustomerId field)
++- `app/api/stripe/charge/route.ts` (added customer creation logic)
++
++### 3. Payment Method Attach Errors
++**Error:** Various errors when attaching payment methods to customers
++
++**Fix:** Added comprehensive error handling:
++- `resource_already_exists` - Already attached, continue
++- `payment_method_not_available` - Expired, show helpful message with update link
++- Returns `needsNewPaymentMethod: true` flag to UI
++- UI shows link to payment method update form
++
++**Files Fixed:**
++- `app/api/stripe/charge/route.ts`
++- `components/ChargeCardForm.tsx`
++
++---
++
++## 🎉 Day 4 Milestone (Partial)
++
++**Status:** 🟡 Billing system infrastructure complete, UI components in progress
++
++**Key Accomplishments:**
++1. Full Transaction model with refund support
++2. Stripe charge and refund APIs working
++3. Balance tracking on Patient model
++4. Stripe Customer integration working
++5. ChargeCardForm component for therapists
++6. Billing section on patient detail page
++7. Tested successfully with real charges
++8. Email receipts working via Stripe
++
++**Code Quality:** Production-ready, PCI-compliant, following best practices
++
++**Next Session:** Complete remaining 9 tasks to finish billing system
++
++---
++
++**Last Updated:** November 1, 2025 - During Day 4
++**Total Development Time:** ~8 hours total (Day 1: 2h, Day 2: 4h, Day 3: 1h, Day 4: 1h so far)
++**Commits Today:** 6 commits on billing branch
++**Current Branch:** `claude/continue-work-011CUgMLQttSG6rB5qBGKeDJ`
++**Status:** 🟡 Billing system 36% complete - continuing implementation
+-- 
+2.43.0
+
+
+From b0a3512170550c318c2a6261db7588b6c90dcfb7 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 1 Nov 2025 20:35:01 +0000
+Subject: [PATCH 2/9] Add payment history API endpoint with access control and
+ pagination
+
+---
+ .../app/api/payments/history/route.ts         | 154 ++++++++++++++++++
+ 1 file changed, 154 insertions(+)
+ create mode 100644 russell-mental-health/app/api/payments/history/route.ts
+
+diff --git a/russell-mental-health/app/api/payments/history/route.ts b/russell-mental-health/app/api/payments/history/route.ts
+new file mode 100644
+index 0000000..1d3f711
+--- /dev/null
++++ b/russell-mental-health/app/api/payments/history/route.ts
+@@ -0,0 +1,154 @@
++// GET /api/payments/history - Fetch payment history for a patient
++import { NextRequest, NextResponse } from 'next/server'
++import { getServerSession } from 'next-auth'
++import { authOptions } from '@/lib/auth'
++import { prisma } from '@/lib/prisma'
++
++export async function GET(request: NextRequest) {
++  try {
++    const session = await getServerSession(authOptions)
++
++    if (!session) {
++      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
++    }
++
++    // Get current user
++    const user = await prisma.user.findUnique({
++      where: { email: session.user.email! },
++      include: { therapist: true, patient: true },
++    })
++
++    if (!user) {
++      return NextResponse.json({ error: 'User not found' }, { status: 404 })
++    }
++
++    // Get query parameters
++    const searchParams = request.nextUrl.searchParams
++    const patientId = searchParams.get('patientId')
++    const limit = parseInt(searchParams.get('limit') || '50')
++    const offset = parseInt(searchParams.get('offset') || '0')
++
++    // Access control
++    let whereClause: any = {}
++
++    if (user.role === 'THERAPIST') {
++      // Therapist can view any patient's history (with additional validation)
++      if (!patientId) {
++        return NextResponse.json(
++          { error: 'patientId is required for therapist' },
++          { status: 400 }
++        )
++      }
++
++      // Verify patient belongs to this therapist
++      const patient = await prisma.patient.findUnique({
++        where: { id: patientId },
++      })
++
++      if (!patient) {
++        return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
++      }
++
++      if (patient.therapistId !== user.therapist!.id) {
++        return NextResponse.json(
++          { error: 'You can only view your own patients' },
++          { status: 403 }
++        )
++      }
++
++      whereClause.patientId = patientId
++    } else if (user.role === 'PATIENT') {
++      // Patient can only view their own history
++      if (!user.patient) {
++        return NextResponse.json(
++          { error: 'Patient profile not found' },
++          { status: 404 }
++        )
++      }
++
++      whereClause.patientId = user.patient.id
++    } else {
++      return NextResponse.json({ error: 'Invalid user role' }, { status: 403 })
++    }
++
++    // Fetch transactions
++    const transactions = await prisma.transaction.findMany({
++      where: whereClause,
++      orderBy: { createdAt: 'desc' },
++      take: limit,
++      skip: offset,
++      include: {
++        patient: {
++          select: {
++            firstName: true,
++            lastName: true,
++          },
++        },
++        refundedFrom: {
++          select: {
++            id: true,
++            amount: true,
++            createdAt: true,
++          },
++        },
++      },
++    })
++
++    // Calculate running balance
++    let runningBalance = 0
++    const transactionsWithBalance = transactions.map((tx) => {
++      // Update running balance based on transaction type
++      if (tx.status === 'succeeded') {
++        if (tx.type === 'charge') {
++          runningBalance += Number(tx.amount)
++        } else if (tx.type === 'payment') {
++          runningBalance -= Number(tx.amount)
++        } else if (tx.type === 'refund') {
++          runningBalance += Number(tx.amount)
++        }
++      }
++
++      return {
++        id: tx.id,
++        patientId: tx.patientId,
++        patientName: `${tx.patient.firstName} ${tx.patient.lastName}`,
++        amount: Number(tx.amount),
++        type: tx.type,
++        status: tx.status,
++        description: tx.description,
++        cardLast4: tx.cardLast4,
++        stripeChargeId: tx.stripeChargeId,
++        stripeError: tx.stripeError,
++        refundedFromId: tx.refundedFromId,
++        refundedFrom: tx.refundedFrom,
++        createdBy: tx.createdBy,
++        createdAt: tx.createdAt.toISOString(),
++        runningBalance: runningBalance,
++      }
++    })
++
++    // Get total count for pagination
++    const totalCount = await prisma.transaction.count({ where: whereClause })
++
++    return NextResponse.json({
++      success: true,
++      transactions: transactionsWithBalance,
++      pagination: {
++        total: totalCount,
++        limit,
++        offset,
++        hasMore: offset + limit < totalCount,
++      },
++    })
++  } catch (error: any) {
++    console.error('Payment history error:', error)
++    return NextResponse.json(
++      {
++        success: false,
++        error: 'Failed to fetch payment history',
++        message: error.message,
++      },
++      { status: 500 }
++    )
++  }
++}
+-- 
+2.43.0
+
+
+From ed8aa4bd08bd1aceb2ea30cbbd157a4ee6f8fbed Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 1 Nov 2025 20:35:45 +0000
+Subject: [PATCH 3/9] Add PaymentHistoryTable component with color-coded
+ transactions and refund/retry actions
+
+---
+ .../components/PaymentHistoryTable.tsx        | 281 ++++++++++++++++++
+ 1 file changed, 281 insertions(+)
+ create mode 100644 russell-mental-health/components/PaymentHistoryTable.tsx
+
+diff --git a/russell-mental-health/components/PaymentHistoryTable.tsx b/russell-mental-health/components/PaymentHistoryTable.tsx
+new file mode 100644
+index 0000000..99aeaf0
+--- /dev/null
++++ b/russell-mental-health/components/PaymentHistoryTable.tsx
+@@ -0,0 +1,281 @@
++'use client'
++
++import { useState, useEffect } from 'react'
++
++interface Transaction {
++  id: string
++  patientId: string
++  patientName: string
++  amount: number
++  type: 'charge' | 'payment' | 'refund'
++  status: 'succeeded' | 'failed' | 'pending'
++  description: string | null
++  cardLast4: string | null
++  stripeChargeId: string | null
++  stripeError: string | null
++  refundedFromId: string | null
++  refundedFrom?: {
++    id: string
++    amount: number
++    createdAt: string
++  }
++  createdBy: string
++  createdAt: string
++  runningBalance: number
++}
++
++interface PaymentHistoryTableProps {
++  patientId: string
++  viewerRole: 'patient' | 'therapist'
++  onRefund?: (transactionId: string) => void
++  onRetry?: (transactionId: string) => void
++}
++
++export function PaymentHistoryTable({
++  patientId,
++  viewerRole,
++  onRefund,
++  onRetry,
++}: PaymentHistoryTableProps) {
++  const [transactions, setTransactions] = useState<Transaction[]>([])
++  const [loading, setLoading] = useState(true)
++  const [error, setError] = useState<string | null>(null)
++
++  useEffect(() => {
++    fetchHistory()
++  }, [patientId])
++
++  const fetchHistory = async () => {
++    try {
++      setLoading(true)
++      setError(null)
++
++      const response = await fetch(
++        `/api/payments/history?patientId=${patientId}&limit=50&offset=0`
++      )
++      const data = await response.json()
++
++      if (!response.ok || !data.success) {
++        throw new Error(data.message || data.error || 'Failed to fetch payment history')
++      }
++
++      setTransactions(data.transactions || [])
++    } catch (err: any) {
++      console.error('Failed to fetch payment history:', err)
++      setError(err.message || 'Failed to load payment history')
++    } finally {
++      setLoading(false)
++    }
++  }
++
++  const getTypeColor = (type: string) => {
++    switch (type) {
++      case 'charge':
++        return 'text-red-700 bg-red-50'
++      case 'payment':
++        return 'text-green-700 bg-green-50'
++      case 'refund':
++        return 'text-yellow-700 bg-yellow-50'
++      default:
++        return 'text-gray-700 bg-gray-50'
++    }
++  }
++
++  const getStatusColor = (status: string) => {
++    switch (status) {
++      case 'succeeded':
++        return 'text-green-700 bg-green-100'
++      case 'failed':
++        return 'text-red-700 bg-red-100'
++      case 'pending':
++        return 'text-yellow-700 bg-yellow-100'
++      default:
++        return 'text-gray-700 bg-gray-100'
++    }
++  }
++
++  const formatDate = (dateString: string) => {
++    const date = new Date(dateString)
++    return date.toLocaleDateString('en-US', {
++      month: 'short',
++      day: 'numeric',
++      year: 'numeric',
++      hour: 'numeric',
++      minute: '2-digit',
++    })
++  }
++
++  if (loading) {
++    return (
++      <div className="flex justify-center py-8">
++        <div className="text-gray-500">Loading payment history...</div>
++      </div>
++    )
++  }
++
++  if (error) {
++    return (
++      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
++        <p className="text-sm text-red-800">Error: {error}</p>
++        <button
++          onClick={fetchHistory}
++          className="mt-2 text-sm font-medium text-red-600 hover:text-red-700"
++        >
++          Try Again
++        </button>
++      </div>
++    )
++  }
++
++  if (transactions.length === 0) {
++    return (
++      <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
++        <p className="text-sm text-gray-600">No payment history yet</p>
++      </div>
++    )
++  }
++
++  return (
++    <div className="overflow-x-auto">
++      <table className="min-w-full divide-y divide-gray-200">
++        <thead className="bg-gray-50">
++          <tr>
++            <th
++              scope="col"
++              className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++            >
++              Date
++            </th>
++            <th
++              scope="col"
++              className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++            >
++              Description
++            </th>
++            <th
++              scope="col"
++              className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++            >
++              Type
++            </th>
++            <th
++              scope="col"
++              className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++            >
++              Amount
++            </th>
++            <th
++              scope="col"
++              className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++            >
++              Card
++            </th>
++            <th
++              scope="col"
++              className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++            >
++              Status
++            </th>
++            <th
++              scope="col"
++              className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++            >
++              Balance
++            </th>
++            {viewerRole === 'therapist' && (
++              <th
++                scope="col"
++                className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++              >
++                Actions
++              </th>
++            )}
++          </tr>
++        </thead>
++        <tbody className="divide-y divide-gray-200 bg-white">
++          {transactions.map((tx) => {
++            const rowBgColor =
++              tx.type === 'charge'
++                ? 'bg-red-50/30'
++                : tx.type === 'payment'
++                  ? 'bg-green-50/30'
++                  : tx.type === 'refund'
++                    ? 'bg-yellow-50/30'
++                    : ''
++
++            return (
++              <tr key={tx.id} className={rowBgColor}>
++                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
++                  {formatDate(tx.createdAt)}
++                </td>
++                <td className="px-6 py-4 text-sm text-gray-700">
++                  {tx.description || (
++                    <span className="italic text-gray-400">No description</span>
++                  )}
++                  {tx.refundedFromId && (
++                    <div className="mt-1 text-xs text-gray-500">
++                      Refund for charge on{' '}
++                      {tx.refundedFrom && formatDate(tx.refundedFrom.createdAt)}
++                    </div>
++                  )}
++                  {tx.status === 'failed' && tx.stripeError && (
++                    <div className="mt-1 text-xs text-red-600">
++                      Error: {tx.stripeError}
++                    </div>
++                  )}
++                </td>
++                <td className="whitespace-nowrap px-6 py-4">
++                  <span
++                    className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold capitalize ${getTypeColor(tx.type)}`}
++                  >
++                    {tx.type}
++                  </span>
++                </td>
++                <td className="whitespace-nowrap px-6 py-4 text-sm">
++                  <span
++                    className={`font-semibold ${tx.type === 'charge' ? 'text-red-600' : tx.type === 'payment' ? 'text-green-600' : 'text-yellow-600'}`}
++                  >
++                    {tx.type === 'charge' ? '-' : '+'}${tx.amount.toFixed(2)}
++                  </span>
++                </td>
++                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
++                  {tx.cardLast4 ? `•••• ${tx.cardLast4}` : '-'}
++                </td>
++                <td className="whitespace-nowrap px-6 py-4">
++                  <span
++                    className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold capitalize ${getStatusColor(tx.status)}`}
++                  >
++                    {tx.status}
++                  </span>
++                </td>
++                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
++                  ${tx.runningBalance.toFixed(2)}
++                </td>
++                {viewerRole === 'therapist' && (
++                  <td className="whitespace-nowrap px-6 py-4 text-sm">
++                    {tx.type === 'charge' && tx.status === 'succeeded' && (
++                      <button
++                        onClick={() => onRefund?.(tx.id)}
++                        className="text-indigo-600 hover:text-indigo-900"
++                      >
++                        Refund
++                      </button>
++                    )}
++                    {tx.status === 'failed' && (
++                      <button
++                        onClick={() => onRetry?.(tx.id)}
++                        className="text-blue-600 hover:text-blue-900"
++                      >
++                        Retry
++                      </button>
++                    )}
++                  </td>
++                )}
++              </tr>
++            )
++          })}
++        </tbody>
++      </table>
++    </div>
++  )
++}
+-- 
+2.43.0
+
+
+From c5e2cafba7fe0c866ae55874dfbc7b68b900f99d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 1 Nov 2025 20:36:25 +0000
+Subject: [PATCH 4/9] Add PayBillForm component with 00 payment cap and custom
+ amount option
+
+---
+ .../components/PayBillForm.tsx                | 221 ++++++++++++++++++
+ 1 file changed, 221 insertions(+)
+ create mode 100644 russell-mental-health/components/PayBillForm.tsx
+
+diff --git a/russell-mental-health/components/PayBillForm.tsx b/russell-mental-health/components/PayBillForm.tsx
+new file mode 100644
+index 0000000..1027373
+--- /dev/null
++++ b/russell-mental-health/components/PayBillForm.tsx
+@@ -0,0 +1,221 @@
++'use client'
++
++import { useState } from 'react'
++
++interface PayBillFormProps {
++  patientId: string
++  currentBalance: number
++  cardLast4: string
++  onSuccess?: () => void
++}
++
++export function PayBillForm({
++  patientId,
++  currentBalance,
++  cardLast4,
++  onSuccess,
++}: PayBillFormProps) {
++  const [amount, setAmount] = useState('')
++  const [showCustomAmount, setShowCustomAmount] = useState(false)
++  const [loading, setLoading] = useState(false)
++  const [error, setError] = useState<string | null>(null)
++  const [success, setSuccess] = useState<string | null>(null)
++
++  // Max payment: Math.max(balance, $500)
++  const maxPayment = Math.max(currentBalance, 500)
++
++  // Default payment button amount (balance or $500, whichever is less)
++  const defaultPaymentAmount = Math.min(currentBalance, 500)
++
++  const handlePayFull = async () => {
++    await processPayment(defaultPaymentAmount)
++  }
++
++  const handlePayCustom = async () => {
++    const amountNum = parseFloat(amount)
++    if (isNaN(amountNum) || amountNum <= 0) {
++      setError('Please enter a valid amount')
++      return
++    }
++
++    if (amountNum > maxPayment) {
++      setError(`Payment cannot exceed ${maxPayment > currentBalance ? '$500.00' : `$${currentBalance.toFixed(2)}`}`)
++      return
++    }
++
++    await processPayment(amountNum)
++  }
++
++  const processPayment = async (amountToPay: number) => {
++    try {
++      setLoading(true)
++      setError(null)
++      setSuccess(null)
++
++      const response = await fetch('/api/stripe/charge', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({
++          patientId,
++          amount: amountToPay,
++          description: 'Patient payment',
++        }),
++      })
++
++      const data = await response.json()
++
++      if (!response.ok || !data.success) {
++        throw new Error(data.message || data.error || 'Payment failed')
++      }
++
++      setSuccess(`Payment of $${amountToPay.toFixed(2)} processed successfully!`)
++      setAmount('')
++      setShowCustomAmount(false)
++
++      // Call onSuccess callback after short delay
++      setTimeout(() => {
++        if (onSuccess) onSuccess()
++      }, 1500)
++    } catch (err: any) {
++      console.error('Payment error:', err)
++      setError(err.message || 'Failed to process payment')
++    } finally {
++      setLoading(false)
++    }
++  }
++
++  if (currentBalance <= 0) {
++    return (
++      <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
++        <p className="text-lg font-semibold text-green-900">All Paid Up! ✓</p>
++        <p className="mt-1 text-sm text-green-700">
++          You have no outstanding balance.
++        </p>
++      </div>
++    )
++  }
++
++  return (
++    <div className="space-y-4">
++      {/* Error Message */}
++      {error && (
++        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
++          <p className="text-sm font-medium text-red-800">{error}</p>
++        </div>
++      )}
++
++      {/* Success Message */}
++      {success && (
++        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
++          <p className="text-sm font-medium text-green-800">{success}</p>
++        </div>
++      )}
++
++      {/* Current Balance */}
++      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
++        <div className="flex items-center justify-between">
++          <div>
++            <p className="text-sm text-gray-600">Outstanding Balance</p>
++            <p className="text-3xl font-bold text-red-600">
++              ${currentBalance.toFixed(2)}
++            </p>
++          </div>
++          <div className="text-right">
++            <p className="text-sm text-gray-600">Card on File</p>
++            <p className="text-lg font-medium text-gray-900">•••• {cardLast4}</p>
++            <a
++              href={`/dashboard/patient/forms/payment-information`}
++              className="text-xs text-blue-600 hover:text-blue-700"
++            >
++              Update Card
++            </a>
++          </div>
++        </div>
++      </div>
++
++      {/* Multiple Payments Warning */}
++      {currentBalance > 500 && (
++        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
++          <p className="text-sm text-yellow-800">
++            ℹ️ Your balance exceeds $500. Maximum single payment is $500. You may
++            need to make multiple payments.
++          </p>
++        </div>
++      )}
++
++      {/* Pay Full Balance Button */}
++      <div>
++        <button
++          onClick={handlePayFull}
++          disabled={loading}
++          className="w-full rounded-lg bg-blue-600 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
++        >
++          {loading ? (
++            'Processing...'
++          ) : (
++            <>
++              {currentBalance > 500
++                ? 'Pay $500.00 Now'
++                : `Pay Full Balance ($${currentBalance.toFixed(2)})`}
++            </>
++          )}
++        </button>
++        <p className="mt-2 text-center text-xs text-gray-500">
++          You will receive an email receipt after payment
++        </p>
++      </div>
++
++      {/* Divider */}
++      <div className="relative">
++        <div className="absolute inset-0 flex items-center">
++          <div className="w-full border-t border-gray-300"></div>
++        </div>
++        <div className="relative flex justify-center text-sm">
++          <button
++            onClick={() => setShowCustomAmount(!showCustomAmount)}
++            className="bg-white px-2 text-gray-500 hover:text-gray-700"
++          >
++            {showCustomAmount ? 'Hide' : 'Pay'} Other Amount
++          </button>
++        </div>
++      </div>
++
++      {/* Custom Amount Section */}
++      {showCustomAmount && (
++        <div className="space-y-3">
++          <div>
++            <label htmlFor="custom-amount" className="block text-sm font-medium text-gray-700">
++              Enter Amount
++            </label>
++            <div className="mt-1 flex items-center">
++              <span className="text-xl font-semibold text-gray-700">$</span>
++              <input
++                type="number"
++                id="custom-amount"
++                value={amount}
++                onChange={(e) => setAmount(e.target.value)}
++                placeholder="0.00"
++                step="0.01"
++                min="0.01"
++                max={maxPayment}
++                disabled={loading}
++                className="ml-2 block w-full rounded-md border-gray-300 px-3 py-2 text-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
++              />
++            </div>
++            <p className="mt-1 text-xs text-gray-500">
++              Maximum: ${maxPayment.toFixed(2)}
++            </p>
++          </div>
++
++          <button
++            onClick={handlePayCustom}
++            disabled={loading || !amount}
++            className="w-full rounded-lg bg-gray-800 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-gray-900 disabled:cursor-not-allowed disabled:bg-gray-400"
++          >
++            {loading ? 'Processing...' : 'Pay Custom Amount'}
++          </button>
++        </div>
++      )}
++    </div>
++  )
++}
+-- 
+2.43.0
+
+
+From d8e3015d290f1544a7143d7f66b757e544b2cebf Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 1 Nov 2025 20:36:59 +0000
+Subject: [PATCH 5/9] Update patient dashboard card to show real balance with
+ color-coding and Pay Now link
+
+---
+ .../(dashboard)/dashboard/patient/page.tsx    | 24 +++++++++++++++----
+ 1 file changed, 19 insertions(+), 5 deletions(-)
+
+diff --git a/russell-mental-health/app/(dashboard)/dashboard/patient/page.tsx b/russell-mental-health/app/(dashboard)/dashboard/patient/page.tsx
+index 1abeb72..5e009e7 100644
+--- a/russell-mental-health/app/(dashboard)/dashboard/patient/page.tsx
++++ b/russell-mental-health/app/(dashboard)/dashboard/patient/page.tsx
+@@ -138,17 +138,31 @@ export default async function PatientDashboardPage() {
+           </div>
+         </div>
+ 
+-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
++        <Link
++          href="/dashboard/patient/billing"
++          className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
++        >
+           <div className="flex items-center justify-between">
+             <div>
+               <p className="text-sm font-medium text-gray-600">Outstanding Balance</p>
+-              <p className="mt-2 text-3xl font-bold text-gray-900">$0</p>
++              <p className={`mt-2 text-3xl font-bold ${Number(patient.balance) > 0 ? 'text-red-600' : 'text-green-600'}`}>
++                ${Number(patient.balance).toFixed(2)}
++              </p>
++              {Number(patient.balance) > 0 ? (
++                <p className="mt-2 text-xs font-medium text-blue-600">
++                  Pay Now →
++                </p>
++              ) : (
++                <p className="mt-2 text-xs font-medium text-green-600">
++                  All paid up! ✓
++                </p>
++              )}
+             </div>
+-            <div className="rounded-full bg-emerald-50 p-3">
+-              <CurrencyDollarIcon className="h-6 w-6 text-emerald-600" />
++            <div className={`rounded-full p-3 ${Number(patient.balance) > 0 ? 'bg-red-50' : 'bg-emerald-50'}`}>
++              <CurrencyDollarIcon className={`h-6 w-6 ${Number(patient.balance) > 0 ? 'text-red-600' : 'text-emerald-600'}`} />
+             </div>
+           </div>
+-        </div>
++        </Link>
+       </div>
+ 
+       {/* Forms to Complete */}
+-- 
+2.43.0
+
+
+From b8ccabc4c607385630e11b967aeb33ed8ebcd4c2 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 1 Nov 2025 20:37:32 +0000
+Subject: [PATCH 6/9] Add patient billing page with PayBillForm and payment
+ history
+
+---
+ .../dashboard/patient/billing/page.tsx        | 151 ++++++++++++++++++
+ 1 file changed, 151 insertions(+)
+ create mode 100644 russell-mental-health/app/(dashboard)/dashboard/patient/billing/page.tsx
+
+diff --git a/russell-mental-health/app/(dashboard)/dashboard/patient/billing/page.tsx b/russell-mental-health/app/(dashboard)/dashboard/patient/billing/page.tsx
+new file mode 100644
+index 0000000..87a06a8
+--- /dev/null
++++ b/russell-mental-health/app/(dashboard)/dashboard/patient/billing/page.tsx
+@@ -0,0 +1,151 @@
++// Patient Billing Page
++// Patient can pay their bill and view payment history
++
++import { getServerSession } from 'next-auth'
++import { authOptions } from '@/lib/auth'
++import { prisma } from '@/lib/prisma'
++import { redirect } from 'next/navigation'
++import Link from 'next/link'
++import { ArrowLeftIcon } from '@heroicons/react/24/outline'
++import { PayBillForm } from '@/components/PayBillForm'
++import { PaymentHistoryTable } from '@/components/PaymentHistoryTable'
++
++export default async function PatientBillingPage() {
++  const session = await getServerSession(authOptions)
++
++  if (!session) {
++    redirect('/login')
++  }
++
++  // Only patients can access this page
++  if (session.user.role !== 'PATIENT') {
++    redirect('/dashboard')
++  }
++
++  // Get patient data
++  const user = await prisma.user.findUnique({
++    where: { email: session.user.email },
++    include: {
++      patient: {
++        include: {
++          therapist: {
++            include: {
++              user: true,
++            },
++          },
++          forms: {
++            where: {
++              formType: 'payment-information',
++              status: {
++                in: ['SUBMITTED', 'COMPLETED'],
++              },
++            },
++            orderBy: {
++              updatedAt: 'desc',
++            },
++            take: 1,
++          },
++        },
++      },
++    },
++  })
++
++  if (!user?.patient) {
++    return (
++      <div className="rounded-lg border border-red-200 bg-red-50 p-6">
++        <h2 className="text-lg font-semibold text-red-900">Patient Profile Not Found</h2>
++        <p className="mt-2 text-sm text-red-700">
++          Your account is not linked to a patient profile. Please contact your therapist.
++        </p>
++      </div>
++    )
++  }
++
++  const patient = user.patient
++
++  // Get payment method info
++  const paymentForm = patient.forms[0]
++  const hasPaymentMethod = paymentForm && paymentForm.formData
++
++  let cardLast4 = ''
++  if (hasPaymentMethod) {
++    const formData = paymentForm.formData as any
++    cardLast4 = formData.cardLast4 || ''
++  }
++
++  return (
++    <div className="space-y-6">
++      {/* Back Link */}
++      <Link
++        href="/dashboard/patient"
++        className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
++      >
++        <ArrowLeftIcon className="mr-2 h-4 w-4" />
++        Back to Dashboard
++      </Link>
++
++      {/* Page Header */}
++      <div>
++        <h1 className="text-2xl font-bold text-gray-900">Billing & Payments</h1>
++        <p className="mt-1 text-sm text-gray-600">
++          Manage your billing and view payment history
++        </p>
++      </div>
++
++      {/* Payment Method Check */}
++      {!hasPaymentMethod && (
++        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6">
++          <h2 className="text-lg font-semibold text-yellow-900">No Payment Method on File</h2>
++          <p className="mt-2 text-sm text-yellow-700">
++            Please add a payment method before making payments.
++          </p>
++          <Link
++            href="/dashboard/patient/forms/payment-information"
++            className="mt-4 inline-block rounded-lg bg-yellow-600 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-700"
++          >
++            Add Payment Method
++          </Link>
++        </div>
++      )}
++
++      {/* Current Balance & Payment Form */}
++      {hasPaymentMethod && (
++        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
++          <h2 className="mb-6 text-lg font-semibold text-gray-900">Make a Payment</h2>
++          <PayBillForm
++            patientId={patient.id}
++            currentBalance={Number(patient.balance)}
++            cardLast4={cardLast4}
++            onSuccess={() => {
++              // Refresh the page to show updated balance
++              window.location.reload()
++            }}
++          />
++        </div>
++      )}
++
++      {/* Payment History */}
++      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
++        <h2 className="mb-6 text-lg font-semibold text-gray-900">Payment History</h2>
++        <PaymentHistoryTable
++          patientId={patient.id}
++          viewerRole="patient"
++        />
++      </div>
++
++      {/* Help Section */}
++      <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
++        <h3 className="font-medium text-gray-900">Questions about billing?</h3>
++        <p className="mt-2 text-sm text-gray-600">
++          Contact {patient.therapist.user.name} at{' '}
++          <a
++            href={`mailto:${patient.therapist.user.email}`}
++            className="text-blue-600 hover:text-blue-700"
++          >
++            {patient.therapist.user.email}
++          </a>
++        </p>
++      </div>
++    </div>
++  )
++}
+-- 
+2.43.0
+
+
+From 4dd24a81d19415bcae30d371c5b153e8a617f71a Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 1 Nov 2025 20:38:25 +0000
+Subject: [PATCH 7/9] Add therapist billing page with outstanding balances
+ table and summary cards
+
+---
+ .../(dashboard)/dashboard/billing/page.tsx    | 338 ++++++++++++++++++
+ 1 file changed, 338 insertions(+)
+ create mode 100644 russell-mental-health/app/(dashboard)/dashboard/billing/page.tsx
+
+diff --git a/russell-mental-health/app/(dashboard)/dashboard/billing/page.tsx b/russell-mental-health/app/(dashboard)/dashboard/billing/page.tsx
+new file mode 100644
+index 0000000..1796c91
+--- /dev/null
++++ b/russell-mental-health/app/(dashboard)/dashboard/billing/page.tsx
+@@ -0,0 +1,338 @@
++// Therapist Billing Page
++// View all patient balances, quick charge, and payment history
++
++import { getServerSession } from 'next/auth'
++import { authOptions } from '@/lib/auth'
++import { prisma } from '@/lib/prisma'
++import { redirect } from 'next/navigation'
++import Link from 'next/link'
++import { CurrencyDollarIcon, UsersIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
++
++export default async function TherapistBillingPage() {
++  const session = await getServerSession(authOptions)
++
++  if (!session) {
++    redirect('/login')
++  }
++
++  // Only therapists can access this page
++  if (session.user.role !== 'THERAPIST') {
++    redirect('/dashboard')
++  }
++
++  // Get therapist data
++  const user = await prisma.user.findUnique({
++    where: { email: session.user.email },
++    include: {
++      therapist: {
++        include: {
++          patients: {
++            where: {
++              status: 'ACTIVE',
++            },
++            orderBy: {
++              balance: 'desc',
++            },
++            include: {
++              forms: {
++                where: {
++                  formType: 'payment-information',
++                  status: {
++                    in: ['SUBMITTED', 'COMPLETED'],
++                  },
++                },
++                orderBy: {
++                  updatedAt: 'desc',
++                },
++                take: 1,
++              },
++              transactions: {
++                where: {
++                  status: 'failed',
++                },
++                orderBy: {
++                  createdAt: 'desc',
++                },
++                take: 1,
++              },
++            },
++          },
++        },
++      },
++    },
++  })
++
++  if (!user?.therapist) {
++    redirect('/dashboard')
++  }
++
++  const therapist = user.therapist
++
++  // Calculate statistics
++  const allPatients = therapist.patients
++  const patientsWithBalance = allPatients.filter((p) => Number(p.balance) > 0)
++  const totalOutstanding = patientsWithBalance.reduce(
++    (sum, p) => sum + Number(p.balance),
++    0
++  )
++  const patientsWithFailedCharges = allPatients.filter(
++    (p) => p.transactions.length > 0
++  ).length
++
++  return (
++    <div className="space-y-6">
++      {/* Page Header */}
++      <div>
++        <h1 className="text-2xl font-bold text-gray-900">Billing & Outstanding Balances</h1>
++        <p className="mt-1 text-sm text-gray-600">
++          Manage patient billing and view payment history
++        </p>
++      </div>
++
++      {/* Summary Cards */}
++      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
++        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
++          <div className="flex items-center justify-between">
++            <div>
++              <p className="text-sm font-medium text-gray-600">Total Outstanding</p>
++              <p className="mt-2 text-3xl font-bold text-red-600">
++                ${totalOutstanding.toFixed(2)}
++              </p>
++            </div>
++            <div className="rounded-full bg-red-50 p-3">
++              <CurrencyDollarIcon className="h-6 w-6 text-red-600" />
++            </div>
++          </div>
++        </div>
++
++        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
++          <div className="flex items-center justify-between">
++            <div>
++              <p className="text-sm font-medium text-gray-600">Patients with Balances</p>
++              <p className="mt-2 text-3xl font-bold text-gray-900">
++                {patientsWithBalance.length}
++              </p>
++              <p className="mt-1 text-xs text-gray-500">
++                of {allPatients.length} total patients
++              </p>
++            </div>
++            <div className="rounded-full bg-blue-50 p-3">
++              <UsersIcon className="h-6 w-6 text-blue-600" />
++            </div>
++          </div>
++        </div>
++
++        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
++          <div className="flex items-center justify-between">
++            <div>
++              <p className="text-sm font-medium text-gray-600">Failed Charges</p>
++              <p className="mt-2 text-3xl font-bold text-yellow-600">
++                {patientsWithFailedCharges}
++              </p>
++              <p className="mt-1 text-xs text-gray-500">Need retry</p>
++            </div>
++            <div className="rounded-full bg-yellow-50 p-3">
++              <ExclamationTriangleIcon className="h-6 w-6 text-yellow-600" />
++            </div>
++          </div>
++        </div>
++      </div>
++
++      {/* Patients with Outstanding Balances */}
++      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
++        <h2 className="mb-6 text-lg font-semibold text-gray-900">
++          Outstanding Balances
++          {patientsWithBalance.length > 0 && (
++            <span className="ml-2 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
++              {patientsWithBalance.length} patients
++            </span>
++          )}
++        </h2>
++
++        {patientsWithBalance.length === 0 ? (
++          <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
++            <p className="text-sm text-gray-600">
++              No outstanding balances. All patients are paid up! ✓
++            </p>
++          </div>
++        ) : (
++          <div className="overflow-x-auto">
++            <table className="min-w-full divide-y divide-gray-200">
++              <thead className="bg-gray-50">
++                <tr>
++                  <th
++                    scope="col"
++                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++                  >
++                    Patient Name
++                  </th>
++                  <th
++                    scope="col"
++                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++                  >
++                    Balance
++                  </th>
++                  <th
++                    scope="col"
++                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++                  >
++                    Card on File
++                  </th>
++                  <th
++                    scope="col"
++                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++                  >
++                    Status
++                  </th>
++                  <th
++                    scope="col"
++                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++                  >
++                    Actions
++                  </th>
++                </tr>
++              </thead>
++              <tbody className="divide-y divide-gray-200 bg-white">
++                {patientsWithBalance.map((patient) => {
++                  const hasPaymentMethod = patient.forms.length > 0
++                  const cardLast4 = hasPaymentMethod
++                    ? ((patient.forms[0].formData as any)?.cardLast4 || '')
++                    : ''
++                  const hasFailed = patient.transactions.length > 0
++
++                  return (
++                    <tr key={patient.id} className={hasFailed ? 'bg-yellow-50/30' : ''}>
++                      <td className="whitespace-nowrap px-6 py-4">
++                        <Link
++                          href={`/dashboard/patients/${patient.id}`}
++                          className="text-sm font-medium text-blue-600 hover:text-blue-700"
++                        >
++                          {patient.firstName} {patient.lastName}
++                        </Link>
++                      </td>
++                      <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-red-600">
++                        ${Number(patient.balance).toFixed(2)}
++                      </td>
++                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
++                        {hasPaymentMethod ? (
++                          `•••• ${cardLast4}`
++                        ) : (
++                          <span className="text-yellow-600">No card</span>
++                        )}
++                      </td>
++                      <td className="whitespace-nowrap px-6 py-4 text-sm">
++                        {hasFailed ? (
++                          <span className="inline-flex rounded-full bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-800">
++                            Failed Charge
++                          </span>
++                        ) : (
++                          <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
++                            Active
++                          </span>
++                        )}
++                      </td>
++                      <td className="whitespace-nowrap px-6 py-4 text-sm">
++                        <Link
++                          href={`/dashboard/patients/${patient.id}#billing`}
++                          className="text-blue-600 hover:text-blue-700"
++                        >
++                          View / Charge
++                        </Link>
++                      </td>
++                    </tr>
++                  )
++                })}
++              </tbody>
++            </table>
++          </div>
++        )}
++      </div>
++
++      {/* All Patients (Even Zero Balance) */}
++      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
++        <h2 className="mb-6 text-lg font-semibold text-gray-900">
++          All Patients
++          <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
++            {allPatients.length} total
++          </span>
++        </h2>
++
++        <div className="overflow-x-auto">
++          <table className="min-w-full divide-y divide-gray-200">
++            <thead className="bg-gray-50">
++              <tr>
++                <th
++                  scope="col"
++                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++                >
++                  Patient Name
++                </th>
++                <th
++                  scope="col"
++                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++                >
++                  Balance
++                </th>
++                <th
++                  scope="col"
++                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++                >
++                  Card on File
++                </th>
++                <th
++                  scope="col"
++                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
++                >
++                  Actions
++                </th>
++              </tr>
++            </thead>
++            <tbody className="divide-y divide-gray-200 bg-white">
++              {allPatients.map((patient) => {
++                const hasPaymentMethod = patient.forms.length > 0
++                const cardLast4 = hasPaymentMethod
++                  ? ((patient.forms[0].formData as any)?.cardLast4 || '')
++                  : ''
++
++                return (
++                  <tr key={patient.id}>
++                    <td className="whitespace-nowrap px-6 py-4">
++                      <Link
++                        href={`/dashboard/patients/${patient.id}`}
++                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
++                      >
++                        {patient.firstName} {patient.lastName}
++                      </Link>
++                    </td>
++                    <td className="whitespace-nowrap px-6 py-4 text-sm">
++                      <span
++                        className={`font-semibold ${Number(patient.balance) > 0 ? 'text-red-600' : 'text-green-600'}`}
++                      >
++                        ${Number(patient.balance).toFixed(2)}
++                      </span>
++                    </td>
++                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
++                      {hasPaymentMethod ? (
++                        `•••• ${cardLast4}`
++                      ) : (
++                        <span className="text-gray-400">-</span>
++                      )}
++                    </td>
++                    <td className="whitespace-nowrap px-6 py-4 text-sm">
++                      <Link
++                        href={`/dashboard/patients/${patient.id}`}
++                        className="text-blue-600 hover:text-blue-700"
++                      >
++                        View Details
++                      </Link>
++                    </td>
++                  </tr>
++                )
++              })}
++            </tbody>
++          </table>
++        </div>
++      </div>
++    </div>
++  )
++}
+-- 
+2.43.0
+
+
+From b17ab38068e28cf5e00996bfefa64c4617468389 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 1 Nov 2025 20:39:13 +0000
+Subject: [PATCH 8/9] Add Outstanding Balances card to therapist dashboard with
+ total and patient count
+
+---
+ .../app/(dashboard)/dashboard/page.tsx        | 33 +++++++++++++++++--
+ 1 file changed, 31 insertions(+), 2 deletions(-)
+
+diff --git a/russell-mental-health/app/(dashboard)/dashboard/page.tsx b/russell-mental-health/app/(dashboard)/dashboard/page.tsx
+index 3524159..718c760 100644
+--- a/russell-mental-health/app/(dashboard)/dashboard/page.tsx
++++ b/russell-mental-health/app/(dashboard)/dashboard/page.tsx
+@@ -40,9 +40,26 @@ export default async function DashboardPage() {
+       _sum: { amount: true },
+     }),
+     prisma.formSubmission.count({ where: { status: 'SUBMITTED' } }),
++    // Outstanding balances
++    prisma.patient.findMany({
++      where: {
++        status: 'ACTIVE',
++        balance: { gt: 0 },
++      },
++      select: {
++        balance: true,
++      },
++    }),
+   ])
+ 
+-  const [activePatients, upcomingAppointments, pendingClaims, monthlyRevenue, pendingForms] = stats
++  const [activePatients, upcomingAppointments, pendingClaims, monthlyRevenue, pendingForms, patientsWithBalances] = stats
++
++  // Calculate total outstanding balances
++  const totalOutstanding = patientsWithBalances.reduce(
++    (sum, p) => sum + Number(p.balance),
++    0
++  )
++  const patientsWithBalanceCount = patientsWithBalances.length
+ 
+   const statCards = [
+     {
+@@ -77,6 +94,15 @@ export default async function DashboardPage() {
+       bgColor: 'bg-orange-50',
+       href: '/dashboard/claims',
+     },
++    {
++      name: 'Outstanding Balances',
++      value: `$${totalOutstanding.toFixed(2)}`,
++      subtitle: `${patientsWithBalanceCount} patients`,
++      icon: CurrencyDollarIcon,
++      color: 'text-red-600',
++      bgColor: 'bg-red-50',
++      href: '/dashboard/billing',
++    },
+     {
+       name: 'Monthly Revenue',
+       value: `$${((monthlyRevenue._sum.amount || 0) / 100).toLocaleString()}`,
+@@ -108,7 +134,10 @@ export default async function DashboardPage() {
+             <div className="flex items-center justify-between">
+               <div>
+                 <p className="text-sm font-medium text-gray-600">{stat.name}</p>
+-                <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
++                <p className={`mt-2 text-3xl font-bold ${stat.color}`}>{stat.value}</p>
++                {'subtitle' in stat && (
++                  <p className="mt-1 text-xs text-gray-500">{stat.subtitle}</p>
++                )}
+               </div>
+               <div className={`rounded-full p-3 ${stat.bgColor}`}>
+                 <stat.icon className={`h-6 w-6 ${stat.color}`} />
+-- 
+2.43.0
+
+
+From e2699fece2b9f72db3f9efdaf5ee3d6a50b95af9 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 1 Nov 2025 20:40:46 +0000
+Subject: [PATCH 9/9] Add email notification system for failed charges (console
+ logging until SendGrid configured)
+
+---
+ .../app/api/stripe/charge/route.ts            |  13 +-
+ russell-mental-health/lib/email.ts            | 119 ++++++++++++++++++
+ 2 files changed, 130 insertions(+), 2 deletions(-)
+ create mode 100644 russell-mental-health/lib/email.ts
+
+diff --git a/russell-mental-health/app/api/stripe/charge/route.ts b/russell-mental-health/app/api/stripe/charge/route.ts
+index 7abdd1f..652f1a3 100644
+--- a/russell-mental-health/app/api/stripe/charge/route.ts
++++ b/russell-mental-health/app/api/stripe/charge/route.ts
+@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
+ import { authOptions } from '@/lib/auth'
+ import { prisma } from '@/lib/prisma'
+ import { stripe } from '@/lib/stripe'
++import { sendFailedChargeNotification } from '@/lib/email'
+ import { Decimal } from '@prisma/client/runtime/library'
+ 
+ export async function POST(request: NextRequest) {
+@@ -247,8 +248,16 @@ export async function POST(request: NextRequest) {
+         },
+       })
+ 
+-      // TODO: Send email notification to patient about failed charge
+-      // This will be implemented in step 13
++      // Send failed charge notifications to therapist and patient
++      await sendFailedChargeNotification({
++        patientEmail: patient.email,
++        patientName: `${patient.firstName} ${patient.lastName}`,
++        therapistEmail: user.email!,
++        therapistName: user.name!,
++        amount,
++        errorMessage: stripeError.message || 'Unknown error',
++        patientId: patient.id,
++      })
+ 
+       return NextResponse.json(
+         {
+diff --git a/russell-mental-health/lib/email.ts b/russell-mental-health/lib/email.ts
+new file mode 100644
+index 0000000..813853b
+--- /dev/null
++++ b/russell-mental-health/lib/email.ts
+@@ -0,0 +1,119 @@
++// Email notification utilities
++// TODO: Configure SendGrid API key in .env.local: SENDGRID_API_KEY=xxx
++
++/**
++ * Send email notification for failed charge
++ * Currently logs to console - configure SendGrid to enable actual emails
++ */
++export async function sendFailedChargeNotification(params: {
++  patientEmail: string
++  patientName: string
++  therapistEmail: string
++  therapistName: string
++  amount: number
++  errorMessage: string
++  patientId: string
++}) {
++  const { patientEmail, patientName, therapistEmail, therapistName, amount, errorMessage, patientId } = params
++
++  // TODO: Replace console.log with actual SendGrid email sending
++  // For now, log to console so failed charges are tracked in server logs
++
++  console.log('=== FAILED CHARGE NOTIFICATION ===')
++  console.log('Patient:', patientName, patientEmail)
++  console.log('Therapist:', therapistName, therapistEmail)
++  console.log('Amount:', `$${amount.toFixed(2)}`)
++  console.log('Error:', errorMessage)
++  console.log('Patient ID:', patientId)
++  console.log('===================================')
++
++  // When SendGrid is configured, replace above with:
++  /*
++  const sgMail = require('@sendgrid/mail')
++  sgMail.setApiKey(process.env.SENDGRID_API_KEY!)
++
++  // Email to therapist
++  await sgMail.send({
++    to: therapistEmail,
++    from: 'noreply@russellmentalhealth.com', // Configure verified sender
++    subject: `Failed Charge: ${patientName} - $${amount.toFixed(2)}`,
++    text: `
++      A charge attempt has failed for patient ${patientName}.
++
++      Amount: $${amount.toFixed(2)}
++      Error: ${errorMessage}
++
++      Action needed:
++      1. Contact patient to update payment method
++      2. Retry charge once payment method is updated
++
++      View patient details: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/patients/${patientId}
++    `,
++    html: `
++      <h2>Failed Charge Notification</h2>
++      <p>A charge attempt has failed for patient <strong>${patientName}</strong>.</p>
++      <ul>
++        <li><strong>Amount:</strong> $${amount.toFixed(2)}</li>
++        <li><strong>Error:</strong> ${errorMessage}</li>
++      </ul>
++      <h3>Action Needed:</h3>
++      <ol>
++        <li>Contact patient to update payment method</li>
++        <li>Retry charge once payment method is updated</li>
++      </ol>
++      <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/patients/${patientId}">View Patient Details</a></p>
++    `,
++  })
++
++  // Email to patient
++  await sgMail.send({
++    to: patientEmail,
++    from: 'noreply@russellmentalhealth.com',
++    subject: 'Payment Method Update Required',
++    text: `
++      Hello ${patientName},
++
++      We attempted to charge your card on file for $${amount.toFixed(2)}, but the payment failed.
++
++      Error: ${errorMessage}
++
++      Please update your payment method as soon as possible to avoid service interruptions.
++
++      You can update your payment method here: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/patient/forms/payment-information
++
++      If you have questions, please contact ${therapistName} at ${therapistEmail}.
++
++      Thank you,
++      Russell Mental Health
++    `,
++    html: `
++      <p>Hello ${patientName},</p>
++      <p>We attempted to charge your card on file for <strong>$${amount.toFixed(2)}</strong>, but the payment failed.</p>
++      <p><strong>Error:</strong> ${errorMessage}</p>
++      <p>Please update your payment method as soon as possible to avoid service interruptions.</p>
++      <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/patient/forms/payment-information">Update Payment Method</a></p>
++      <p>If you have questions, please contact ${therapistName} at <a href="mailto:${therapistEmail}">${therapistEmail}</a>.</p>
++      <p>Thank you,<br>Russell Mental Health</p>
++    `,
++  })
++  */
++
++  return {
++    success: true,
++    message: 'Failed charge logged to console. Configure SendGrid to enable email notifications.',
++  }
++}
++
++/**
++ * Setup instructions for SendGrid:
++ *
++ * 1. Sign up for SendGrid account: https://sendgrid.com/
++ * 2. Create API key with "Mail Send" permission
++ * 3. Add to .env.local:
++ *    SENDGRID_API_KEY=SG.xxxxxxxxxxxxx
++ *    NEXT_PUBLIC_APP_URL=http://localhost:3000 (or production URL)
++ * 4. Verify sender email in SendGrid dashboard
++ * 5. Install SendGrid package: npm install @sendgrid/mail
++ * 6. Uncomment the SendGrid code in this file
++ * 7. Update sender email to your verified address
++ */
+-- 
+2.43.0
+
