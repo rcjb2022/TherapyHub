@@ -176,13 +176,13 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      // Update patient balance if charge succeeded
+      // Update patient balance if charge succeeded - DECREASE balance (we collected money)
       if (paymentIntent.status === 'succeeded') {
         await prisma.patient.update({
           where: { id: patient.id },
           data: {
             balance: {
-              increment: new Decimal(amount), // Add to what they owe
+              decrement: new Decimal(amount), // Subtract - patient owes LESS now
             },
           },
         })

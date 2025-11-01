@@ -133,7 +133,6 @@ export function ChargeCardForm({
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
             <p className="font-semibold">{success}</p>
-            <p className="text-sm">Patient will receive an email receipt.</p>
           </div>
         )}
 
