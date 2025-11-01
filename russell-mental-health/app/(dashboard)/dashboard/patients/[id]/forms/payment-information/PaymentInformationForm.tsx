@@ -399,10 +399,11 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
               <option value="credit-card">Credit Card</option>
               <option value="debit-card">Debit Card</option>
               <option value="hsa-fsa">HSA/FSA Card</option>
-                <option value="other">Other (to be discussed)</option>
-              </select>
-            </div>
+              <option value="other">Other (to be discussed)</option>
+            </select>
+          </div>
 
+          <div className="mt-4">
             <label className="flex items-start gap-3">
               <input
                 type="checkbox"
