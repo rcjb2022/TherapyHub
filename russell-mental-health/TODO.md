@@ -1,12 +1,31 @@
 # Russell Mental Health Platform - TODO List
 
-**Version:** 0.3.1
-**Last Updated:** November 1, 2025 (End of Day 3)
-**Status:** Patient Forms Workflow COMPLETE ✅ - Full End-to-End Working
+**Version:** 0.4.0
+**Last Updated:** November 1, 2025 (Day 4 - In Progress)
+**Status:** Billing & Payment System IN PROGRESS 🟡 (36% complete - 5/14 tasks done)
 
 ---
 
-## ✅ Completed Today (Day 3 - Nov 1, 2025)
+## ✅ Completed Today (Day 4 - Nov 1, 2025)
+
+### Complete Billing & Payment System 💳 (5/14 tasks complete)
+- [x] Created Transaction model in Prisma schema
+  - All amounts stored as positive numbers
+  - Type field: "charge", "payment", "refund"
+  - Refund tracking with relations
+  - Full audit trail
+- [x] Added Patient balance tracking (Decimal field)
+- [x] Added Stripe Customer integration (stripeCustomerId field)
+- [x] Created /api/stripe/charge endpoint (therapist charges patient)
+- [x] Created /api/stripe/refund endpoint (therapist refunds charges)
+- [x] Built ChargeCardForm component (therapist UI)
+- [x] Updated therapist patient detail page with billing section
+- [x] Fixed Decimal serialization issues
+- [x] Tested charge functionality - WORKING ✅
+
+---
+
+## ✅ Completed Earlier (Day 3 - Nov 1, 2025)
 
 ### Patient Forms Success Messages ✅
 - [x] Created shared FormSuccessMessage component
@@ -34,35 +53,67 @@
 
 ---
 
-## 🎯 Immediate Priorities (Day 4 - Nov 2)
+## 🎯 Immediate Priorities (Continue Day 4 - Nov 1)
+
+### 1. Complete Billing System (9 remaining tasks) 💳
+**Priority:** HIGH - Core feature for practice revenue
+
+**Backend:**
+- [ ] **Create /api/payments/history endpoint**
+  - GET endpoint with pagination
+  - Access control (therapist sees all, patient sees only their own)
+  - Returns transaction history sorted by date
+
+**Shared Components:**
+- [ ] **Build PaymentHistoryTable component**
+  - Works for both patient and therapist views
+  - Shows: Date, Type, Amount, Card, Status, Running Balance
+  - Color-coded rows (charges red, payments green, refunds yellow)
+  - Refund button for therapists
+  - Retry button for failed charges
+
+**Patient-Side:**
+- [ ] **Build PayBillForm component**
+  - Patient pays their outstanding balance
+  - Max payment: Math.max(balance, $500)
+  - Validation and error handling
+
+- [ ] **Update patient dashboard card**
+  - Show outstanding balance
+  - Link to patient billing page
+
+- [ ] **Create patient billing page**
+  - Route: /patient/billing
+  - PayBillForm + PaymentHistoryTable
+
+**Therapist-Side:**
+- [ ] **Create therapist billing page**
+  - Route: /dashboard/billing
+  - See all patients with balances
+  - Quick charge functionality
+  - All payment history across patients
+
+- [ ] **Update therapist dashboard card**
+  - Show total outstanding balances
+  - Count of patients with balances
+  - Link to billing page
+
+**Additional:**
+- [ ] **Add email notifications for failed charges**
+  - SendGrid integration
+  - Notify therapist and patient
+
+- [ ] **Test complete payment flow**
+  - Charge, payment, refund, failures
 
 ### 2. Stripe Payment Integration 💳
-**Priority:** HIGH - Core feature for practice
+**Priority:** COMPLETE ✅ (Done in Day 3-4)
 
-- [ ] **Install and configure Stripe**
-  - [ ] `npm install @stripe/stripe-js @stripe/react-stripe-js`
-  - [ ] Set up Stripe provider in app layout
-  - [ ] Configure test API keys (already have them in .env.local)
-  - [ ] Create Stripe webhook endpoint for events
-
-- [ ] **Create PaymentMethodInput component**
-  - [ ] Use Stripe CardElement for secure input
-  - [ ] Style to match existing form design
-  - [ ] Add validation and error handling
-  - [ ] Loading states
-
-- [ ] **Update Payment Information form**
-  - [ ] Replace placeholder card fields with Stripe Elements
-  - [ ] Tokenize card on submit (NEVER store actual card numbers!)
-  - [ ] Store Stripe token + last 4 digits + expiration
-  - [ ] Auto-complete form when Stripe succeeds
-  - [ ] Handle Stripe errors with user-friendly messages
-
-- [ ] **Test Stripe integration**
-  - [ ] Test card 4242 4242 4242 4242 (success)
-  - [ ] Test card 4000 0000 0000 0002 (decline)
-  - [ ] Verify no card data in database (PCI compliance)
-  - [ ] Test error handling
+- [x] Install and configure Stripe
+- [x] Create PaymentMethodInput component
+- [x] Update Payment Information form
+- [x] Test Stripe integration
+- [x] PCI compliance verified
 
 ### 3. Forms Text Review & Polish ✨
 **Priority:** MEDIUM - Needs user input
