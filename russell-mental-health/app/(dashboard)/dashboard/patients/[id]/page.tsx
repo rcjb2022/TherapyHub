@@ -66,6 +66,11 @@ export default async function PatientDetailPage({
   // Get pending forms (SUBMITTED status)
   const pendingForms = patient?.forms.filter((f) => f.status === 'SUBMITTED') || []
 
+  // Get payment method from payment-information form
+  const paymentForm = patient?.forms.find((f) => f.formType === 'payment-information')
+  const paymentMethodData = paymentForm?.formData as any
+  const hasPaymentMethod = paymentMethodData?.stripePaymentMethodId && paymentMethodData?.cardLast4
+
   if (!patient) {
     notFound()
   }
@@ -223,6 +228,41 @@ export default async function PatientDetailPage({
           {/* Payment Information */}
           <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">Payment Information</h2>
+
+            {/* Card on File */}
+            <div className="mb-4 rounded-lg bg-gray-50 p-3">
+              {hasPaymentMethod ? (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">💳 Card on File</p>
+                    <p className="text-sm text-gray-600">
+                      •••• •••• •••• {paymentMethodData.cardLast4}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Expires {paymentMethodData.cardExpMonth}/{paymentMethodData.cardExpYear}
+                    </p>
+                  </div>
+                  <Link
+                    href={`/dashboard/patients/${id}/forms/payment-information`}
+                    className="text-xs text-blue-600 hover:text-blue-700 underline"
+                  >
+                    Update
+                  </Link>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">No payment method on file</p>
+                  <Link
+                    href={`/dashboard/patients/${id}/forms/payment-information`}
+                    className="inline-block text-sm text-blue-600 hover:text-blue-700 underline"
+                  >
+                    Add payment method
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Payments */}
             {patient.payments && patient.payments.length > 0 ? (
               <div className="space-y-3">
                 <div>
@@ -240,22 +280,10 @@ export default async function PatientDetailPage({
                     ))}
                   </div>
                 </div>
-                <div className="pt-3 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">Credit card on file: Not configured</p>
-                  <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">
-                    Add payment method
-                  </button>
-                </div>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="pt-3 border-t border-gray-200">
                 <p className="text-sm text-gray-600">No payments on record</p>
-                <div className="pt-3 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">Credit card on file: None</p>
-                  <button className="mt-2 text-xs text-blue-600 hover:text-blue-700">
-                    Add payment method
-                  </button>
-                </div>
               </div>
             )}
           </div>
