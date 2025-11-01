@@ -95,17 +95,49 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Ensure patient has a Stripe Customer
+    let stripeCustomerId = patient.stripeCustomerId
+
+    if (!stripeCustomerId) {
+      // Create Stripe Customer
+      const customer = await stripe.customers.create({
+        email: patient.email,
+        name: `${patient.firstName} ${patient.lastName}`,
+        metadata: {
+          patientId: patient.id,
+        },
+      })
+
+      stripeCustomerId = customer.id
+
+      // Save customer ID to patient record
+      await prisma.patient.update({
+        where: { id: patient.id },
+        data: { stripeCustomerId: customer.id },
+      })
+    }
+
+    // Attach payment method to customer if not already attached
+    try {
+      await stripe.paymentMethods.attach(stripePaymentMethodId, {
+        customer: stripeCustomerId,
+      })
+    } catch (attachError: any) {
+      // Payment method might already be attached, that's okay
+      if (attachError.code !== 'resource_already_exists') {
+        console.warn('Payment method attach warning:', attachError.message)
+      }
+    }
+
     // Create Stripe PaymentIntent
     try {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: 'usd',
+        customer: stripeCustomerId, // Use customer ID
         payment_method: stripePaymentMethodId,
         confirm: true,
-        automatic_payment_methods: {
-          enabled: true,
-          allow_redirects: 'never',
-        },
+        off_session: true, // Charge without customer present
         receipt_email: patient.email, // Stripe sends automatic receipt
         description: description || `Therapy charge for ${patient.firstName} ${patient.lastName}`,
         metadata: {

@@ -305,7 +305,7 @@ export default async function PatientDetailPage({
             {hasPaymentMethod ? (
               <ChargeCardForm
                 patientId={patient.id}
-                currentBalance={Number(patient.balance)}
+                currentBalance={Number(patient.balance.toString())}
                 cardLast4={paymentMethodData.cardLast4}
               />
             ) : (
