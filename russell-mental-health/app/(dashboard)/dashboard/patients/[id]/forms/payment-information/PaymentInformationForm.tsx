@@ -2,13 +2,14 @@
 
 // Client component for Payment Information Form
 // Credit card on file and billing information
-// NOTE: Full Stripe integration to be added later
+// Stripe integration for secure card collection
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { FormSuccessMessage, determineNextForm } from '../formHelpers'
+import { PaymentMethodInput } from '@/components/PaymentMethodInput'
 
 interface PaymentInformationFormProps {
   patientId: string
@@ -25,6 +26,7 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
   const [showSuccess, setShowSuccess] = useState(false)
   const [nextForm, setNextForm] = useState<{ type: string; title: string } | null>(null)
   const [completedCount, setCompletedCount] = useState(0)
+  const [paymentMethodSaved, setPaymentMethodSaved] = useState(false)
   const [formData, setFormData] = useState({
     // Billing Name & Address
     billingName: '',
@@ -34,10 +36,11 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
     billingZip: '',
     billingPhone: '',
 
-    // Credit Card (Placeholder - Stripe integration later)
-    cardholderName: '',
-    // NOTE: DO NOT store actual card numbers!
-    // Future: Stripe Elements will tokenize card data
+    // Stripe Payment Method (PCI Compliant - only metadata, no card numbers!)
+    stripePaymentMethodId: '', // Stripe token ID
+    cardLast4: '', // Last 4 digits only
+    cardExpMonth: 0, // Expiration month
+    cardExpYear: 0, // Expiration year
 
     // Payment Preferences
     preferredPaymentMethod: '',
@@ -76,7 +79,10 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
                 billingState: existingForm.formData.billingState || '',
                 billingZip: existingForm.formData.billingZip || '',
                 billingPhone: existingForm.formData.billingPhone || '',
-                cardholderName: existingForm.formData.cardholderName || '',
+                stripePaymentMethodId: existingForm.formData.stripePaymentMethodId || '',
+                cardLast4: existingForm.formData.cardLast4 || '',
+                cardExpMonth: existingForm.formData.cardExpMonth || 0,
+                cardExpYear: existingForm.formData.cardExpYear || 0,
                 preferredPaymentMethod: existingForm.formData.preferredPaymentMethod || '',
                 autoPayConsent: existingForm.formData.autoPayConsent || false,
                 understandFees: existingForm.formData.understandFees || false,
@@ -84,6 +90,10 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
                 cancellationPolicy: existingForm.formData.cancellationPolicy || false,
                 additionalPaymentInfo: existingForm.formData.additionalPaymentInfo || '',
               })
+              // If payment method exists, mark as saved
+              if (existingForm.formData.stripePaymentMethodId) {
+                setPaymentMethodSaved(true)
+              }
             }
           }
         }
@@ -108,10 +118,36 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
     }
   }
 
+  const handlePaymentMethodCreated = (paymentMethodId: string, last4: string, expMonth: number, expYear: number) => {
+    console.log('Payment method created:', { paymentMethodId, last4, expMonth, expYear })
+    setFormData({
+      ...formData,
+      stripePaymentMethodId: paymentMethodId,
+      cardLast4: last4,
+      cardExpMonth: expMonth,
+      cardExpYear: expYear,
+    })
+    setPaymentMethodSaved(true)
+    setError('')
+  }
+
+  const handlePaymentMethodError = (errorMessage: string) => {
+    console.error('Payment method error:', errorMessage)
+    setError(errorMessage)
+    setPaymentMethodSaved(false)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+
+    // Validate payment method is saved
+    if (!paymentMethodSaved || !formData.stripePaymentMethodId) {
+      setError('Please save your payment method before submitting')
+      setIsLoading(false)
+      return
+    }
 
     // Validate required acknowledgments
     if (!formData.understandFees) {
@@ -310,43 +346,59 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
         {/* Payment Method */}
         <div className="mb-8">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Payment Method</h2>
-          <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 mb-4">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> Secure credit card processing via Stripe will be added in a future update.
-              For now, please provide your payment preferences and our staff will contact you to securely collect payment information.
-            </p>
-          </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Cardholder Name
-              </label>
-              <input
-                type="text"
-                name="cardholderName"
-                value={formData.cardholderName}
-                onChange={handleChange}
-                placeholder="Name as it appears on card"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          {paymentMethodSaved && formData.cardLast4 ? (
+            <div className="rounded-lg bg-green-50 border border-green-200 p-4 mb-4">
+              <p className="text-sm text-green-800">
+                <strong>✓ Payment method saved:</strong> Card ending in {formData.cardLast4} (Exp: {formData.cardExpMonth}/{formData.cardExpYear})
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentMethodSaved(false)
+                  setFormData({
+                    ...formData,
+                    stripePaymentMethodId: '',
+                    cardLast4: '',
+                    cardExpMonth: 0,
+                    cardExpYear: 0,
+                  })
+                }}
+                className="mt-2 text-sm text-green-700 underline hover:text-green-900"
+              >
+                Update payment method
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Secure Card Collection:</strong> Your card information is encrypted by Stripe and never stored on our servers.
+                </p>
+              </div>
+
+              <PaymentMethodInput
+                onPaymentMethodCreated={handlePaymentMethodCreated}
+                onError={handlePaymentMethodError}
               />
             </div>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Preferred Payment Method *
-              </label>
-              <select
-                name="preferredPaymentMethod"
-                required
-                value={formData.preferredPaymentMethod}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select...</option>
-                <option value="credit-card">Credit Card</option>
-                <option value="debit-card">Debit Card</option>
-                <option value="hsa-fsa">HSA/FSA Card</option>
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Preferred Payment Method *
+            </label>
+            <select
+              name="preferredPaymentMethod"
+              required
+              value={formData.preferredPaymentMethod}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select...</option>
+              <option value="credit-card">Credit Card</option>
+              <option value="debit-card">Debit Card</option>
+              <option value="hsa-fsa">HSA/FSA Card</option>
                 <option value="other">Other (to be discussed)</option>
               </select>
             </div>
