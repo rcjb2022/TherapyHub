@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { FormSuccessMessage, determineNextForm } from '../formHelpers'
+import FileUpload from '@/components/FileUpload'
 
 interface InsuranceInformationFormProps {
   patientId: string
@@ -32,6 +33,10 @@ export default function InsuranceInformationForm({ patientId }: InsuranceInforma
     primaryPolicyHolderName: '',
     primaryPolicyHolderDOB: '',
     primaryRelationshipToPatient: '',
+
+    // Insurance Card Uploads (Required by insurance company)
+    insuranceCardFront: '',
+    insuranceCardBack: '',
 
     // Secondary Insurance
     hasSecondaryInsurance: '',
@@ -71,6 +76,8 @@ export default function InsuranceInformationForm({ patientId }: InsuranceInforma
                 primaryPolicyHolderName: existingForm.formData.primaryPolicyHolderName || '',
                 primaryPolicyHolderDOB: existingForm.formData.primaryPolicyHolderDOB || '',
                 primaryRelationshipToPatient: existingForm.formData.primaryRelationshipToPatient || '',
+                insuranceCardFront: existingForm.formData.insuranceCardFront || '',
+                insuranceCardBack: existingForm.formData.insuranceCardBack || '',
                 hasSecondaryInsurance: existingForm.formData.hasSecondaryInsurance || '',
                 secondaryInsuranceCompany: existingForm.formData.secondaryInsuranceCompany || '',
                 secondaryPolicyNumber: existingForm.formData.secondaryPolicyNumber || '',
@@ -284,6 +291,40 @@ export default function InsuranceInformationForm({ patientId }: InsuranceInforma
                 <option value="child">Child</option>
                 <option value="other">Other</option>
               </select>
+            </div>
+
+            <div className="sm:col-span-2">
+              <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 mb-4">
+                <p className="text-sm text-blue-800 font-medium">
+                  📋 Required by Insurance Company: Please upload a picture of the front and back of your insurance card.
+                </p>
+              </div>
+            </div>
+
+            <div className="sm:col-span-2">
+              <FileUpload
+                label="Insurance Card - Front"
+                name="insuranceCardFront"
+                required
+                patientId={patientId}
+                fileType="insurance-card"
+                currentFileUrl={formData.insuranceCardFront}
+                onUploadComplete={(url) => setFormData({ ...formData, insuranceCardFront: url })}
+                helpText="Upload a clear photo of the front of your insurance card"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <FileUpload
+                label="Insurance Card - Back"
+                name="insuranceCardBack"
+                required
+                patientId={patientId}
+                fileType="insurance-card"
+                currentFileUrl={formData.insuranceCardBack}
+                onUploadComplete={(url) => setFormData({ ...formData, insuranceCardBack: url })}
+                helpText="Upload a clear photo of the back of your insurance card"
+              />
             </div>
 
             <div className="sm:col-span-2">
