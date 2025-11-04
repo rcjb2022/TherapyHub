@@ -33,6 +33,10 @@ export default function InsuranceInformationForm({ patientId }: InsuranceInforma
     primaryPolicyHolderDOB: '',
     primaryRelationshipToPatient: '',
 
+    // Insurance Card Images (required by insurance company)
+    insuranceCardFrontUploaded: '',
+    insuranceCardBackUploaded: '',
+
     // Secondary Insurance
     hasSecondaryInsurance: '',
     secondaryInsuranceCompany: '',
@@ -71,6 +75,8 @@ export default function InsuranceInformationForm({ patientId }: InsuranceInforma
                 primaryPolicyHolderName: existingForm.formData.primaryPolicyHolderName || '',
                 primaryPolicyHolderDOB: existingForm.formData.primaryPolicyHolderDOB || '',
                 primaryRelationshipToPatient: existingForm.formData.primaryRelationshipToPatient || '',
+                insuranceCardFrontUploaded: existingForm.formData.insuranceCardFrontUploaded || '',
+                insuranceCardBackUploaded: existingForm.formData.insuranceCardBackUploaded || '',
                 hasSecondaryInsurance: existingForm.formData.hasSecondaryInsurance || '',
                 secondaryInsuranceCompany: existingForm.formData.secondaryInsuranceCompany || '',
                 secondaryPolicyNumber: existingForm.formData.secondaryPolicyNumber || '',

@@ -399,6 +399,7 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
               <option value="credit-card">Credit Card</option>
               <option value="debit-card">Debit Card</option>
               <option value="hsa-fsa">HSA/FSA Card</option>
+              <option value="cryptocurrency">Cryptocurrency (Bitcoin or Ethereum)</option>
               <option value="other">Other (to be discussed)</option>
             </select>
           </div>
@@ -426,10 +427,10 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
           <div className="rounded-lg bg-gray-50 p-4 mb-4">
             <h3 className="font-semibold text-gray-900 mb-2">Session Fees</h3>
             <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-              <li>Individual Therapy Session (50 minutes): $150</li>
-              <li>Initial Evaluation (60 minutes): $200</li>
-              <li>Group Therapy Session: $50</li>
-              <li>Family Therapy Session (60 minutes): $175</li>
+              <li>Individual Therapy Session (50-60 minutes): $175</li>
+              <li>Initial Evaluation: $200</li>
+              <li>Group Therapy Session: $75 per person (3 person minimum)</li>
+              <li>Family Therapy Session: $175</li>
             </ul>
           </div>
 
@@ -437,7 +438,7 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
             <h3 className="font-semibold text-gray-900 mb-2">Cancellation Policy</h3>
             <p className="text-sm text-gray-700">
               Cancellations must be made at least 24 hours in advance. Late cancellations or no-shows will be charged
-              the full session fee unless due to emergency circumstances.
+              the full session fee.
             </p>
           </div>
 
@@ -446,15 +447,19 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 My session fee is: *
               </label>
-              <input
-                type="text"
+              <select
                 name="sessionFee"
                 required
                 value={formData.sessionFee}
                 onChange={handleChange}
-                placeholder="$150 (or as discussed with therapist)"
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              >
+                <option value="">Select...</option>
+                <option value="$175 - Individual Therapy">$175 - Individual Therapy</option>
+                <option value="$200 - Initial Evaluation">$200 - Initial Evaluation</option>
+                <option value="$75 - Group Therapy">$75 - Group Therapy</option>
+                <option value="$175 - Family Therapy">$175 - Family Therapy</option>
+              </select>
             </div>
 
             <label className="flex items-start gap-3">
@@ -492,14 +497,14 @@ export default function PaymentInformationForm({ patientId }: PaymentInformation
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Additional Information</h2>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Additional Payment Notes
+              Additional Payment Notes (if applicable)
             </label>
             <textarea
               name="additionalPaymentInfo"
               rows={3}
               value={formData.additionalPaymentInfo}
               onChange={handleChange}
-              placeholder="Any special payment arrangements or notes"
+              placeholder="If applicable, any special payment arrangements or notes"
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

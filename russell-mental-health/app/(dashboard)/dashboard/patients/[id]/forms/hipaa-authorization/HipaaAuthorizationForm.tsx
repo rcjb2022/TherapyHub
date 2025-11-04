@@ -28,6 +28,7 @@ export default function HipaaAuthorizationForm({ patientId }: HipaaAuthorization
     // Consent Agreements
     consentToTreatment: false,
     consentToTelehealth: false,
+    consentToAIAssistance: false,
     consentToReleaseInfo: false,
     consentToVoicemail: false,
     consentToText: false,
@@ -69,6 +70,7 @@ export default function HipaaAuthorizationForm({ patientId }: HipaaAuthorization
               setFormData({
                 consentToTreatment: existingForm.formData.consentToTreatment || false,
                 consentToTelehealth: existingForm.formData.consentToTelehealth || false,
+                consentToAIAssistance: existingForm.formData.consentToAIAssistance || false,
                 consentToReleaseInfo: existingForm.formData.consentToReleaseInfo || false,
                 consentToVoicemail: existingForm.formData.consentToVoicemail || false,
                 consentToText: existingForm.formData.consentToText || false,
@@ -268,6 +270,39 @@ export default function HipaaAuthorizationForm({ patientId }: HipaaAuthorization
             />
             <span className="text-sm text-gray-700">
               I consent to receive services via telehealth (video or phone sessions)
+            </span>
+          </label>
+        </div>
+
+        {/* AI Assistance Consent */}
+        <div className="mb-8">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">AI Assistance Consent</h2>
+          <div className="rounded-lg bg-gray-50 p-4 mb-4">
+            <p className="text-sm text-gray-700 mb-3">
+              I understand and consent to the use of artificial intelligence for the following purposes:
+            </p>
+            <ul className="text-sm text-gray-700 list-disc list-inside space-y-1 mb-3">
+              <li><strong>Transcription purposes:</strong> AI may be used to transcribe therapy sessions for record-keeping</li>
+              <li><strong>Translation purposes:</strong> AI may assist with translation of clinical materials if needed</li>
+              <li><strong>Medical prescription information:</strong> AI may assist in organizing medication information for therapist research purposes</li>
+              <li><strong>Editing and grammar purposes:</strong> AI may assist the therapist in editing clinical notes for clarity and grammar</li>
+              <li><strong>Analysis of bias in notes:</strong> AI may be used to analyze clinical documentation for potential bias</li>
+            </ul>
+            <p className="text-sm text-gray-700 mb-3">
+              I understand that all AI-generated content will be reviewed by my therapist and that all information remains confidential and
+              protected under HIPAA regulations. This authorization may be withdrawn at any time in writing.
+            </p>
+          </div>
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              name="consentToAIAssistance"
+              checked={formData.consentToAIAssistance}
+              onChange={handleChange}
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-700">
+              I consent to the use of AI assistance as described above
             </span>
           </label>
         </div>
