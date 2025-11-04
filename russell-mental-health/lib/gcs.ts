@@ -1,5 +1,5 @@
 // Google Cloud Storage helper
-// Handles file uploads to GCS bucket
+// Handles file uploads to GCS bucket with signed URLs for HIPAA compliance
 
 import { Storage } from '@google-cloud/storage'
 
@@ -16,7 +16,7 @@ const bucketName = process.env.GCS_BUCKET_NAME || ''
  * @param file - File buffer to upload
  * @param fileName - Name to save the file as
  * @param contentType - MIME type of the file
- * @returns Public URL of the uploaded file
+ * @returns Signed URL of the uploaded file (valid for 7 days)
  */
 export async function uploadToGCS(
   file: Buffer,
@@ -28,7 +28,7 @@ export async function uploadToGCS(
 
     // Create a unique filename with timestamp
     const timestamp = Date.now()
-    const uniqueFileName = `${timestamp}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+    const uniqueFileName = `${timestamp}-${fileName.replace(/[^a-zA-Z0-9.-/]/g, '_')}`
 
     // Upload file to GCS
     const blob = bucket.file(uniqueFileName)
@@ -36,6 +36,10 @@ export async function uploadToGCS(
       resumable: false,
       metadata: {
         contentType: contentType,
+        // Add metadata for tracking
+        metadata: {
+          uploadedAt: new Date().toISOString(),
+        },
       },
     })
 
@@ -46,12 +50,15 @@ export async function uploadToGCS(
       })
 
       blobStream.on('finish', async () => {
-        // Make the file public
-        await blob.makePublic()
+        // Generate a signed URL that expires in 7 days (HIPAA compliant)
+        // This is more secure than making files permanently public
+        const [signedUrl] = await blob.getSignedUrl({
+          version: 'v4',
+          action: 'read',
+          expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+        })
 
-        // Get the public URL
-        const publicUrl = `https://storage.googleapis.com/${bucketName}/${uniqueFileName}`
-        resolve(publicUrl)
+        resolve(signedUrl)
       })
 
       blobStream.end(file)
@@ -63,15 +70,46 @@ export async function uploadToGCS(
 }
 
 /**
+ * Get a fresh signed URL for an existing file
+ * @param fileName - Name of the file in GCS
+ * @returns New signed URL (valid for 7 days)
+ */
+export async function getSignedUrl(fileName: string): Promise<string> {
+  try {
+    const bucket = storage.bucket(bucketName)
+    const file = bucket.file(fileName)
+
+    const [signedUrl] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'read',
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    })
+
+    return signedUrl
+  } catch (error) {
+    console.error('Error generating signed URL:', error)
+    throw error
+  }
+}
+
+/**
  * Delete a file from Google Cloud Storage
- * @param fileUrl - Public URL of the file to delete
+ * @param fileUrl - Signed URL or filename of the file to delete
  */
 export async function deleteFromGCS(fileUrl: string): Promise<void> {
   try {
-    // Extract filename from URL
-    const fileName = fileUrl.split('/').pop()
-    if (!fileName) {
-      throw new Error('Invalid file URL')
+    // Extract filename from signed URL or direct filename
+    let fileName: string
+    if (fileUrl.includes('storage.googleapis.com')) {
+      // Extract from URL format: https://storage.googleapis.com/bucket/filename?...
+      const urlParts = fileUrl.split('/')
+      const bucketIndex = urlParts.indexOf(bucketName)
+      if (bucketIndex === -1) {
+        throw new Error('Invalid GCS URL')
+      }
+      fileName = urlParts.slice(bucketIndex + 1).join('/').split('?')[0]
+    } else {
+      fileName = fileUrl
     }
 
     const bucket = storage.bucket(bucketName)
@@ -81,3 +119,4 @@ export async function deleteFromGCS(fileUrl: string): Promise<void> {
     throw error
   }
 }
+

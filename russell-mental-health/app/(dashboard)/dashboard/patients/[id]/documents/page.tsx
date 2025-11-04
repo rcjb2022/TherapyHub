@@ -234,14 +234,14 @@ export default async function PatientDocumentsPage({
 
 // Document Card Component
 function DocumentCard({ doc }: { doc: { label: string; url: string; formType: string; uploadedAt: Date } }) {
-  // Handle both GCS URLs and legacy base64 data URLs
+  // Handle both GCS signed URLs and legacy base64 data URLs
   const isBase64 = doc.url.startsWith('data:')
   const isImage = isBase64
     ? doc.url.startsWith('data:image/')
-    : doc.url.match(/\.(jpg|jpeg|png|gif)$/i)
+    : doc.url.match(/\.(jpg|jpeg|png|gif)(\?|$)/i) // Match extension before query params
   const isPDF = isBase64
     ? doc.url.startsWith('data:application/pdf')
-    : doc.url.match(/\.pdf$/i)
+    : doc.url.match(/\.pdf(\?|$)/i) // Match extension before query params
 
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 hover:border-blue-300 hover:shadow-md transition-all">

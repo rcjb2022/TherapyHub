@@ -244,7 +244,7 @@ export default function UniversalFormReview({
       )
     }
 
-    // Uploaded files (GCS URLs or legacy base64 data URLs)
+    // Uploaded files (GCS signed URLs or legacy base64 data URLs)
     const isFileUrl = typeof value === 'string' && (
       value.startsWith('https://storage.googleapis.com/') ||
       value.startsWith('data:')
@@ -255,10 +255,10 @@ export default function UniversalFormReview({
       const isBase64 = value.startsWith('data:')
       const isImage = isBase64
         ? value.startsWith('data:image/')
-        : value.match(/\.(jpg|jpeg|png|gif)$/i)
+        : value.match(/\.(jpg|jpeg|png|gif)(\?|$)/i) // Match extension before query params
       const isPDF = isBase64
         ? value.startsWith('data:application/pdf')
-        : value.match(/\.pdf$/i)
+        : value.match(/\.pdf(\?|$)/i) // Match extension before query params
 
       return (
         <div key={key}>
