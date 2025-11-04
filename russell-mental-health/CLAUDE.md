@@ -16,12 +16,22 @@
 - ✅ **Proper error handling required**
 - ✅ **HIPAA-compliant from the start**
 
-### 2. Test Before Moving On
-- ✅ **Test everything locally before proceeding**
+### 2. Incremental Build-Test-Iterate Approach
+- ✅ **Break large projects into logical checkpoints**
+- ✅ **Build → Test → Iterate at each checkpoint**
+- ✅ **NEVER build everything before testing**
+- ✅ **Test at stopping points to catch issues early**
+- ✅ **User must confirm feature works before continuing to next section**
+- ✅ **Verify in browser and check console logs at each checkpoint**
 - ✅ **Debug issues immediately when they occur**
-- ✅ **Verify in browser and check console logs**
-- ✅ **User must confirm feature works before moving to next task**
 - ❌ **Never assume code works without testing**
+- ❌ **Never get too far down the road without validating functionality**
+
+**Example - Appointment Scheduling:**
+- ❌ **Bad:** Build entire calendar + appointments + reminders + sync, THEN test
+- ✅ **Good:** Build basic calendar → TEST → Build create appointment → TEST → Build edit/delete → TEST → etc.
+
+**Rationale:** Catch issues early when they're easy to fix, not after building dependent features on broken foundation.
 
 ### 3. Model Selection Strategy
 - **Default Model:** Sonnet 4.5 (fast, efficient for most tasks)
