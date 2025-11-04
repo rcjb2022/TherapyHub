@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeftIcon, PencilIcon, EnvelopeIcon, PhoneIcon, MapPinIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, PencilIcon, EnvelopeIcon, PhoneIcon, MapPinIcon, FolderIcon } from '@heroicons/react/24/outline'
 import { ChargeCardForm } from '@/components/ChargeCardForm'
 
 export default async function PatientDetailPage({
@@ -198,6 +198,21 @@ export default async function PatientDetailPage({
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Documents Library */}
+          <div className="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">Documents Library</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              View all uploaded insurance cards, ID documents, and legal forms
+            </p>
+            <Link
+              href={`/dashboard/patients/${id}/documents`}
+              className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            >
+              <FolderIcon className="h-4 w-4" />
+              View All Documents
+            </Link>
           </div>
 
           {/* Insurance Information */}
