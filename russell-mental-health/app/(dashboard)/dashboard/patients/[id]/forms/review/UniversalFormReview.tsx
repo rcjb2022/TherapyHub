@@ -244,10 +244,21 @@ export default function UniversalFormReview({
       )
     }
 
-    // Uploaded files (images and PDFs)
-    if (typeof value === 'string' && value.startsWith('data:')) {
-      const isImage = value.startsWith('data:image/')
-      const isPDF = value.startsWith('data:application/pdf')
+    // Uploaded files (GCS URLs or legacy base64 data URLs)
+    const isFileUrl = typeof value === 'string' && (
+      value.startsWith('https://storage.googleapis.com/') ||
+      value.startsWith('data:')
+    )
+
+    if (isFileUrl) {
+      // Determine if it's an image or PDF
+      const isBase64 = value.startsWith('data:')
+      const isImage = isBase64
+        ? value.startsWith('data:image/')
+        : value.match(/\.(jpg|jpeg|png|gif)$/i)
+      const isPDF = isBase64
+        ? value.startsWith('data:application/pdf')
+        : value.match(/\.pdf$/i)
 
       return (
         <div key={key}>

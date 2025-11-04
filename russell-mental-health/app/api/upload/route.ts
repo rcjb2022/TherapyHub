@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { uploadToGCS } from '@/lib/gcs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,24 +42,21 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Generate unique filename
-    const timestamp = Date.now()
+    // Generate unique filename with patient ID and file type for organization
     const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-    const fileName = `${fileType}/${patientId}/${timestamp}-${sanitizedFileName}`
+    const fileName = `${fileType}/${patientId}/${sanitizedFileName}`
 
-    // TODO: Upload to Cloud Storage
-    // For now, convert to base64 data URL for display
-    const base64 = buffer.toString('base64')
-    const dataUrl = `data:${file.type};base64,${base64}`
+    // Upload to Google Cloud Storage
+    const publicUrl = await uploadToGCS(buffer, fileName, file.type)
 
-    // Return the data URL (in production, this would be a Cloud Storage URL)
+    // Return the public GCS URL
     return NextResponse.json({
       success: true,
-      url: dataUrl,
+      url: publicUrl,
       fileName: file.name,
       fileType: file.type,
       fileSize: file.size,
-      message: 'File uploaded successfully',
+      message: 'File uploaded successfully to Google Cloud Storage',
     })
   } catch (error: any) {
     console.error('Upload error:', error)

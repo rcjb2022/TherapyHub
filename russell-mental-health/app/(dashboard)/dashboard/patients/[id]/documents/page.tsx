@@ -234,8 +234,14 @@ export default async function PatientDocumentsPage({
 
 // Document Card Component
 function DocumentCard({ doc }: { doc: { label: string; url: string; formType: string; uploadedAt: Date } }) {
-  const isImage = doc.url.startsWith('data:image/')
-  const isPDF = doc.url.startsWith('data:application/pdf')
+  // Handle both GCS URLs and legacy base64 data URLs
+  const isBase64 = doc.url.startsWith('data:')
+  const isImage = isBase64
+    ? doc.url.startsWith('data:image/')
+    : doc.url.match(/\.(jpg|jpeg|png|gif)$/i)
+  const isPDF = isBase64
+    ? doc.url.startsWith('data:application/pdf')
+    : doc.url.match(/\.pdf$/i)
 
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 hover:border-blue-300 hover:shadow-md transition-all">
