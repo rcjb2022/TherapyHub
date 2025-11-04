@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { FormSuccessMessage, determineNextForm } from '../formHelpers'
+import FileUpload from '@/components/FileUpload'
 
 interface InsuranceInformationFormProps {
   patientId: string
@@ -312,37 +313,27 @@ export default function InsuranceInformationForm({ patientId }: InsuranceInforma
                   <strong>Required by Insurance Company:</strong> Please upload a picture of the front and back of your insurance card.
                 </p>
               </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Insurance Card - Front *
-                  </label>
-                  <input
-                    type="text"
-                    name="insuranceCardFrontUploaded"
-                    required
-                    value={formData.insuranceCardFrontUploaded}
-                    onChange={handleChange}
-                    placeholder="Confirm: Front of card uploaded"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Type "uploaded" after uploading front image</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Insurance Card - Back *
-                  </label>
-                  <input
-                    type="text"
-                    name="insuranceCardBackUploaded"
-                    required
-                    value={formData.insuranceCardBackUploaded}
-                    onChange={handleChange}
-                    placeholder="Confirm: Back of card uploaded"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Type "uploaded" after uploading back image</p>
-                </div>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <FileUpload
+                  label="Insurance Card - Front"
+                  name="insuranceCardFrontUploaded"
+                  required={true}
+                  patientId={patientId}
+                  fileType="insurance-card"
+                  currentFileUrl={formData.insuranceCardFrontUploaded}
+                  onUploadComplete={(url) => setFormData({ ...formData, insuranceCardFrontUploaded: url })}
+                  helpText="Upload front of insurance card (JPG, PNG, GIF, or PDF)"
+                />
+                <FileUpload
+                  label="Insurance Card - Back"
+                  name="insuranceCardBackUploaded"
+                  required={true}
+                  patientId={patientId}
+                  fileType="insurance-card"
+                  currentFileUrl={formData.insuranceCardBackUploaded}
+                  onUploadComplete={(url) => setFormData({ ...formData, insuranceCardBackUploaded: url })}
+                  helpText="Upload back of insurance card (JPG, PNG, GIF, or PDF)"
+                />
               </div>
             </div>
           </div>

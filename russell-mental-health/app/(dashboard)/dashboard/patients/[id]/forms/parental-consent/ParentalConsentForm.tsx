@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import { FormSuccessMessage, determineNextForm } from '../formHelpers'
+import FileUpload from '@/components/FileUpload'
 
 interface ParentalConsentFormProps {
   patientId: string
@@ -33,6 +35,7 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
     parentAddress: '',
     custodyStatus: '',
     custodyDescription: '',
+    custodyDocumentUrl: '',
 
     // Consent Agreements
     consentToTreatment: false,
@@ -81,6 +84,7 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
                 parentAddress: existingForm.formData.parentAddress || '',
                 custodyStatus: existingForm.formData.custodyStatus || '',
                 custodyDescription: existingForm.formData.custodyDescription || '',
+                custodyDocumentUrl: existingForm.formData.custodyDocumentUrl || '',
                 consentToTreatment: existingForm.formData.consentToTreatment || false,
                 understandConfidentiality: existingForm.formData.understandConfidentiality || false,
                 understandMinorRights: existingForm.formData.understandMinorRights || false,
@@ -351,26 +355,47 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select...</option>
-                <option value="full">Full Custody</option>
-                <option value="shared">Shared Custody (as determined by court of law)</option>
+                <option value="full">Full Custody (as determined by a Court of Law)</option>
+                <option value="shared">Shared Custody (as determined by a Court of Law)</option>
                 <option value="na">Not Applicable</option>
               </select>
             </div>
 
             {formData.custodyStatus === 'shared' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  If Applicable, Please Describe Custody Arrangement
-                </label>
-                <textarea
-                  name="custodyDescription"
-                  rows={3}
-                  value={formData.custodyDescription}
-                  onChange={handleChange}
-                  placeholder="Please describe the custody arrangement as determined by court of law"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <>
+                <div className="col-span-2">
+                  <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Important:</strong> For Shared Custody, BOTH parents must consent OR you must upload a Judicial Order or applicable Legal Document authorizing treatment.
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    If Applicable, Please Describe Custody Arrangement
+                  </label>
+                  <textarea
+                    name="custodyDescription"
+                    rows={3}
+                    value={formData.custodyDescription}
+                    onChange={handleChange}
+                    placeholder="Please describe the custody arrangement as determined by Court of Law"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <FileUpload
+                    label="Judicial Order / Legal Document (Optional)"
+                    name="custodyDocumentUrl"
+                    required={false}
+                    patientId={patientId}
+                    fileType="legal-document"
+                    currentFileUrl={formData.custodyDocumentUrl}
+                    onUploadComplete={(url) => setFormData({ ...formData, custodyDocumentUrl: url })}
+                    helpText="Upload Judicial Order or Legal Document if BOTH parents cannot consent (JPG, PNG, GIF, or PDF)"
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -529,7 +554,7 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
           <div className="rounded-lg bg-gray-50 p-4 mb-4">
             <p className="text-sm text-gray-700">
               I understand that I may revoke this authorization at any time in writing. I also understand that should custody or
-              guardianship change as determined by a court of law, if applicable, I will notify Russell Mental Health within 10 business days.
+              guardianship change as determined by a Court of Law, if applicable, I will notify Russell Mental Health within 10 business days.
             </p>
           </div>
           <label className="flex items-start gap-3">
