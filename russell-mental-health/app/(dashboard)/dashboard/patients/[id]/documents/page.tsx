@@ -27,14 +27,14 @@ export default async function PatientDocumentsPage({
     redirect('/dashboard')
   }
 
-  // Fetch patient with all forms
+  // Fetch patient with all forms (submitted, completed, or reviewed)
   const patient = await prisma.patient.findUnique({
     where: { id },
     include: {
       forms: {
         where: {
           status: {
-            in: ['PENDING_REVIEW', 'COMPLETED'],
+            in: ['SUBMITTED', 'COMPLETED', 'REVIEWED'],
           },
         },
         orderBy: {
