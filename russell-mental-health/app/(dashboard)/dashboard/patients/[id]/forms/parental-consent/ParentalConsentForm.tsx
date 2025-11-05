@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import FileUpload from '@/components/FileUpload'
 
 interface ParentalConsentFormProps {
   patientId: string
@@ -31,6 +32,11 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
     parentEmail: '',
     parentPhone: '',
     parentAddress: '',
+
+    // Custody Information
+    custodyStatus: '',
+    custodyDescription: '',
+    custodyDocument: '',
 
     // Consent Agreements
     consentToTreatment: false,
@@ -73,6 +79,9 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
                 parentEmail: existingForm.formData.parentEmail || '',
                 parentPhone: existingForm.formData.parentPhone || '',
                 parentAddress: existingForm.formData.parentAddress || '',
+                custodyStatus: existingForm.formData.custodyStatus || '',
+                custodyDescription: existingForm.formData.custodyDescription || '',
+                custodyDocument: existingForm.formData.custodyDocument || '',
                 consentToTreatment: existingForm.formData.consentToTreatment || false,
                 understandConfidentiality: existingForm.formData.understandConfidentiality || false,
                 understandMinorRights: existingForm.formData.understandMinorRights || false,
@@ -328,6 +337,77 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Custody Status *
+              </label>
+              <select
+                name="custodyStatus"
+                required
+                value={formData.custodyStatus}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select...</option>
+                <option value="full">Full Custody (as determined by a Court of Law)</option>
+                <option value="shared">Shared Custody (as determined by a Court of Law)</option>
+                <option value="na">Not Applicable</option>
+              </select>
+            </div>
+
+            {formData.custodyStatus === 'shared' && (
+              <>
+                <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+                  <p className="text-sm text-yellow-800 font-medium">
+                    ⚠️ Shared Custody Requirements: BOTH parents must consent to treatment, OR you must upload a Judicial Order or applicable Legal Document authorizing treatment.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description (if applicable)
+                  </label>
+                  <textarea
+                    name="custodyDescription"
+                    rows={2}
+                    value={formData.custodyDescription}
+                    onChange={handleChange}
+                    placeholder="Please describe custody arrangement if applicable"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <FileUpload
+                    label="Judicial Order / Legal Document (Optional)"
+                    name="custodyDocument"
+                    required={false}
+                    patientId={patientId}
+                    fileType="legal-document"
+                    currentFileUrl={formData.custodyDocument}
+                    onUploadComplete={(url) => setFormData({ ...formData, custodyDocument: url })}
+                    helpText="Upload Judicial Order or Legal Document authorizing treatment (JPG, PNG, GIF, or PDF)"
+                  />
+                </div>
+              </>
+            )}
+
+            {(formData.custodyStatus === 'full' || formData.custodyStatus === 'na') && formData.custodyStatus && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description (if applicable)
+                </label>
+                <textarea
+                  name="custodyDescription"
+                  rows={2}
+                  value={formData.custodyDescription}
+                  onChange={handleChange}
+                  placeholder="Please describe if applicable"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
           </div>
         </div>
 

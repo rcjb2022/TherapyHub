@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { FormSuccessMessage, determineNextForm } from '../formHelpers'
+import FileUpload from '@/components/FileUpload'
 
 interface PatientInformationFormProps {
   patientId: string
@@ -54,6 +55,10 @@ export default function PatientInformationForm({ patientId }: PatientInformation
     occupation: '',
     employer: '',
     referredBy: '',
+    // Identification Documents
+    idType: '',
+    idFront: '',
+    idBack: '',
   })
 
   // Load existing form data if it exists
@@ -103,6 +108,9 @@ export default function PatientInformationForm({ patientId }: PatientInformation
                 occupation: existingForm.formData.occupation || '',
                 employer: existingForm.formData.employer || '',
                 referredBy: existingForm.formData.referredBy || '',
+                idType: existingForm.formData.idType || '',
+                idFront: existingForm.formData.idFront || '',
+                idBack: existingForm.formData.idBack || '',
               })
             }
           } else {
@@ -563,6 +571,78 @@ export default function PatientInformationForm({ patientId }: PatientInformation
               className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+        </div>
+
+        {/* Identification Documents */}
+        <div className="mb-8">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Identification Documents</h2>
+          <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 mb-6">
+            <p className="text-sm text-blue-800 font-medium">
+              📋 Please upload a government-issued photo ID (Driver's License, State ID, or Passport)
+            </p>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Type of ID *
+            </label>
+            <select
+              name="idType"
+              required
+              value={formData.idType}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select...</option>
+              <option value="drivers-license">Driver's License / State ID</option>
+              <option value="passport">Passport</option>
+            </select>
+          </div>
+
+          {formData.idType === 'drivers-license' && (
+            <>
+              <div className="mb-6">
+                <FileUpload
+                  label="Driver's License / State ID - Front"
+                  name="idFront"
+                  required
+                  patientId={patientId}
+                  fileType="id-document"
+                  currentFileUrl={formData.idFront}
+                  onUploadComplete={(url) => setFormData({ ...formData, idFront: url })}
+                  helpText="Upload a clear photo of the front of your ID"
+                />
+              </div>
+
+              <div className="mb-6">
+                <FileUpload
+                  label="Driver's License / State ID - Back"
+                  name="idBack"
+                  required
+                  patientId={patientId}
+                  fileType="id-document"
+                  currentFileUrl={formData.idBack}
+                  onUploadComplete={(url) => setFormData({ ...formData, idBack: url })}
+                  helpText="Upload a clear photo of the back of your ID"
+                />
+              </div>
+            </>
+          )}
+
+          {formData.idType === 'passport' && (
+            <div className="mb-6">
+              <FileUpload
+                label="Passport - Information Page"
+                name="idFront"
+                required
+                patientId={patientId}
+                fileType="id-document"
+                currentFileUrl={formData.idFront}
+                onUploadComplete={(url) => setFormData({ ...formData, idFront: url })}
+                helpText="Upload a clear photo of your passport information page"
+              />
+            </div>
+          )}
         </div>
 
         {/* Submit */}
