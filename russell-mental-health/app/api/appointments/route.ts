@@ -154,12 +154,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Create event in Google Calendar
+    // Note: Service accounts can't send invites without Domain-Wide Delegation
+    // Patient will see appointments in the app instead
     const { eventId, meetLink } = await createCalendarEvent({
       summary: eventSummary,
       description: eventDescription,
       startTime: startDateTime,
       endTime: endDateTime,
-      attendees: [patient.email], // Send invite to patient
+      attendees: [], // Can't invite with service account (would need Domain-Wide Delegation)
       recurrence,
     })
 
@@ -220,7 +222,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to create appointment',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details: process.env.NODE_ENV === 'development' && error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     )
