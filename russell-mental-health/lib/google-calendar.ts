@@ -21,18 +21,38 @@ function getCalendarClient(): calendar_v3.Calendar {
   if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
     // Service account credentials from JSON string
     const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
+
+    // Use domain-wide delegation to impersonate the calendar owner
+    const calendarEmail = process.env.GOOGLE_CALENDAR_ID || 'drbethany@russellmentalhealth.com'
+
     auth = new google.auth.GoogleAuth({
       credentials,
-      scopes: ['https://www.googleapis.com/auth/calendar'],
+      scopes: [
+        'https://www.googleapis.com/auth/calendar',
+        'https://www.googleapis.com/auth/calendar.events'
+      ],
+      clientOptions: {
+        subject: calendarEmail, // Impersonate this user (Domain-Wide Delegation)
+      },
     })
   } else if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
     // Service account credentials from file path
     const keyPath = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH
     if (fs.existsSync(keyPath)) {
       const credentials = JSON.parse(fs.readFileSync(keyPath, 'utf-8'))
+
+      // Use domain-wide delegation to impersonate the calendar owner
+      const calendarEmail = process.env.GOOGLE_CALENDAR_ID || 'drbethany@russellmentalhealth.com'
+
       auth = new google.auth.GoogleAuth({
         credentials,
-        scopes: ['https://www.googleapis.com/auth/calendar'],
+        scopes: [
+          'https://www.googleapis.com/auth/calendar',
+          'https://www.googleapis.com/auth/calendar.events'
+        ],
+        clientOptions: {
+          subject: calendarEmail, // Impersonate this user (Domain-Wide Delegation)
+        },
       })
     } else {
       throw new Error(`Service account key file not found at: ${keyPath}`)
