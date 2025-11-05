@@ -114,17 +114,23 @@ export default async function PatientDashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <Link
+          href="/dashboard/appointments"
+          className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Upcoming Appointments</p>
               <p className="mt-2 text-3xl font-bold text-gray-900">0</p>
+              <p className="mt-2 text-xs font-medium text-blue-600">
+                View Calendar →
+              </p>
             </div>
             <div className="rounded-full bg-green-50 p-3">
               <CalendarIcon className="h-6 w-6 text-green-600" />
             </div>
           </div>
-        </div>
+        </Link>
 
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
