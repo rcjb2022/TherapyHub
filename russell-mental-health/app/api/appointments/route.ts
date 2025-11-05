@@ -154,12 +154,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create event in Google Calendar
+    // Patient receives invite with Google Meet link (fallback for WebRTC)
     const { eventId, meetLink } = await createCalendarEvent({
       summary: eventSummary,
       description: eventDescription,
       startTime: startDateTime,
       endTime: endDateTime,
-      attendees: [patient.email], // Send invite to patient
+      attendees: [patient.email], // Send calendar invite to patient
       recurrence,
     })
 
@@ -220,7 +221,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Failed to create appointment',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details: process.env.NODE_ENV === 'development' && error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     )

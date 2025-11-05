@@ -194,12 +194,12 @@ export function AppointmentCalendar() {
 
           // Time settings (Florida/Eastern time)
           timeZone="America/New_York"
-          slotMinTime="08:00:00" // 8 AM
-          slotMaxTime="20:00:00" // 8 PM
+          slotMinTime="00:00:00" // 12 AM (midnight) - allow crisis appointments
+          slotMaxTime="24:00:00" // 12 AM next day (full 24 hours)
           slotDuration="00:15:00" // 15-minute slots
           snapDuration="00:15:00" // Snap to 15-minute increments
 
-          // Business hours (7 days, 8 AM - 8 PM)
+          // Business hours (typical hours, but appointments allowed anytime)
           businessHours={{
             daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // Sunday - Saturday
             startTime: '08:00',

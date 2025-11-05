@@ -70,10 +70,10 @@ export function AppointmentModal({
   const [therapistId, setTherapistId] = useState('')
   const [appointmentType, setAppointmentType] = useState('THERAPY_SESSION')
   const [sessionType, setSessionType] = useState('INDIVIDUAL')
-  const [cptCode, setCptCode] = useState('90834')
+  const [cptCode, setCptCode] = useState('90837')
   const [startDate, setStartDate] = useState('')
   const [startTime, setStartTime] = useState('')
-  const [duration, setDuration] = useState(45)
+  const [duration, setDuration] = useState(60)
   const [notes, setNotes] = useState('')
   const [recurringPattern, setRecurringPattern] = useState('none')
 
@@ -208,8 +208,8 @@ export function AppointmentModal({
     setPatientId('')
     setAppointmentType('THERAPY_SESSION')
     setSessionType('INDIVIDUAL')
-    setCptCode('90834')
-    setDuration(45)
+    setCptCode('90837')
+    setDuration(60)
     setNotes('')
     setRecurringPattern('none')
     setError(null)
@@ -226,8 +226,8 @@ export function AppointmentModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white shadow-2xl">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold">New Appointment</h2>
           <button
