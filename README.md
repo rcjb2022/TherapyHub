@@ -1,22 +1,22 @@
 # TherapyHub - Russell Mental Health Platform
 
-**Version:** 0.3.1 (Day 3 Complete)
-**Status:** 🚧 In Active Development
+**Version:** 0.5.0 (Day 5 Complete)
+**Status:** 🚀 File Upload System Complete - Ready for Appointment Scheduling
 **Practice:** Russell Mental Health - Dr. Bethany R. Russell, Ph.D., P.A.
 
 ---
 
-## 🎉 Project Status: Day 3 Complete!
+## 🎉 Project Status: Day 5 Complete!
 
 ✅ **Authentication system working (therapist + patient)**
-✅ **Dashboard with patient stats (clickable cards)**
+✅ **Dashboard with patient stats and pending forms tracking**
 ✅ **Patient CRUD operations (create, view, edit)**
-✅ **All 6 patient intake forms complete and working**
+✅ **All 7 patient intake forms complete with file uploads**
 ✅ **Form success messages with progress tracking**
-✅ **Forms auto-update patient records**
-✅ **Full end-to-end patient forms workflow tested**
-✅ **Status syncing across all views**
-🚧 **Stripe payment integration in progress**
+✅ **Complete billing & payment system (Stripe integration)**
+✅ **Google Cloud Storage integration with HIPAA-compliant signed URLs**
+✅ **Document library organized by category**
+✅ **Full end-to-end workflow tested and validated**
 
 **Target Launch:** 3-4 weeks from start (End of November 2025)
 
@@ -97,7 +97,7 @@ TherapyHub/
 
 ---
 
-## 📊 Current Version: 0.2.0
+## 📊 Current Version: 0.5.0
 
 ### ✅ Completed (Day 1 - Oct 30, 2025)
 
@@ -130,56 +130,65 @@ TherapyHub/
 
 ---
 
-### ✅ Completed (Day 2-3 - Oct 31 - Nov 1, 2025)
+### ✅ Completed (Day 2-5 - Oct 31 - Nov 4, 2025)
 
-**Authentication & Security:**
+**Day 2 (Oct 31, 2025) - Authentication & Forms Foundation:**
 - NextAuth.js fully configured with credentials provider
 - Therapist login page with email/password
 - Session management with JWT tokens
 - Protected routes and API endpoints
-- Automatic session timeout (15 minutes)
-
-**Dashboard:**
 - Main dashboard with real-time patient statistics
-- Active patients, total appointments, pending claims, revenue cards
-- Clickable stat cards that navigate to relevant pages
-- Recent activity feed
-- Quick action buttons
-
-**Patient Management:**
-- Patient list page with search functionality
-- Filter by status (Active, Inactive, Discharged)
-- Create new patient with complete form
-- View patient detail page with comprehensive information
-- Edit patient information (WORKING - fixed Next.js 15 params bug)
-- Patient data validation and error handling
-- Insurance information display
-
-**Fillable Forms System:**
-- Forms dashboard showing all required patient forms
-- All 6 patient intake forms COMPLETE and working:
-  - Patient Information (personal, contact, emergency contact)
-  - Medical History (medications, allergies, surgeries)
-  - Mental Health History (psychiatric history, current treatment)
-  - Insurance Information (primary and secondary insurance)
-  - HIPAA Authorization (consents and e-signature)
-  - Payment Information (billing address, card on file)
-- Form success messages with progress indicators (X of 6 forms completed)
-- "Next Form" button for guided patient workflow
-- Forms automatically update patient records in database
+- Patient CRUD operations (create, view, edit, list)
+- All 7 patient intake forms created
+- Universal form review component
 - Form submission tracking (DRAFT → SUBMITTED → COMPLETED)
-- Completion indicators on patient detail page with green checkmarks
-- Universal form review component for therapist
-- Status syncing across all views (patient, therapist, forms list)
 
-**Bug Fixes:**
-- Fixed Next.js 15 async params breaking change in all API routes
-- Fixed edit patient page showing wrong patient data (controlled components)
-- Fixed form save failures (params were undefined)
-- Fixed searchParams async warnings
-- Fixed form completion status not displaying after therapist review
-- Fixed status syncing across patient and therapist views
-- Added comprehensive error logging throughout
+**Day 3 (Nov 1, 2025) - Patient Portal & Forms Polish:**
+- Patient portal login and authentication
+- Form success messages with progress indicators (X of 7 forms completed)
+- "Next Form" button for guided patient workflow
+- Fixed form completion status display bug
+- Status syncing across all views (patient, therapist, forms list)
+- Full end-to-end patient forms workflow tested
+
+**Day 4 (Nov 1-2, 2025) - Complete Billing & Payment System:** ⭐
+- Created Transaction model in Prisma schema (charge, payment, refund types)
+- Added Patient balance tracking with Decimal precision
+- Stripe Customer integration (stripeCustomerId field)
+- Created `/api/stripe/charge` endpoint (therapist charges patient)
+- Created `/api/stripe/refund` endpoint (full/partial refunds)
+- Created `/api/payments/history` endpoint (paginated transaction history)
+- Built ChargeCardForm component (therapist UI)
+- Built PayBillForm component (patient UI with $500 max per transaction)
+- Built PaymentHistoryTable component (shared, color-coded)
+- Created therapist billing dashboard (`/dashboard/billing`)
+- Created patient billing page (`/patient/billing`)
+- Updated therapist dashboard with outstanding balances card
+- Updated patient dashboard with outstanding balance card
+- Email notification placeholders (ready for SendGrid)
+- Complete payment flow tested (charge, payment, refund, failures)
+- Color-coded UI (red for negative balances, green for credits)
+- Fixed Decimal serialization issues
+
+**Day 5 (Nov 4, 2025) - File Upload System & Document Management:** ⭐
+- Installed `@google-cloud/storage` package
+- Created `lib/gcs.ts` helper (upload, delete, signed URLs)
+- HIPAA-compliant signed URLs with 7-day expiration
+- Smart detection: supports file paths OR JSON service account keys
+- Created `/api/upload` endpoint with authentication and validation
+- Built FileUpload component (drag-and-drop, preview, remove)
+- File validation: JPG, PNG, GIF, PDF (max 10MB)
+- **Insurance Information Form:** Card front + back uploads
+- **Patient Information Form:** Government ID uploads (Driver's License/Passport)
+- **Parental Consent Form:** Legal document uploads with custody status
+- Created document library page (`/dashboard/patients/[id]/documents`)
+- Organized by category (Insurance Cards, Identification, Legal Documents)
+- Image previews with lazy loading
+- Fast PDF viewing (no base64 encoding)
+- Fixed GCS initialization (absolute path support outside project)
+- Fixed Prisma query to use correct FormStatus enum values
+- Applied functional setState pattern to prevent race conditions
+- Removed all fallback/mock code per CLAUDE.md principles
 
 **Technical Improvements:**
 - Proper TypeScript types throughout
@@ -187,8 +196,13 @@ TherapyHub/
 - API route handlers properly await params
 - No-cache headers to prevent stale data
 - Audit logging for all PHI access
+- Production-ready error handling
+- Build-test-iterate approach at logical checkpoints
 
-**See:** [russell-mental-health/TODO.md](russell-mental-health/TODO.md) for remaining work
+**See:**
+- [russell-mental-health/DAY_5_COMPLETE.md](russell-mental-health/DAY_5_COMPLETE.md) for Day 5 details
+- [russell-mental-health/TODO.md](russell-mental-health/TODO.md) for Day 6 priorities
+- [HANDOFF_DAY_6.md](HANDOFF_DAY_6.md) for next session plan
 
 ---
 
@@ -215,61 +229,79 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 
 ## 📅 Development Roadmap
 
-### ✅ Completed: Version 0.2.0 (Day 2 - Oct 31)
+### ✅ Completed: Version 0.2.0 (Day 2 - Oct 31, 2025)
 - [x] NextAuth.js authentication setup
 - [x] Therapist login page with credentials
 - [x] Dashboard layout (header, sidebar, navigation)
 - [x] Patient management CRUD (list, add, edit, view)
 - [x] Patient search and filtering
 - [x] Fillable forms system infrastructure
-- [x] Patient Information form (complete and working)
+- [x] All 7 patient intake forms created
+- [x] Universal form review component
 - [x] Forms auto-update patient records
 
-### ✅ Completed: Version 0.3.1 (Nov 1, 2025)
-- [x] Medical History form (fillable)
-- [x] Mental Health History form (fillable)
-- [x] Insurance Information form (fillable, updates Insurance table)
-- [x] HIPAA Authorization form (fillable)
-- [x] Payment Information form (credit card on file)
+### ✅ Completed: Version 0.3.0 (Day 3 - Nov 1, 2025)
+- [x] Patient portal login and authentication
 - [x] Form success messages with progress tracking
-- [x] Full end-to-end patient forms workflow
-- [x] Status syncing and completion display
+- [x] "Next Form" button for guided workflow
+- [x] Fixed form completion status display
+- [x] Status syncing across all views
+- [x] Full end-to-end patient forms workflow tested
 
-### 🚧 In Progress: Version 0.3.5 (Resume Nov 2)
-- [ ] Stripe payment integration for Payment Information form
-- [ ] Content review of all forms with user
-- [ ] Patient dashboard improvements
+### ✅ Completed: Version 0.4.0 (Day 4 - Nov 1-2, 2025)
+- [x] Stripe payment integration COMPLETE
+- [x] Transaction model (charge, payment, refund)
+- [x] Patient balance tracking (Decimal precision)
+- [x] Charge card functionality (therapist side)
+- [x] Refund system (full/partial)
+- [x] Payment history with pagination
+- [x] Pay bill form (patient side, $500 max)
+- [x] Therapist billing dashboard
+- [x] Patient billing page
+- [x] Email notification placeholders
+- [x] Complete payment flow tested
 
-### 📋 Planned: Version 0.3.0 (Week 2)
-- [ ] Appointment scheduling system
-- [ ] FullCalendar integration
-- [ ] Google Calendar sync
-- [ ] Automated email/SMS reminders
-- [ ] Patient portal login
+### ✅ Completed: Version 0.5.0 (Day 5 - Nov 4, 2025) ⭐
+- [x] Google Cloud Storage integration
+- [x] HIPAA-compliant signed URLs (7-day expiration)
+- [x] File upload API and component
+- [x] Insurance card uploads (front + back)
+- [x] Government ID uploads (Driver's License, Passport)
+- [x] Legal document uploads (custody orders)
+- [x] Document library page by category
+- [x] Image previews with lazy loading
+- [x] Fast PDF viewing
+
+### 🚧 In Progress: Version 0.6.0 (Day 6 - Nov 5, 2025)
+- [ ] **Phase 1:** Calendar foundation (FullCalendar, day/week/month views)
+- [ ] **Phase 2:** Create appointments (patient selection, CPT codes)
+- [ ] **Phase 3:** View/edit/cancel appointments
+- [ ] **Phase 4:** Drag-and-drop rescheduling
+- [ ] Patient dashboard improvements (appointments widget, form count)
+
+### 📋 Planned: Version 0.7.0 (Week 2)
+- [ ] Google Calendar sync (two-way)
+- [ ] Automated email reminders (Gmail API)
+- [ ] SMS reminders (Twilio - optional)
+- [ ] Appointment no-show tracking
+- [ ] Appointment history and reports
 - [ ] Custom WebRTC video sessions
 
-### 📋 Planned: Version 0.4.0 (Week 2-3)
+### 📋 Planned: Version 0.8.0 (Week 2-3)
 - [ ] Clinical note templates (SOAP format)
 - [ ] ICD-10 diagnosis code lookup
 - [ ] CPT code assignment
-- [ ] Document upload to Cloud Storage
+- [ ] Note signing and locking
 - [ ] E-signature functionality
-- [ ] Intake form builder
+- [ ] Treatment plan templates
 
-### 📋 Planned: Version 0.5.0 (Week 3)
+### 📋 Planned: Version 0.9.0 (Week 3)
 - [ ] Office Ally API integration
 - [ ] Real-time insurance claim submission (EDI 837)
 - [ ] ERA (835) response processing
 - [ ] Eligibility verification (270/271)
 - [ ] Claim status tracking and management
 - [ ] Denial handling and appeals
-
-### 📋 Planned: Version 0.6.0 (Week 3-4)
-- [ ] Stripe payment processing
-- [ ] Patient payment portal
-- [ ] Automated receipt generation
-- [ ] Payment plan management
-- [ ] Financial reporting dashboard
 
 ### 📋 Planned: Version 1.0.0 (Week 4)
 - [ ] Security audit and penetration testing
@@ -281,7 +313,7 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - [ ] Backup and disaster recovery testing
 - [ ] User acceptance testing with Dr. Russell
 - [ ] Staff training
-- [ ] Go-live!
+- [ ] Go-live! 🚀
 
 ### 🔮 Future (V2.0+)
 - Cryptocurrency payment support (Coinbase Commerce)
@@ -297,42 +329,53 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 ## 🛠 Technology Stack
 
 **Frontend:**
-- Next.js 16.0.1 (App Router)
+- Next.js 16.0.1 (App Router + Turbopack)
 - React 19
-- TypeScript
-- Tailwind CSS
-- FullCalendar
+- TypeScript 5.0+
+- Tailwind CSS 3.4+
+- Hero Icons 2.0
+- FullCalendar (planned for Day 6)
 - React Hook Form + Zod
+- Stripe React Components (@stripe/react-stripe-js, @stripe/stripe-js)
 
 **Backend:**
 - Next.js API Routes
-- Prisma ORM
-- PostgreSQL 15 (Cloud SQL)
-- NextAuth.js
-- Socket.io + Simple-peer (WebRTC)
+- Prisma ORM 6.0+
+- PostgreSQL 15 (Google Cloud SQL)
+- NextAuth.js v5
+- Google Cloud Storage SDK (@google-cloud/storage)
+- Stripe Node SDK (stripe)
+- Socket.io + Simple-peer (WebRTC - planned)
 
 **Infrastructure:**
 - Google Cloud Platform
-  - Cloud SQL (database)
-  - Cloud Storage (documents)
-  - Cloud Run (deployment)
-- Stripe (payments)
-- Office Ally (insurance clearinghouse)
+  - Cloud SQL (PostgreSQL database)
+  - Cloud Storage (HIPAA-compliant document storage)
+  - Cloud Run (deployment - planned)
+- Stripe (payment processing)
+- Office Ally (insurance clearinghouse - planned)
 
 **Key Integrations:**
-- Stripe API (payment processing)
-- Office Ally API (EDI 837/835 insurance claims)
-- Google Calendar API (scheduling sync)
-- Gmail API (automated emails)
-- Custom WebRTC (video sessions)
+- ✅ Stripe API (payment processing, transactions, refunds)
+- ✅ Google Cloud Storage (HIPAA-compliant file uploads with signed URLs)
+- 📋 Office Ally API (EDI 837/835 insurance claims - planned)
+- 📋 Google Calendar API (scheduling sync - planned)
+- 📋 Gmail API (automated emails - planned)
+- 📋 Custom WebRTC (video sessions - planned)
 
 ---
 
 ## 📝 Documentation
 
 ### For Developers
-- **[russell-mental-health/ABOUT.md](russell-mental-health/ABOUT.md)** - Version info, roadmap, and todo list
-- **[russell-mental-health/DAY_1_COMPLETE.md](russell-mental-health/DAY_1_COMPLETE.md)** - Day 1 milestone details
+- **[README.md](README.md)** - This file (project overview, quick start)
+- **[russell-mental-health/ABOUT.md](russell-mental-health/ABOUT.md)** - Detailed version info and features
+- **[russell-mental-health/TODO.md](russell-mental-health/TODO.md)** - Current tasks and Day 6 priorities
+- **[russell-mental-health/CLAUDE.md](russell-mental-health/CLAUDE.md)** - Development guidelines and principles
+- **[russell-mental-health/DAY_1_COMPLETE.md](russell-mental-health/DAY_1_COMPLETE.md)** - Day 1 milestone
+- **[russell-mental-health/DAY_2_COMPLETE.md](russell-mental-health/DAY_2_COMPLETE.md)** - Day 2 milestone
+- **[russell-mental-health/DAY_5_COMPLETE.md](russell-mental-health/DAY_5_COMPLETE.md)** - Day 5 milestone
+- **[HANDOFF_DAY_6.md](HANDOFF_DAY_6.md)** - Day 6 detailed plan (appointment scheduling)
 - **[FINAL_REALISTIC_PLAN.md](FINAL_REALISTIC_PLAN.md)** - Complete 3-4 week implementation plan
 - **[SPECIALIZED_FEATURES.md](SPECIALIZED_FEATURES.md)** - Practice-specific features (ASD, immigration evals, crypto)
 - **[PLUG_AND_PLAY_STRATEGY.md](PLUG_AND_PLAY_STRATEGY.md)** - API integration strategy and costs
@@ -436,6 +479,7 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 
 ---
 
-**Last Updated:** November 1, 2025
-**Current Phase:** Day 3 Complete - Patient Forms Workflow Fully Working
-**Next Milestone:** Stripe integration and appointment scheduling
+**Last Updated:** November 4, 2025 (End of Day 5)
+**Current Phase:** Day 5 Complete - File Upload System & Document Management
+**Current Version:** 0.5.0
+**Next Milestone:** Appointment Scheduling System (Day 6 - Nov 5, 2025)

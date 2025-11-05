@@ -1,141 +1,48 @@
 # Russell Mental Health Platform
 
-> **A modern, HIPAA-compliant therapy practice management system built for Russell Mental Health**
-
-**Version:** 0.5.0 | **Status:** 🚀 File Upload System Complete | **License:** Proprietary
+> **For complete project documentation, see the main [README.md](../README.md) in the TherapyHub root directory.**
 
 ---
 
-## 🎯 Overview
+## 🚀 Quick Links
 
-Custom-built practice management platform replacing expensive commercial solutions (TherapyNotes, SimplePractice) with a tailored system costing **~$20-45/month** vs **$40-60/month**, saving **$240-600/year** while providing complete control over features and data.
-
-**Built for:** Dr. Bethany R. Russell, Ph.D., P.A. - Russell Mental Health, Babcock Ranch, FL
-
----
-
-## ✨ Key Features (v0.5.0)
-
-### 🔐 Authentication & Security
-- NextAuth.js authentication with JWT tokens
-- Role-based access control (RBAC)
-- Session timeout (15 minutes)
-- HIPAA-compliant audit logging
-
-### 📊 Dashboard
-- Real-time statistics (Active Patients, Appointments, Revenue, Pending Forms)
-- Clickable navigation cards
-- Recent activity feed
-- Outstanding balances tracking
-- Pending forms alerting system
-
-### 👥 Patient Management
-- Complete CRUD operations
-- Advanced search and filtering
-- Patient detail pages with full history
-- Insurance information tracking
-- Payment method storage (Stripe)
-- Balance tracking with Decimal precision
-
-### 📝 Forms System (All 7 Standard Intake Forms)
-1. **Patient Information** - Demographics, contact details, **ID uploads** ⭐
-2. **Medical History** - Medical conditions, medications, allergies
-3. **Mental Health History** - Symptoms, previous treatment, safety assessment, **social media use**
-4. **Insurance Information** - Primary/secondary insurance, **card uploads** ⭐
-5. **HIPAA Authorization** - Consents, privacy notices, **AI assistance consent** ⭐
-6. **Payment Information** - Billing and payment methods, **cryptocurrency option**
-7. **Parental Consent** - For minors, **custody status**, **legal document uploads** ⭐
-
-### 🔄 Forms Workflow
-- Status tracking: DRAFT → SUBMITTED → COMPLETED
-- Pre-population with existing data
-- Universal review component (one component handles all 7 forms)
-- Therapist can edit before completing
-- Reviewer and completion timestamp tracking
-- 150+ field labels mapped to human-readable names
-
-### 📁 Document Management ⭐ NEW
-- **Google Cloud Storage integration** with HIPAA-compliant signed URLs
-- **Drag-and-drop file uploads** (JPG, PNG, GIF, PDF)
-- **Insurance card uploads** (front + back)
-- **Government ID uploads** (Driver's License, Passport)
-- **Legal document uploads** (custody orders, judicial documents)
-- **Document library** - View all uploaded files organized by category
-- **Fast PDF viewing** - No base64 encoding, instant load times
-- **Image previews** with lazy loading for performance
-
-### 💰 Billing & Payments (Complete System) ⭐
-- **Stripe Integration** - Secure card storage and processing
-- **Transaction Management** - Full audit trail with success/failure tracking
-- **Balance Tracking** - Decimal precision for accurate accounting
-- **Charge Card Form** - Therapist can charge patient cards
-- **Refund System** - Full and partial refunds with notes
-- **Payment History** - Paginated transaction history with filters
-- **Pay Bill Form** - Patients can pay balances ($500 max per transaction)
-- **Email Notifications** - Transaction confirmations (console logging until SendGrid configured)
-- **Color-coded UI** - Red for negative balances, green for credits
-
-### 📋 Pending Forms Management
-- Dashboard card showing count of pending forms
-- Dedicated review page showing all patients with pending forms
-- Direct navigation from dashboard to review workflow
-- Yellow color-coded pending status throughout app
+**Main Documentation:**
+- **[TherapyHub/README.md](../README.md)** - Complete project overview, features, and roadmap
+- **[ABOUT.md](ABOUT.md)** - Detailed technical documentation
+- **[TODO.md](TODO.md)** - Current tasks and Day 6 priorities
+- **[CLAUDE.md](CLAUDE.md)** - Development guidelines and principles
+- **[DAY_5_COMPLETE.md](DAY_5_COMPLETE.md)** - Latest milestone documentation
+- **[../HANDOFF_DAY_6.md](../HANDOFF_DAY_6.md)** - Next session detailed plan
 
 ---
 
-## 🛠 Technology Stack
+## Current Status
 
-**Frontend:**
-- Next.js 16.0.1 (App Router + Turbopack)
-- React 19
-- TypeScript 5.0+
-- Tailwind CSS 3.4+
-- Hero Icons 2.0
-- Stripe React Components
+**Version:** 0.5.0 (Day 5 Complete - November 4, 2025)
 
-**Backend:**
-- Next.js API Routes
-- Prisma ORM 6.0+
-- PostgreSQL 15 (Google Cloud SQL)
-- NextAuth.js v5
-- Google Cloud Storage SDK
+**Latest Achievements:**
+- ✅ Google Cloud Storage integration with HIPAA-compliant signed URLs
+- ✅ File upload system for insurance cards, IDs, and legal documents
+- ✅ Document library organized by category
+- ✅ Complete billing & payment system (Stripe)
+- ✅ All 7 intake forms with file upload functionality
 
-**Infrastructure:**
-- Google Cloud Platform (Cloud SQL, Cloud Storage)
-- Stripe (payment processing)
-- Office Ally (insurance clearinghouse - future)
+**Next Up (Day 6 - November 5, 2025):**
+- 🎯 Appointment Scheduling System (FullCalendar integration)
+- 📊 Patient Dashboard Improvements
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+ installed
-- GCP service account key
-- Cloud SQL Proxy binary
-
-### Setup
+## Quick Start
 
 ```bash
-# 1. Clone repository
-git clone https://github.com/rcjb2022/TherapyHub.git
-cd TherapyHub/russell-mental-health
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure environment
-cp .env.local.template .env.local
-# Edit .env.local with your credentials
-cp .env.local .env
-
-# 4. Start Cloud SQL Proxy (Terminal 1)
+# Terminal 1 - Start Cloud SQL Proxy
 ./cloud-sql-proxy therapyconnect-brrphd:us-east1:rmh-db
 
-# 5. Start dev server (Terminal 2)
+# Terminal 2 - Start Development Server
 npm run dev
 
-# 6. Access application
+# Access Application
 # http://localhost:3000
 ```
 
@@ -145,191 +52,44 @@ npm run dev
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 russell-mental-health/
 ├── app/
-│   ├── api/                  # API routes
-│   ├── (auth)/               # Authentication pages
-│   ├── (dashboard)/          # Protected dashboard
-│   └── (public)/             # Public pages
-├── components/               # React components
-├── lib/                      # Utilities (auth, prisma)
+│   ├── api/                    # API routes
+│   ├── (auth)/                 # Authentication pages
+│   ├── (dashboard)/            # Protected dashboard
+│   └── (public)/               # Public pages
+├── components/                 # React components
+├── lib/                        # Utilities (auth, prisma, gcs)
 ├── prisma/
-│   └── schema.prisma         # Database schema (18 models)
-├── .env.local               # Environment variables (not in git)
-├── ABOUT.md                 # Full documentation
-├── README.md                # This file
-├── TODO.md                  # Current tasks
-├── DAY_1_COMPLETE.md        # Day 1 milestone
-└── DAY_2_COMPLETE.md        # Day 2 milestone
+│   └── schema.prisma           # Database schema (18 models)
+├── .env.local                  # Environment variables (not in git)
+├── ABOUT.md                    # Full documentation
+├── CLAUDE.md                   # Development guidelines
+├── TODO.md                     # Current tasks
+├── DAY_1_COMPLETE.md          # Day 1 milestone
+├── DAY_2_COMPLETE.md          # Day 2 milestone
+├── DAY_5_COMPLETE.md          # Day 5 milestone (latest)
+└── README.md                   # This file
 ```
 
 ---
 
-## 📊 Database Schema
+## Technology Stack
 
-**18 Tables:**
-- **Auth:** User, Account, Session, VerificationToken
-- **Practice:** Therapist, Patient, Appointment, VideoSession, ClinicalNote
-- **Billing:** Insurance, Claim, Payment
-- **Documents:** Document, FormSubmission
-- **System:** AuditLog, SystemConfig
+- **Frontend:** Next.js 16.0.1, React 19, TypeScript, Tailwind CSS
+- **Backend:** Prisma ORM, PostgreSQL 15, NextAuth.js v5
+- **Infrastructure:** Google Cloud (SQL, Storage), Stripe
+- **Key Features:** HIPAA-compliant, audit logging, file uploads, payment processing
 
-See `prisma/schema.prisma` for full schema.
+For complete stack details, see [../README.md](../README.md)
 
 ---
 
-## 💰 Cost Savings
-
-| Service | Commercial | Russell MH | Savings |
-|---------|-----------|------------|---------|
-| TherapyNotes | $59/month | $20-45/month | **$14-39/mo** |
-| SimplePractice | $39/month | $20-45/month | **$0-19/mo** |
-| **Annual Savings** | - | - | **$240-600/year** |
-
-**Plus:**
-- ✅ Complete data ownership
-- ✅ No vendor lock-in
-- ✅ Unlimited customization
-- ✅ Scalable to SaaS platform
-
----
-
-## 🔐 Security & HIPAA Compliance
-
-- ✅ PHI encrypted at rest (AES-256)
-- ✅ Connections encrypted in transit (TLS 1.3)
-- ✅ Comprehensive audit logging
-- ✅ Role-based access control
-- ✅ Session timeout enforcement
-- ✅ Automatic daily backups
-- ✅ Business Associate Agreements (GCP, Stripe)
-
----
-
-## 📅 Development Progress
-
-**Day 1 (Oct 30, 2025):** ✅
-- GCP infrastructure setup
-- Database schema (18 tables)
-- Application initialization
-
-**Day 2 (Oct 31, 2025):** ✅
-- Authentication system
-- Dashboard and navigation
-- Patient management CRUD
-- All 7 intake forms created
-- **Therapist Review & Complete Workflow:**
-  - Pending forms dashboard card
-  - Universal review component (all 7 forms)
-  - Edit and complete submitted forms
-  - Status tracking (SUBMITTED → COMPLETED)
-  - Reviewer and timestamp tracking
-
-**Day 3 (Nov 1, 2025):** 🚧 In Progress
-- Patient portal testing
-- Stripe payment integration
-- Forms text review
-
----
-
-## 📚 Documentation
-
-- **`README.md`** - This file (quick start and overview)
-- **`ABOUT.md`** - Complete documentation, roadmap, and technical details
-- **`TODO.md`** - Current task list and priorities
-- **`DAY_1_COMPLETE.md`** - Day 1 milestone documentation
-- **`DAY_2_COMPLETE.md`** - Day 2 milestone documentation
-- **`CLAUDE.md`** - Claude AI development guidelines
-- **`prisma/schema.prisma`** - Database schema documentation
-
----
-
-## 🎯 Roadmap
-
-### ✅ v0.3.0 - Forms Workflow (Current)
-- Authentication and security
-- Patient management
-- All 7 intake forms
-- Therapist review workflow
-
-### 🚧 v0.4.0 - Patient Portal (Next)
-- Patient login and dashboard
-- Stripe payment integration
-- Forms text polish
-
-### 📅 v0.5.0 - Scheduling (Week 2)
-- Appointment scheduling
-- Calendar integration
-- Google Calendar sync
-- Automated reminders
-
-### 📅 v0.6.0 - Clinical Notes (Week 2-3)
-- SOAP note templates
-- ICD-10 diagnosis lookup
-- CPT code assignment
-- Document upload and e-signatures
-
-### 📅 v0.7.0 - Insurance Billing (Week 3)
-- Office Ally integration
-- EDI 837/835 processing
-- Eligibility verification
-- Claim tracking
-
-### 📅 v1.0.0 - Production Launch (Week 4)
-- Security audit
-- HIPAA compliance review
-- Cloud Run deployment
-- Custom domain setup
-- Go-live! 🚀
-
----
-
-## 👥 Team
-
-**Practice Owner:**
-- Dr. Bethany R. Russell, Ph.D.
-- Licensed Clinical Psychologist
-- NPI: 1336918325
-
-**Development:**
-- Lead Developer: Claude (Anthropic AI)
-- Project Manager: Charles
-
-**Contact:**
-- Practice: DrBethany@RussellMentalHealth.com
-- Phone: 239-427-1635
-- Website: www.RussellMentalHealth.com
-
----
-
-## 📜 License
-
-**Proprietary - All Rights Reserved**
-
-© 2025 Bethany R. Russell, Ph.D., P.A.
-
-This software is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited.
-
----
-
-## 🙏 Acknowledgments
-
-- **Google Cloud Platform** - Infrastructure
-- **Stripe** - Payment processing
-- **Office Ally** - Insurance clearinghouse
-- **Anthropic** - AI development assistance
-- **Vercel** - Next.js framework
-- **Prisma** - Database toolkit
-
----
-
-**Last Updated:** October 31, 2025 (End of Day 2)
-**Current Version:** 0.3.0
-**Status:** ✅ Core therapist workflow complete, ready for patient testing
-**Next Milestone:** Patient portal access + Stripe integration (Day 3)
+**📜 License:** Proprietary - All Rights Reserved
+**© 2025** Bethany R. Russell, Ph.D., P.A.
 
 ---
 
