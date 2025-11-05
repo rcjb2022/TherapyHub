@@ -7,9 +7,12 @@ import { Storage } from '@google-cloud/storage'
 // Credentials come from environment variables
 const storage = new Storage({
   projectId: process.env.GCP_PROJECT_ID,
-  credentials: process.env.GOOGLE_SERVICE_ACCOUNT_KEY
-    ? JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY)
-    : undefined,
+  // Support both file path and JSON string for service account key
+  ...(process.env.GOOGLE_SERVICE_ACCOUNT_KEY
+    ? process.env.GOOGLE_SERVICE_ACCOUNT_KEY.startsWith('{')
+      ? { credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY) } // JSON string
+      : { keyFilename: process.env.GOOGLE_SERVICE_ACCOUNT_KEY } // File path
+    : {}),
 })
 
 const bucketName = process.env.GCS_BUCKET_NAME || ''
@@ -55,7 +58,10 @@ export async function uploadToGCS(
 
     return signedUrl
   } catch (error) {
-    console.error('Error uploading to GCS:', error)
+    console.error('❌ GCS Upload Error:', error)
+    console.error('Project ID:', process.env.GCP_PROJECT_ID)
+    console.error('Bucket Name:', process.env.GCS_BUCKET_NAME)
+    console.error('Has Service Account Key:', !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY)
     throw error
   }
 }
