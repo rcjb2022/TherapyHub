@@ -2,7 +2,7 @@
 
 > **A modern, HIPAA-compliant therapy practice management system built for Russell Mental Health**
 
-**Version:** 0.3.0 | **Status:** 🚀 Production-Ready Forms Workflow | **License:** Proprietary
+**Version:** 0.5.0 | **Status:** 🚀 File Upload System Complete | **License:** Proprietary
 
 ---
 
@@ -14,7 +14,7 @@ Custom-built practice management platform replacing expensive commercial solutio
 
 ---
 
-## ✨ Key Features (v0.3.0)
+## ✨ Key Features (v0.5.0)
 
 ### 🔐 Authentication & Security
 - NextAuth.js authentication with JWT tokens
@@ -26,6 +26,7 @@ Custom-built practice management platform replacing expensive commercial solutio
 - Real-time statistics (Active Patients, Appointments, Revenue, Pending Forms)
 - Clickable navigation cards
 - Recent activity feed
+- Outstanding balances tracking
 - Pending forms alerting system
 
 ### 👥 Patient Management
@@ -33,15 +34,17 @@ Custom-built practice management platform replacing expensive commercial solutio
 - Advanced search and filtering
 - Patient detail pages with full history
 - Insurance information tracking
+- Payment method storage (Stripe)
+- Balance tracking with Decimal precision
 
 ### 📝 Forms System (All 7 Standard Intake Forms)
-1. **Patient Information** - Demographics and contact details
+1. **Patient Information** - Demographics, contact details, **ID uploads** ⭐
 2. **Medical History** - Medical conditions, medications, allergies
-3. **Mental Health History** - Symptoms, previous treatment, safety assessment
-4. **Insurance Information** - Primary/secondary insurance
-5. **HIPAA Authorization** - Consents and privacy notices
-6. **Payment Information** - Billing and payment methods
-7. **Parental Consent** - For minors under 18
+3. **Mental Health History** - Symptoms, previous treatment, safety assessment, **social media use**
+4. **Insurance Information** - Primary/secondary insurance, **card uploads** ⭐
+5. **HIPAA Authorization** - Consents, privacy notices, **AI assistance consent** ⭐
+6. **Payment Information** - Billing and payment methods, **cryptocurrency option**
+7. **Parental Consent** - For minors, **custody status**, **legal document uploads** ⭐
 
 ### 🔄 Forms Workflow
 - Status tracking: DRAFT → SUBMITTED → COMPLETED
@@ -50,6 +53,27 @@ Custom-built practice management platform replacing expensive commercial solutio
 - Therapist can edit before completing
 - Reviewer and completion timestamp tracking
 - 150+ field labels mapped to human-readable names
+
+### 📁 Document Management ⭐ NEW
+- **Google Cloud Storage integration** with HIPAA-compliant signed URLs
+- **Drag-and-drop file uploads** (JPG, PNG, GIF, PDF)
+- **Insurance card uploads** (front + back)
+- **Government ID uploads** (Driver's License, Passport)
+- **Legal document uploads** (custody orders, judicial documents)
+- **Document library** - View all uploaded files organized by category
+- **Fast PDF viewing** - No base64 encoding, instant load times
+- **Image previews** with lazy loading for performance
+
+### 💰 Billing & Payments (Complete System) ⭐
+- **Stripe Integration** - Secure card storage and processing
+- **Transaction Management** - Full audit trail with success/failure tracking
+- **Balance Tracking** - Decimal precision for accurate accounting
+- **Charge Card Form** - Therapist can charge patient cards
+- **Refund System** - Full and partial refunds with notes
+- **Payment History** - Paginated transaction history with filters
+- **Pay Bill Form** - Patients can pay balances ($500 max per transaction)
+- **Email Notifications** - Transaction confirmations (console logging until SendGrid configured)
+- **Color-coded UI** - Red for negative balances, green for credits
 
 ### 📋 Pending Forms Management
 - Dashboard card showing count of pending forms
@@ -67,17 +91,19 @@ Custom-built practice management platform replacing expensive commercial solutio
 - TypeScript 5.0+
 - Tailwind CSS 3.4+
 - Hero Icons 2.0
+- Stripe React Components
 
 **Backend:**
 - Next.js API Routes
 - Prisma ORM 6.0+
 - PostgreSQL 15 (Google Cloud SQL)
 - NextAuth.js v5
+- Google Cloud Storage SDK
 
 **Infrastructure:**
 - Google Cloud Platform (Cloud SQL, Cloud Storage)
 - Stripe (payment processing)
-- Office Ally (insurance clearinghouse)
+- Office Ally (insurance clearinghouse - future)
 
 ---
 
