@@ -609,7 +609,7 @@ export default function PatientInformationForm({ patientId }: PatientInformation
                   patientId={patientId}
                   fileType="id-document"
                   currentFileUrl={formData.idFront}
-                  onUploadComplete={(url) => setFormData({ ...formData, idFront: url })}
+                  onUploadComplete={(url) => setFormData(prev => ({ ...prev, idFront: url }))}
                   helpText="Upload a clear photo of the front of your ID"
                 />
               </div>
@@ -622,7 +622,7 @@ export default function PatientInformationForm({ patientId }: PatientInformation
                   patientId={patientId}
                   fileType="id-document"
                   currentFileUrl={formData.idBack}
-                  onUploadComplete={(url) => setFormData({ ...formData, idBack: url })}
+                  onUploadComplete={(url) => setFormData(prev => ({ ...prev, idBack: url }))}
                   helpText="Upload a clear photo of the back of your ID"
                 />
               </div>

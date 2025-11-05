@@ -386,7 +386,7 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
                     patientId={patientId}
                     fileType="legal-document"
                     currentFileUrl={formData.custodyDocument}
-                    onUploadComplete={(url) => setFormData({ ...formData, custodyDocument: url })}
+                    onUploadComplete={(url) => setFormData(prev => ({ ...prev, custodyDocument: url }))}
                     helpText="Upload Judicial Order or Legal Document authorizing treatment (JPG, PNG, GIF, or PDF)"
                   />
                 </div>
