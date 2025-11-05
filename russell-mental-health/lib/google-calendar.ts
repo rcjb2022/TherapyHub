@@ -20,9 +20,17 @@ function getCalendarClient(): calendar_v3.Calendar {
     process.env.GOOGLE_REDIRECT_URI
   )
 
-  // For server-to-server communication, we'll need to set up service account
-  // or use OAuth flow. For now, we'll use service account approach.
-  // NOTE: This may need adjustment based on actual OAuth setup
+  // Set refresh token from environment
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN
+
+  if (!refreshToken) {
+    throw new Error(
+      'GOOGLE_REFRESH_TOKEN not found in environment variables. ' +
+        'Please visit /admin/google-auth to authorize Google Calendar access.'
+    )
+  }
+
+  auth.setCredentials({ refresh_token: refreshToken })
 
   const calendar = google.calendar({ version: 'v3', auth })
   return calendar
