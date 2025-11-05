@@ -133,8 +133,8 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
             right: 'dayGridMonth,timeGridWeek',
           }}
           timeZone="America/New_York"
-          slotMinTime="08:00:00"
-          slotMaxTime="20:00:00"
+          slotMinTime="00:00:00" // 24-hour access (crisis appointments)
+          slotMaxTime="24:00:00"
           allDaySlot={false}
           nowIndicator={true}
           events={events}

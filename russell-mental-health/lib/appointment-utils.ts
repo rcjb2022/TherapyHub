@@ -157,17 +157,7 @@ export function validateAppointmentTime(startTime: Date, duration: number): { va
     return { valid: false, error: 'Appointment cannot be scheduled in the past' }
   }
 
-  // Check if during business hours
-  if (!isBusinessHours(startTime)) {
-    return { valid: false, error: 'Appointment must be between 8 AM and 8 PM' }
-  }
-
-  // Check if end time is during business hours (must end by 8:00 PM)
-  const endTime = calculateEndTime(startTime, duration)
-  if (endTime.getHours() > 20 || (endTime.getHours() === 20 && endTime.getMinutes() > 0)) {
-    return { valid: false, error: 'Appointment must end by 8:00 PM' }
-  }
-
+  // Allow appointments at ANY time (including outside normal hours for crisis situations)
   return { valid: true }
 }
 
