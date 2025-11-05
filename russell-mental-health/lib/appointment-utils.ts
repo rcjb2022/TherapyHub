@@ -65,8 +65,8 @@ export const CPT_CODES = [
 // Appointment Types
 export const APPOINTMENT_TYPES = [
   { value: 'INITIAL_CONSULTATION', label: 'Initial Consultation', defaultDuration: 60, defaultCPT: '90791' },
-  { value: 'THERAPY_SESSION', label: 'Therapy Session', defaultDuration: 45, defaultCPT: '90834' },
-  { value: 'FOLLOW_UP', label: 'Follow-up', defaultDuration: 45, defaultCPT: '90834' },
+  { value: 'THERAPY_SESSION', label: 'Therapy Session', defaultDuration: 60, defaultCPT: '90837' },
+  { value: 'FOLLOW_UP', label: 'Follow-up', defaultDuration: 60, defaultCPT: '90837' },
   { value: 'ASD_ASSESSMENT', label: 'ASD Assessment', defaultDuration: 120, defaultCPT: '96130' },
   { value: 'IMMIGRATION_EVALUATION', label: 'Immigration Evaluation', defaultDuration: 90, defaultCPT: '96130' },
   { value: 'COURT_EVALUATION', label: 'Court Evaluation', defaultDuration: 90, defaultCPT: '96130' },
