@@ -207,6 +207,12 @@ model Appointment {
   notes           String?     @db.Text
   cancellationReason String?
 
+  // Google Calendar Integration (Day 6)
+  googleEventId   String?     @unique // Links to Google Calendar event
+  googleMeetLink  String?     // Google Meet link for session
+  isRecurring     Boolean     @default(false) // Is this a recurring appointment?
+  recurringEventId String?    // Groups recurring appointments
+
   // Reminders
   reminderSent    Boolean   @default(false)
   reminderSentAt  DateTime?
@@ -225,6 +231,8 @@ model Appointment {
   @@index([patientId])
   @@index([therapistId])
   @@index([startTime])
+  @@index([googleEventId])
+  @@index([recurringEventId])
 }
 
 enum AppointmentType {
