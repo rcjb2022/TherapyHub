@@ -154,14 +154,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create event in Google Calendar
-    // Note: Service accounts can't send invites without Domain-Wide Delegation
-    // Patient will see appointments in the app instead
+    // Patient receives invite with Google Meet link (fallback for WebRTC)
     const { eventId, meetLink } = await createCalendarEvent({
       summary: eventSummary,
       description: eventDescription,
       startTime: startDateTime,
       endTime: endDateTime,
-      attendees: [], // Can't invite with service account (would need Domain-Wide Delegation)
+      attendees: [patient.email], // Send calendar invite to patient
       recurrence,
     })
 
