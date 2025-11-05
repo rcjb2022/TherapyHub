@@ -16,11 +16,31 @@ import { useState, useEffect } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin from '@fullcalendar/interaction'
+import interactionPlugin, { DateClickArg, EventDropArg } from '@fullcalendar/interaction'
+import { EventClickArg } from '@fullcalendar/core'
 import { Button } from '@/components/ui/button'
 import { PlusIcon, RefreshCwIcon } from 'lucide-react'
 
-// Appointment type for calendar events
+// API Response types
+interface AppointmentFromAPI {
+  id: string
+  startTime: string
+  endTime: string
+  status: string
+  appointmentType: string
+  googleMeetLink?: string | null
+  patient: {
+    firstName: string
+    lastName: string
+  }
+  therapist: {
+    user: {
+      name: string
+    }
+  }
+}
+
+// Calendar event type
 interface CalendarEvent {
   id: string
   title: string
@@ -49,10 +69,10 @@ export function AppointmentCalendar() {
     try {
       const response = await fetch('/api/appointments')
       if (response.ok) {
-        const data = await response.json()
+        const data: AppointmentFromAPI[] = await response.json()
 
         // Transform appointments to FullCalendar events
-        const calendarEvents: CalendarEvent[] = data.map((apt: any) => ({
+        const calendarEvents: CalendarEvent[] = data.map((apt) => ({
           id: apt.id,
           title: `${apt.patient.firstName} ${apt.patient.lastName}`,
           start: apt.startTime,
@@ -64,7 +84,7 @@ export function AppointmentCalendar() {
             therapistName: apt.therapist.user.name,
             appointmentType: apt.appointmentType,
             status: apt.status,
-            googleMeetLink: apt.googleMeetLink,
+            googleMeetLink: apt.googleMeetLink || undefined,
           },
         }))
 
@@ -83,7 +103,7 @@ export function AppointmentCalendar() {
   }, [])
 
   // Handle date click (create new appointment)
-  const handleDateClick = (arg: any) => {
+  const handleDateClick = (arg: DateClickArg) => {
     setSelectedSlot({
       start: arg.date,
       end: new Date(arg.date.getTime() + 60 * 60 * 1000), // Default 1 hour
@@ -92,14 +112,14 @@ export function AppointmentCalendar() {
   }
 
   // Handle event click (view/edit appointment)
-  const handleEventClick = (arg: any) => {
+  const handleEventClick = (arg: EventClickArg) => {
     console.log('Event clicked:', arg.event)
     // TODO: Open appointment details modal
     alert(`Appointment: ${arg.event.title}\n\nClick functionality coming in Phase 3!`)
   }
 
   // Handle event drag (reschedule)
-  const handleEventDrop = async (arg: any) => {
+  const handleEventDrop = async (arg: EventDropArg) => {
     const appointmentId = arg.event.id
     const newStart = arg.event.start
     const newEnd = arg.event.end

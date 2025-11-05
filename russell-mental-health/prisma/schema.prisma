@@ -231,7 +231,6 @@ model Appointment {
   @@index([patientId])
   @@index([therapistId])
   @@index([startTime])
-  @@index([googleEventId])
   @@index([recurringEventId])
 }
 
