@@ -1,39 +1,20 @@
-# Russell Mental Health Platform
+# 📖 Russell Mental Health - Quick Reference
 
-> **For complete project documentation, see the main [README.md](../README.md) in the TherapyHub root directory.**
-
----
-
-## 🚀 Quick Links
-
-**Main Documentation:**
-- **[TherapyHub/README.md](../README.md)** - Complete project overview, features, and roadmap
-- **[ABOUT.md](ABOUT.md)** - Detailed technical documentation
-- **[TODO.md](TODO.md)** - Current tasks and Day 6 priorities
-- **[CLAUDE.md](CLAUDE.md)** - Development guidelines and principles
-- **[DAY_5_COMPLETE.md](DAY_5_COMPLETE.md)** - Latest milestone documentation
-- **[../HANDOFF_DAY_6.md](../HANDOFF_DAY_6.md)** - Next session detailed plan
+> ## 🚨 **Main Documentation Location**
+>
+> **This is a quick reference guide for developers working in this directory.**
+>
+> **For complete project documentation, roadmap, features, and setup instructions:**
+>
+> ### 👉 **See [../README.md](../README.md)** (Main Project README)
+>
+> The main README in the TherapyHub root directory contains the full, detailed documentation.
 
 ---
 
-## Current Status
+## ⚡ Quick Start (For Developers Already Set Up)
 
-**Version:** 0.5.0 (Day 5 Complete - November 4, 2025)
-
-**Latest Achievements:**
-- ✅ Google Cloud Storage integration with HIPAA-compliant signed URLs
-- ✅ File upload system for insurance cards, IDs, and legal documents
-- ✅ Document library organized by category
-- ✅ Complete billing & payment system (Stripe)
-- ✅ All 7 intake forms with file upload functionality
-
-**Next Up (Day 6 - November 5, 2025):**
-- 🎯 Appointment Scheduling System (FullCalendar integration)
-- 📊 Patient Dashboard Improvements
-
----
-
-## Quick Start
+**Start Development Servers:**
 
 ```bash
 # Terminal 1 - Start Cloud SQL Proxy
@@ -41,21 +22,48 @@
 
 # Terminal 2 - Start Development Server
 npm run dev
-
-# Access Application
-# http://localhost:3000
 ```
 
-**Test Credentials:**
-- Email: drbethany@russellmentalhealth.com
-- Password: (configured during setup)
+**Access:** http://localhost:3000
+
+**Credentials:** drbethany@russellmentalhealth.com
 
 ---
 
-## Project Structure
+## 📚 Documentation Index
+
+| Document | Purpose |
+|----------|---------|
+| **[../README.md](../README.md)** | 📖 **MAIN README** - Complete project docs, roadmap, all features |
+| [ABOUT.md](ABOUT.md) | Detailed technical documentation |
+| [TODO.md](TODO.md) | Current tasks & Day 6 priorities |
+| [CLAUDE.md](CLAUDE.md) | Development guidelines & principles |
+| [DAY_5_COMPLETE.md](DAY_5_COMPLETE.md) | Latest milestone (Day 5) |
+| [../HANDOFF_DAY_6.md](../HANDOFF_DAY_6.md) | Next session detailed plan |
+
+---
+
+## 📊 Current Status (v0.5.0 - Day 5 Complete)
+
+**Latest Achievements:**
+- ✅ Google Cloud Storage integration (HIPAA-compliant signed URLs)
+- ✅ File upload system (insurance cards, IDs, legal documents)
+- ✅ Document library organized by category
+- ✅ Complete billing & payment system (Stripe)
+- ✅ All 7 intake forms with file upload functionality
+
+**Next Up (Day 6 - Nov 5, 2025):**
+- 🎯 Appointment Scheduling System (FullCalendar)
+- 📊 Patient Dashboard Improvements
+
+**For full roadmap:** See [../README.md](../README.md)
+
+---
+
+## 🏗 Project Structure
 
 ```
-russell-mental-health/
+russell-mental-health/          # ← You are here
 ├── app/
 │   ├── api/                    # API routes
 │   ├── (auth)/                 # Authentication pages
@@ -65,36 +73,37 @@ russell-mental-health/
 ├── lib/                        # Utilities (auth, prisma, gcs)
 ├── prisma/
 │   └── schema.prisma           # Database schema (18 models)
-├── .env.local                  # Environment variables (not in git)
-├── ABOUT.md                    # Full documentation
-├── CLAUDE.md                   # Development guidelines
-├── TODO.md                     # Current tasks
-├── DAY_1_COMPLETE.md          # Day 1 milestone
-├── DAY_2_COMPLETE.md          # Day 2 milestone
-├── DAY_5_COMPLETE.md          # Day 5 milestone (latest)
-└── README.md                   # This file
+├── ABOUT.md
+├── TODO.md
+├── CLAUDE.md
+└── README.md                   # ← This quick reference file
 ```
 
 ---
 
-## Technology Stack
+## 🛠 Tech Stack Summary
 
-- **Frontend:** Next.js 16.0.1, React 19, TypeScript, Tailwind CSS
-- **Backend:** Prisma ORM, PostgreSQL 15, NextAuth.js v5
-- **Infrastructure:** Google Cloud (SQL, Storage), Stripe
-- **Key Features:** HIPAA-compliant, audit logging, file uploads, payment processing
+- **Framework:** Next.js 16.0.1 + React 19 + TypeScript
+- **Database:** Prisma + PostgreSQL 15 (Cloud SQL)
+- **Auth:** NextAuth.js v5
+- **Storage:** Google Cloud Storage
+- **Payments:** Stripe
 
-For complete stack details, see [../README.md](../README.md)
+**For complete tech stack:** See [../README.md](../README.md#-technology-stack)
+
+---
+
+## 💡 Need Help?
+
+- **Complete Documentation:** [../README.md](../README.md)
+- **Current Tasks:** [TODO.md](TODO.md)
+- **Development Guidelines:** [CLAUDE.md](CLAUDE.md)
+- **Latest Milestone:** [DAY_5_COMPLETE.md](DAY_5_COMPLETE.md)
 
 ---
 
-**📜 License:** Proprietary - All Rights Reserved
-**© 2025** Bethany R. Russell, Ph.D., P.A.
-
----
+**Version:** 0.5.0 | **License:** Proprietary | **© 2025** Bethany R. Russell, Ph.D., P.A.
 
 <div align="center">
-  <strong>Built with ❤️ for Russell Mental Health</strong>
-  <br/>
-  <sub>Babcock Ranch, FL | www.RussellMentalHealth.com</sub>
+  <sub>Russell Mental Health | Babcock Ranch, FL | www.RussellMentalHealth.com</sub>
 </div>
