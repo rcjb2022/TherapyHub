@@ -11,19 +11,85 @@
 ### 1. Production Code Only
 - ❌ **NO mock data or simulated code**
 - ❌ **NO placeholder implementations**
+- ❌ **NO fallback code or "temporary" workarounds**
 - ✅ **ALL code must be production-ready**
 - ✅ **Real database operations only**
 - ✅ **Proper error handling required**
 - ✅ **HIPAA-compliant from the start**
 
-### 2. Test Before Moving On
+**Example - What NOT to Do:**
+```typescript
+// ❌ BAD - Fallback code
+if (isGCSConfigured) {
+  fileUrl = await uploadToGCS(...)
+} else {
+  // Fallback to base64 for local testing
+  fileUrl = `data:${file.type};base64,${base64}`
+}
+```
+
+**Example - What TO Do:**
+```typescript
+// ✅ GOOD - Real implementation only
+const fileUrl = await uploadToGCS(buffer, fileName, file.type)
+return NextResponse.json({ success: true, url: fileUrl })
+```
+
+### 2. Incremental Build-Test-Iterate Approach
+**CRITICAL: Break large projects into logical checkpoints and test at each step**
+
+- ✅ **Break features into logical phases** with clear stopping points
+- ✅ **Build → Test → Iterate** at each checkpoint before continuing
+- ✅ **NEVER build everything before testing** - catch issues early
+- ✅ **Test at stopping points** to validate functionality works
+- ✅ **Wait for user confirmation** before moving to next phase
+- ❌ **Never assume code works without testing**
+- ❌ **Never get too far down the road** without validating functionality
+
+**Example - Appointment Scheduling (Correct Approach):**
+```
+✅ Phase 1: Calendar Foundation
+   - Build basic calendar with day/week/month views
+   - 🚦 STOP & TEST: Calendar displays, can switch views, no errors
+   - Wait for user: "Calendar works, proceed to Phase 2"
+
+✅ Phase 2: Create Appointments
+   - Build appointment creation form and API
+   - 🚦 STOP & TEST: Can create appointment, appears on calendar, saves to DB
+   - Wait for user: "Creating appointments works, proceed to Phase 3"
+
+✅ Phase 3: Edit/Delete Appointments
+   - Build edit and delete functionality
+   - 🚦 STOP & TEST: Can edit, changes reflect, can delete
+   - Wait for user: "Edit/delete works, proceed to Phase 4"
+
+✅ Phase 4: Drag-and-Drop
+   - Add drag-and-drop rescheduling
+   - 🚦 STOP & TEST: Drag works, conflicts prevented
+   - Wait for user: "Complete! All appointment features working"
+```
+
+**Example - What NOT to Do:**
+```
+❌ Bad Approach:
+   - Build entire calendar system
+   - Add all CRUD operations
+   - Implement drag-and-drop
+   - Add conflict detection
+   - Add Google Calendar sync
+   - THEN test everything at once
+
+   Problem: If something breaks, hard to know where the issue is!
+```
+
+### 3. Test Before Moving On
 - ✅ **Test everything locally before proceeding**
 - ✅ **Debug issues immediately when they occur**
 - ✅ **Verify in browser and check console logs**
 - ✅ **User must confirm feature works before moving to next task**
 - ❌ **Never assume code works without testing**
 
-### 3. Model Selection Strategy
+### 4. Model Selection Strategy
 - **Default Model:** Sonnet 4.5 (fast, efficient for most tasks)
 - **For Persistent Problems:** Switch to Opus 4.1
   - Use Opus when same bug occurs 2+ times
@@ -32,7 +98,7 @@
   - Switch back to Sonnet once problem is resolved
 - **User will request model switch explicitly**
 
-### 4. Consistency is Key
+### 5. Consistency is Key
 - Follow established patterns throughout codebase
 - Use same form structure for all forms
 - Maintain consistent error handling approach
@@ -114,6 +180,162 @@ When updating Prisma schema:
 - Group related changes together
 - Reference issues/features being addressed
 - Follow format: "Action: Description"
+
+---
+
+## 📖 README Structure & Conventions
+
+### Two README Files - Different Purposes
+
+**CRITICAL: We maintain TWO README files that serve different purposes:**
+
+#### 1. **Main README** (`TherapyHub/README.md`) - The Source of Truth
+**Location:** Repository root (TherapyHub/README.md)
+**Purpose:** Complete, detailed project documentation
+**Audience:** Anyone discovering the project (GitHub visitors, new developers, stakeholders)
+
+**Style & Content:**
+- ✅ **Detailed and comprehensive** - Full project overview
+- ✅ **Complete feature list** - All completed work documented by day
+- ✅ **Full roadmap** - All versions (0.2.0 → 1.0.0) with complete task lists
+- ✅ **Technology stack** - Comprehensive list with version numbers
+- ✅ **Setup instructions** - Full setup process from scratch
+- ✅ **Cost analysis** - Monthly costs, savings comparison
+- ✅ **Project philosophy** - Why we built this, comparisons to commercial solutions
+- ✅ **Contact information** - Practice details, team info
+- ✅ **All milestones** - Links to all DAY_X_COMPLETE.md documents
+
+**Update Frequency:** ⚠️ **End of EVERY session where significant work is completed**
+
+**What to Update:**
+- Version number (header and "Current Version" section)
+- Status banner at top
+- Completed features organized by day
+- Roadmap progress (move items from "Planned" to "Completed")
+- Technology stack (when new packages added)
+- Documentation links (when new docs created)
+- Last updated date at bottom
+
+---
+
+#### 2. **Quick Reference** (`russell-mental-health/README_QR.md`) - For Active Development
+**Location:** App directory (russell-mental-health/README_QR.md)
+**Purpose:** Quick reference for developers already working on the project
+**Audience:** Developers navigating to the app directory during active development
+
+**Style & Content:**
+- ✅ **Prominent banner** pointing to main README (🚨 emoji for visibility)
+- ✅ **Quick start commands** - Just the commands, assume environment is configured
+- ✅ **Documentation index** - Table with links to all relevant docs
+- ✅ **Current status snapshot** - Latest version, recent achievements, what's next
+- ✅ **Project structure** - Visual tree of directory structure with "You are here" marker
+- ✅ **Tech stack summary** - Brief list, links to main README for details
+- ❌ **No duplication** - Does NOT repeat detailed content from main README
+- ❌ **No setup instructions** - Assumes developer is already set up
+- ❌ **No full roadmap** - Just current status and next milestone
+
+**Update Frequency:** ⚠️ **When main README is updated**
+
+**What to Update:**
+- Current status section (version, latest achievements, next up)
+- Version number in header
+- Any changes to quick start commands
+- Documentation index (if new docs added)
+
+---
+
+### Updating Both READMEs - Step-by-Step
+
+**When completing a session with significant changes:**
+
+**Step 1: Update Main README** (`TherapyHub/README.md`)
+```markdown
+# TherapyHub - Russell Mental Health Platform
+
+**Version:** 0.X.0 (Day X Complete)  ← Update version
+**Status:** 🚀 [Feature] Complete - Ready for [Next Feature]  ← Update status
+
+## 🎉 Project Status: Day X Complete!
+← Add new completed features as bullet points
+
+### ✅ Completed (Day X - Nov X, 2025)
+← Add comprehensive section for the day's work
+
+### 🚧 In Progress: Version 0.X.0 (Day X - Nov X, 2025)
+← Move to "In Progress" section with next priorities
+
+**Last Updated:** November X, 2025 (End of Day X)  ← Update bottom
+```
+
+**Step 2: Update Quick Reference** (`russell-mental-health/README_QR.md`)
+```markdown
+## 📊 Current Status (v0.X.0 - Day X Complete)  ← Update version
+
+**Latest Achievements:**
+← Update with 3-5 bullet points of recent work
+
+**Next Up (Day X - November X, 2025):**
+← Update with next priorities
+
+**Version:** 0.X.0 | ...  ← Update footer version
+```
+
+**Step 3: Verify Consistency**
+- [ ] Version numbers match in both files
+- [ ] Status descriptions are consistent
+- [ ] Quick Reference links correctly to Main README
+- [ ] Latest achievements in Quick Reference match Main README
+- [ ] Documentation links are up to date
+
+---
+
+### Common Mistakes to Avoid
+
+❌ **DON'T duplicate detailed content in README_QR.md**
+- Quick Reference should point to Main README, not duplicate it
+
+❌ **DON'T forget to update BOTH files**
+- Main README gets full details, Quick Reference gets status snapshot
+
+❌ **DON'T write setup instructions in README_QR.md**
+- That's in Main README only (Quick Reference assumes setup done)
+
+❌ **DON'T skip the prominent banner in README_QR.md**
+- Always keep the 🚨 banner directing to Main README
+
+❌ **DON'T update version numbers in only one file**
+- Version must be synchronized across both READMEs
+
+✅ **DO keep README_QR.md concise and actionable**
+- Commands, links, current status - that's it
+
+✅ **DO make Main README comprehensive**
+- Anyone should be able to understand the entire project from it
+
+✅ **DO update both when milestones reached**
+- End of session with significant work = update both
+
+---
+
+### README Checklist (End of Session)
+
+**Main README (`TherapyHub/README.md`):**
+- [ ] Version number updated in header
+- [ ] Status banner updated with current state
+- [ ] New "Completed (Day X)" section added if milestone reached
+- [ ] Features added to relevant sections
+- [ ] Roadmap updated (tasks moved from Planned → Completed)
+- [ ] Technology stack updated if new packages added
+- [ ] Documentation links updated if new docs created
+- [ ] "Last Updated" date at bottom changed
+
+**Quick Reference (`russell-mental-health/README_QR.md`):**
+- [ ] Version number updated in "Current Status" section
+- [ ] "Latest Achievements" updated with 3-5 recent items
+- [ ] "Next Up" section updated with next priorities
+- [ ] Documentation index updated if new docs added
+- [ ] Version number updated in footer
+- [ ] Prominent banner still points to Main README
 
 ---
 

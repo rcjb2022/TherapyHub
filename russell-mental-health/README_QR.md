@@ -1,14 +1,20 @@
-# 📖 Russell Mental Health - Quick Reference
+# 📖 README_QR.md - Quick Reference
 
 > ## 🚨 **Main Documentation Location**
 >
-> **This is a quick reference guide for developers working in this directory.**
+> **This is a QUICK REFERENCE guide for developers working in the `russell-mental-health/` directory.**
 >
 > **For complete project documentation, roadmap, features, and setup instructions:**
 >
-> ### 👉 **See [../README.md](../README.md)** (Main Project README)
+> ### 👉 **See [../README.md](../README.md)** (Main Project README - The Source of Truth)
 >
 > The main README in the TherapyHub root directory contains the full, detailed documentation.
+>
+> **This file (README_QR.md) provides:**
+> - Quick start commands for already-configured environments
+> - Documentation index with links to all docs
+> - Current status snapshot
+> - Essential info for daily development
 
 ---
 
@@ -76,7 +82,7 @@ russell-mental-health/          # ← You are here
 ├── ABOUT.md
 ├── TODO.md
 ├── CLAUDE.md
-└── README.md                   # ← This quick reference file
+└── README_QR.md                # ← This quick reference file
 ```
 
 ---
