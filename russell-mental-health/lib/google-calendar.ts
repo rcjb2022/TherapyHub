@@ -11,26 +11,48 @@
  */
 
 import { google, calendar_v3 } from 'googleapis'
+import fs from 'fs'
 
 // Initialize Google Calendar client
 function getCalendarClient(): calendar_v3.Calendar {
-  const auth = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  )
+  let auth
 
-  // Set refresh token from environment
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN
-
-  if (!refreshToken) {
+  // Try Service Account first (preferred method)
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    // Service account credentials from JSON string
+    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
+    auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/calendar'],
+    })
+  } else if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
+    // Service account credentials from file path
+    const keyPath = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH
+    if (fs.existsSync(keyPath)) {
+      const credentials = JSON.parse(fs.readFileSync(keyPath, 'utf-8'))
+      auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ['https://www.googleapis.com/auth/calendar'],
+      })
+    } else {
+      throw new Error(`Service account key file not found at: ${keyPath}`)
+    }
+  } else if (process.env.GOOGLE_REFRESH_TOKEN) {
+    // Fallback to OAuth2 if refresh token is available
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    )
+    oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN })
+    auth = oauth2Client
+  } else {
     throw new Error(
-      'GOOGLE_REFRESH_TOKEN not found in environment variables. ' +
-        'Please visit /admin/google-auth to authorize Google Calendar access.'
+      'No Google Calendar authentication configured. ' +
+        'Please set either GOOGLE_SERVICE_ACCOUNT_JSON, GOOGLE_SERVICE_ACCOUNT_KEY_PATH, ' +
+        'or GOOGLE_REFRESH_TOKEN in your environment variables.'
     )
   }
-
-  auth.setCredentials({ refresh_token: refreshToken })
 
   const calendar = google.calendar({ version: 'v3', auth })
   return calendar
