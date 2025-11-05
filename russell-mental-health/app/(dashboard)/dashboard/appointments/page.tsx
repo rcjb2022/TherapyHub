@@ -17,7 +17,7 @@ export const metadata = {
 export default async function PatientAppointmentsPage() {
   const session = await getServerSession(authOptions)
 
-  if (!session) {
+  if (!session?.user?.email) {
     redirect('/login')
   }
 
@@ -47,7 +47,7 @@ export default async function PatientAppointmentsPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">My Appointments</h1>
               <p className="text-sm text-gray-600 mt-1">
-                Your upcoming sessions with {user.patient.therapist.user.name}
+                Your upcoming sessions with {user.patient.therapist?.user?.name ?? 'your therapist'}
               </p>
             </div>
           </div>

@@ -20,6 +20,7 @@ import interactionPlugin, { DateClickArg, EventDropArg } from '@fullcalendar/int
 import { EventClickArg } from '@fullcalendar/core'
 import { Button } from '@/components/ui/button'
 import { PlusIcon, RefreshCwIcon } from 'lucide-react'
+import { AppointmentModal } from './AppointmentModal'
 
 // API Response types
 interface AppointmentFromAPI {
@@ -240,26 +241,19 @@ export function AppointmentCalendar() {
         />
       </div>
 
-      {/* New Appointment Modal - Placeholder */}
-      {showNewAppointmentModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">New Appointment</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Appointment modal coming in Phase 3!
-            </p>
-            {selectedSlot && (
-              <div className="text-xs bg-gray-100 p-3 rounded mb-4">
-                <div>Start: {selectedSlot.start.toLocaleString()}</div>
-                <div>End: {selectedSlot.end.toLocaleString()}</div>
-              </div>
-            )}
-            <Button onClick={() => setShowNewAppointmentModal(false)}>
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* Appointment Modal */}
+      <AppointmentModal
+        isOpen={showNewAppointmentModal}
+        onClose={() => {
+          setShowNewAppointmentModal(false)
+          setSelectedSlot(null)
+        }}
+        onSuccess={() => {
+          fetchAppointments() // Refresh calendar
+        }}
+        defaultStartTime={selectedSlot?.start}
+        defaultEndTime={selectedSlot?.end}
+      />
     </div>
   )
 }
