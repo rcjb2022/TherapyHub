@@ -12,6 +12,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { zonedTimeToUtc } from 'date-fns-tz'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -151,10 +152,12 @@ export function AppointmentModal({
       return
     }
 
-    // Parse start time
-    // Note: The HTML datetime-local input interprets the time in the user's local timezone
-    // For a Florida-based practice, we assume users are in Eastern timezone
-    const startDateTime = new Date(`${startDate}T${startTime}`)
+    // Parse start time in Eastern timezone (America/New_York)
+    // CRITICAL: The HTML datetime-local input gives us date/time WITHOUT timezone info
+    // We must explicitly treat this as Eastern time, regardless of user's browser timezone
+    // Using date-fns-tz zonedTimeToUtc to properly handle DST transitions
+    const timeZone = 'America/New_York'
+    const startDateTime = zonedTimeToUtc(`${startDate}T${startTime}`, timeZone)
 
     // Validate appointment time
     const validation = validateAppointmentTime(startDateTime, duration)

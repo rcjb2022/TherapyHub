@@ -62,8 +62,8 @@ export default async function PatientDashboardPage() {
 
   const patient = user.patient
 
-  // Get upcoming appointments
-  const upcomingAppointments = await prisma.appointment.findMany({
+  // Get next upcoming appointment (using findFirst per Gemini suggestion - more idiomatic)
+  const nextAppointment = await prisma.appointment.findFirst({
     where: {
       patientId: patient.id,
       startTime: {
@@ -76,11 +76,7 @@ export default async function PatientDashboardPage() {
     orderBy: {
       startTime: 'asc',
     },
-    take: 1, // Just get the next one
   })
-
-  const nextAppointment = upcomingAppointments[0]
-  const upcomingCount = upcomingAppointments.length
 
   // Separate forms by status
   const pendingForms = patient.forms.filter((f) => f.status === 'DRAFT' || f.status === 'SUBMITTED')

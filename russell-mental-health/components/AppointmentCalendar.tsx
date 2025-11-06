@@ -234,18 +234,16 @@ export function AppointmentCalendar() {
           contentHeight="auto"
           aspectRatio={1.8}
 
-          // Time format (Eastern time)
+          // Time format (Eastern time - timezone is set above)
           slotLabelFormat={{
             hour: 'numeric',
             minute: '2-digit',
             meridiem: 'short',
-            timeZoneName: 'short', // Show EST/EDT
           }}
           eventTimeFormat={{
             hour: 'numeric',
             minute: '2-digit',
             meridiem: 'short',
-            timeZoneName: 'short', // Show EST/EDT
           }}
         />
       </div>
