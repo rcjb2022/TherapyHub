@@ -1,7 +1,7 @@
 # Russell Mental Health Platform
 
-**Version:** 0.3.0 (Day 2 Complete)
-**Status:** 🚀 Forms Workflow Complete - Ready for Patient Testing
+**Version:** 0.7.0 (Day 7 Complete)
+**Status:** 🚀 Patient UX & Video Session Foundation Complete - Ready for Video Recording & AI Features
 **Practice:** Russell Mental Health - Dr. Bethany R. Russell, Ph.D., P.A.
 
 ---
@@ -19,7 +19,7 @@ A modern, HIPAA-compliant therapy practice management platform built specificall
 
 ---
 
-## 🎯 Current Version: 0.3.0 (Day 2 Complete - Oct 31, 2025)
+## 🎯 Current Version: 0.7.0 (Day 7 Complete - Nov 6, 2025)
 
 ### ✅ Completed Features
 
@@ -171,7 +171,7 @@ A modern, HIPAA-compliant therapy practice management platform built specificall
 
 ## 📅 Development Roadmap
 
-### ✅ Completed: Version 0.3.0 (Day 2 - Oct 31)
+### ✅ Completed: Version 0.2.0 (Day 2 - Oct 31)
 - [x] NextAuth.js authentication
 - [x] Therapist login page
 - [x] Dashboard layout and navigation
@@ -184,40 +184,78 @@ A modern, HIPAA-compliant therapy practice management platform built specificall
 - [x] Pending forms dashboard card
 - [x] Complete therapist review workflow
 
-### 🚧 In Progress: Version 0.4.0 (Day 3 - Nov 1)
-- [ ] Patient portal access and testing
-- [ ] Stripe payment integration
-- [ ] Forms text review and polish
+### ✅ Completed: Version 0.3.0 (Day 3 - Nov 1)
+- [x] Patient portal access and testing
+- [x] Form success messages with progress tracking
+- [x] "Next Form" button for guided workflow
+- [x] Fixed form completion status display
+- [x] Full end-to-end patient forms workflow tested
 
-### 📅 Planned: Version 0.5.0 (Week 2)
-- [ ] Appointment scheduling system
-- [ ] Calendar integration (FullCalendar)
-- [ ] Google Calendar sync
-- [ ] Automated appointment reminders
-- [ ] Custom WebRTC video sessions
+### ✅ Completed: Version 0.4.0 (Day 4 - Nov 1-2)
+- [x] Stripe payment integration COMPLETE
+- [x] Transaction model (charge, payment, refund)
+- [x] Patient balance tracking
+- [x] Charge card functionality (therapist side)
+- [x] Refund system (full/partial)
+- [x] Payment history with pagination
+- [x] Pay bill form (patient side, $500 max)
+- [x] Therapist billing dashboard
+- [x] Patient billing page
 
-### 📅 Planned: Version 0.6.0 (Week 2-3)
+### ✅ Completed: Version 0.5.0 (Day 5 - Nov 4)
+- [x] Google Cloud Storage integration
+- [x] HIPAA-compliant signed URLs
+- [x] File upload API and component
+- [x] Insurance card uploads
+- [x] Government ID uploads
+- [x] Legal document uploads
+- [x] Document library page by category
+
+### ✅ Completed: Version 0.6.0 (Day 6 - Nov 6)
+- [x] FullCalendar integration with Luxon timezone plugin
+- [x] Eastern Time display with automatic DST handling
+- [x] Create/edit/cancel appointments
+- [x] Drag-and-drop rescheduling
+- [x] One-time payment feature (Stripe Elements)
+- [x] Prepayment support up to $500
+- [x] Account credit system
+
+### ✅ Completed: Version 0.7.0 (Day 7 - Nov 6)
+- [x] Patient dashboard "Today's Schedule" section
+- [x] Enhanced calendar modal with large prominent buttons
+- [x] In-progress session highlighting
+- [x] Color-coded appointments
+- [x] Session Vault foundation page
+- [x] Video session waiting room operational
+- [x] UX consistency (patient matches therapist)
+- [x] 30-minute join window standardized
+- [x] 6 critical bug fixes
+
+### 📅 Planned: Version 0.8.0 (Day 8 - Nov 7)
+- [ ] Video session recording (WebRTC + MediaRecorder)
+- [ ] Save recordings to Google Cloud Storage
+- [ ] 30-day automatic deletion (HIPAA retention)
+- [ ] Gemini AI integration
+- [ ] Auto-transcribe recorded sessions
+- [ ] Generate SOAP notes from transcripts
+- [ ] Session Vault UI (video player, transcript viewer)
+
+### 📅 Planned: Version 0.9.0 (Week 2-3)
 - [ ] Clinical note templates (SOAP format)
 - [ ] ICD-10 diagnosis codes lookup
 - [ ] CPT code assignment
-- [ ] Document upload and e-signatures
 - [ ] Treatment plans and goals tracking
+- [ ] Google Calendar sync (two-way)
+- [ ] Automated email reminders
 
-### 📅 Planned: Version 0.7.0 (Week 3)
+### 📅 Planned: Version 1.0.0 (Week 3)
 - [ ] Office Ally integration (EDI 837)
 - [ ] Real-time insurance claim submission
 - [ ] ERA (835) response processing
 - [ ] Eligibility verification (270/271)
 - [ ] Claim status tracking
 
-### 📅 Planned: Version 0.8.0 (Week 3-4)
-- [ ] Stripe payment processing
-- [ ] Patient payment portal
-- [ ] Automated receipt generation
-- [ ] Payment plan management
-- [ ] Financial reporting
-
-### 📅 Planned: Version 1.0.0 (Week 4)
+### 📅 Planned: Version 1.1.0 (Week 4 - Production Launch)
 - [ ] Security audit and penetration testing
 - [ ] HIPAA compliance review
 - [ ] Performance optimization
@@ -513,7 +551,7 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 
 ---
 
-**Last Updated:** October 31, 2025 (End of Day 2)
-**Next Session:** November 1, 2025 (Day 3)
-**Current Phase:** Core forms workflow complete, ready for patient testing
-**Next Milestone:** Patient portal access + Stripe integration
+**Last Updated:** November 6, 2025 (End of Day 7)
+**Next Session:** November 7, 2025 (Day 8)
+**Current Phase:** Patient UX & Video Session Foundation Complete
+**Next Milestone:** Video Recording & AI Features (Gemini transcription, SOAP notes)
