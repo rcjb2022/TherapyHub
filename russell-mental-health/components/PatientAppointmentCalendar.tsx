@@ -14,6 +14,7 @@ import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import { EventClickArg } from '@fullcalendar/core'
+import luxon2Plugin from '@fullcalendar/luxon2'
 import { Button } from '@/components/ui/button'
 import { RefreshCwIcon, VideoIcon } from 'lucide-react'
 import { TIMEZONE } from '@/lib/appointment-utils'
@@ -111,8 +112,13 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
     <div className="h-full flex flex-col bg-white">
       {/* Toolbar */}
       <div className="border-b px-6 py-3 flex items-center justify-between bg-gray-50">
-        <div className="text-sm text-gray-600">
-          Your scheduled appointments
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-gray-600">
+            Your scheduled appointments
+          </div>
+          <div className="text-xs font-medium text-gray-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+            All times shown in Eastern Time (ET)
+          </div>
         </div>
 
         <Button
@@ -128,7 +134,7 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
       {/* Calendar */}
       <div className="flex-1 overflow-auto p-6">
         <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin]}
+          plugins={[dayGridPlugin, timeGridPlugin, luxon2Plugin]}
           initialView="timeGridWeek"
           headerToolbar={{
             left: 'prev,next today',

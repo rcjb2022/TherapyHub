@@ -16,8 +16,9 @@ import { useState, useEffect } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
-import interactionPlugin, { DateClickArg, EventDropArg } from '@fullcalendar/interaction'
-import { EventClickArg } from '@fullcalendar/core'
+import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction'
+import { EventClickArg, EventDropArg } from '@fullcalendar/core'
+import luxon2Plugin from '@fullcalendar/luxon2'
 import { Button } from '@/components/ui/button'
 import { PlusIcon, RefreshCwIcon } from 'lucide-react'
 import { AppointmentModal } from './AppointmentModal'
@@ -163,7 +164,12 @@ export function AppointmentCalendar() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          {/* Timezone notice */}
+          <div className="text-xs font-medium text-gray-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+            All times shown in Eastern Time (ET)
+          </div>
+
           {/* Legend */}
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1">
@@ -185,7 +191,7 @@ export function AppointmentCalendar() {
       {/* Calendar */}
       <div className="flex-1 overflow-auto p-6">
         <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, luxon2Plugin]}
 
           // Initial view
           initialView="timeGridWeek"
