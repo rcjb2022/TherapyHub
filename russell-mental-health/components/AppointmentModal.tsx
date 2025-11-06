@@ -222,6 +222,15 @@ export function AppointmentModal({
 
   if (!isOpen) return null
 
+  // Generate 15-minute interval time options (00:00 to 23:45)
+  const timeOptions: string[] = []
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+      timeOptions.push(time)
+    }
+  }
+
   // Calculate end time for display (in Eastern time)
   let endTimeDisplay = ''
   if (startDate && startTime) {
@@ -346,16 +355,30 @@ export function AppointmentModal({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Start Time *
+                  Start Time * <span className="text-xs text-gray-500 font-normal">(Eastern Time)</span>
                 </label>
-                <input
-                  type="time"
+                <select
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  step="900"
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
-                />
+                >
+                  <option value="">Select time...</option>
+                  {timeOptions.map((time) => {
+                    // Format time for display (e.g., "09:00" -> "9:00 AM")
+                    const [hour, minute] = time.split(':')
+                    const hourNum = parseInt(hour)
+                    const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum
+                    const ampm = hourNum >= 12 ? 'PM' : 'AM'
+                    const displayTime = `${displayHour}:${minute} ${ampm}`
+
+                    return (
+                      <option key={time} value={time}>
+                        {displayTime}
+                      </option>
+                    )
+                  })}
+                </select>
                 {endTimeDisplay && (
                   <p className="text-xs text-gray-500 mt-1">
                     Ends at {endTimeDisplay}
