@@ -62,7 +62,11 @@ interface CalendarEvent {
   }
 }
 
-export function AppointmentCalendar() {
+interface AppointmentCalendarProps {
+  userRole: string
+}
+
+export function AppointmentCalendar({ userRole }: AppointmentCalendarProps) {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false)
@@ -335,6 +339,7 @@ export function AppointmentCalendar() {
           onRefresh={() => {
             fetchAppointments() // Refresh calendar after cancel/edit
           }}
+          userRole={userRole}
         />
       )}
     </div>

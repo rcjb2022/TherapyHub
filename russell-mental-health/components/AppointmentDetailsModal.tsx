@@ -36,6 +36,7 @@ interface AppointmentDetailsModalProps {
   onClose: () => void
   onEdit: (appointmentId: string) => void
   onRefresh: () => void
+  userRole: string
 }
 
 interface AppointmentDetails {
@@ -68,6 +69,7 @@ export function AppointmentDetailsModal({
   onClose,
   onEdit,
   onRefresh,
+  userRole,
 }: AppointmentDetailsModalProps) {
   const [appointment, setAppointment] = useState<AppointmentDetails | null>(null)
   const [loading, setLoading] = useState(false)
@@ -334,36 +336,51 @@ export function AppointmentDetailsModal({
 
         {/* Actions */}
         {appointment && appointment.status === 'SCHEDULED' && (
-          <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end">
-            <Button
-              onClick={() => {
-                onEdit(appointmentId)
-                onClose()
-              }}
-              variant="outline"
-              className="sm:w-auto"
-            >
-              <PencilIcon className="h-4 w-4 mr-2" />
-              Edit Appointment
-            </Button>
-            <Button
-              onClick={handleCancel}
-              disabled={canceling}
-              variant="destructive"
-              className="sm:w-auto"
-            >
-              {canceling ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Cancelling...
-                </>
-              ) : (
-                <>
-                  <XCircleIcon className="h-4 w-4 mr-2" />
-                  Cancel Appointment
-                </>
-              )}
-            </Button>
+          <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4">
+            {userRole === 'THERAPIST' || userRole === 'ADMIN' ? (
+              // Therapist actions: Edit and Cancel
+              <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                <Button
+                  onClick={() => {
+                    onEdit(appointmentId)
+                    onClose()
+                  }}
+                  variant="outline"
+                  className="sm:w-auto"
+                >
+                  <PencilIcon className="h-4 w-4 mr-2" />
+                  Edit Appointment
+                </Button>
+                <Button
+                  onClick={handleCancel}
+                  disabled={canceling}
+                  variant="destructive"
+                  className="sm:w-auto"
+                >
+                  {canceling ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Cancelling...
+                    </>
+                  ) : (
+                    <>
+                      <XCircleIcon className="h-4 w-4 mr-2" />
+                      Cancel Appointment
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              // Patient message: Cannot cancel directly
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-gray-700">
+                  <strong>Need to cancel this appointment?</strong>
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Please contact your therapist directly to reschedule or cancel. Thank you!
+                </p>
+              </div>
+            )}
           </div>
         )}
       </Card>
