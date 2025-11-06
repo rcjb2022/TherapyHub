@@ -52,13 +52,16 @@ TherapyHub/
 ├── russell-mental-health/          # Main Next.js application
 │   ├── app/                        # Next.js App Router pages
 │   ├── prisma/                     # Database schema (18 models)
-│   ├── ABOUT.md                    # Version info & roadmap
-│   ├── DAY_1_COMPLETE.md          # Day 1 milestone documentation
+│   ├── README_QR.md                # Quick reference for developers
 │   └── package.json
-├── FINAL_REALISTIC_PLAN.md         # Complete implementation plan
-├── SPECIALIZED_FEATURES.md         # Practice-specific features
-├── PLUG_AND_PLAY_STRATEGY.md      # API integration guide
-└── README.md                       # This file
+├── docs/                           # All project documentation
+│   ├── ABOUT.md                    # Version info & roadmap
+│   ├── TODO.md                     # Current tasks & priorities
+│   ├── CLAUDE.md                   # Development guidelines
+│   ├── daily/                      # Daily completion docs
+│   ├── sessions/                   # Handoffs & next-day prompts
+│   └── planning/                   # Strategic planning docs
+└── README.md                       # This file (project overview)
 ```
 
 ---
@@ -135,7 +138,7 @@ TherapyHub/
 - Day 1 milestone documented
 - Development setup guides
 
-**See:** [russell-mental-health/DAY_1_COMPLETE.md](russell-mental-health/DAY_1_COMPLETE.md) for details
+**See:** [docs/daily/DAY_1_COMPLETE.md](docs/daily/DAY_1_COMPLETE.md) for details
 
 ---
 
@@ -253,12 +256,12 @@ TherapyHub/
 - **Mobile Responsive** - All pages optimized for mobile devices
 
 **See:**
-- [russell-mental-health/DAY_7_COMPLETE.md](russell-mental-health/DAY_7_COMPLETE.md) for Day 7 details
-- [russell-mental-health/DAY_6_COMPLETE.md](russell-mental-health/DAY_6_COMPLETE.md) for Day 6 details
-- [russell-mental-health/DAY_5_COMPLETE.md](russell-mental-health/DAY_5_COMPLETE.md) for Day 5 details
-- [russell-mental-health/TODO.md](russell-mental-health/TODO.md) for Day 8 priorities
-- [HANDOFF_DAY_7.md](HANDOFF_DAY_7.md) for session handoff
-- [TOMORROW_PROMPTS_DAY_8.md](TOMORROW_PROMPTS_DAY_8.md) for next session plan
+- [docs/daily/DAY_7_COMPLETE.md](docs/daily/DAY_7_COMPLETE.md) for Day 7 details
+- [docs/daily/DAY_6_COMPLETE.md](docs/daily/DAY_6_COMPLETE.md) for Day 6 details
+- [docs/daily/DAY_5_COMPLETE.md](docs/daily/DAY_5_COMPLETE.md) for Day 5 details
+- [docs/TODO.md](docs/TODO.md) for Day 8 priorities
+- [docs/sessions/HANDOFF_DAY_7.md](docs/sessions/HANDOFF_DAY_7.md) for session handoff
+- [docs/sessions/TOMORROW_PROMPTS_DAY_8.md](docs/sessions/TOMORROW_PROMPTS_DAY_8.md) for next session plan
 
 ---
 
@@ -450,18 +453,15 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 
 ### For Developers
 - **[README.md](README.md)** - This file (project overview, quick start)
-- **[russell-mental-health/ABOUT.md](russell-mental-health/ABOUT.md)** - Detailed version info and features
-- **[russell-mental-health/TODO.md](russell-mental-health/TODO.md)** - Current tasks and Day 6 priorities
-- **[russell-mental-health/CLAUDE.md](russell-mental-health/CLAUDE.md)** - Development guidelines and principles
-- **[russell-mental-health/DAY_1_COMPLETE.md](russell-mental-health/DAY_1_COMPLETE.md)** - Day 1 milestone
-- **[russell-mental-health/DAY_2_COMPLETE.md](russell-mental-health/DAY_2_COMPLETE.md)** - Day 2 milestone
-- **[russell-mental-health/DAY_6_COMPLETE.md](russell-mental-health/DAY_6_COMPLETE.md)** - Day 6 milestone
-- **[russell-mental-health/DAY_5_COMPLETE.md](russell-mental-health/DAY_5_COMPLETE.md)** - Day 5 milestone
-- **[HANDOFF_DAY_6.md](HANDOFF_DAY_6.md)** - Day 6 session handoff
-- **[TOMORROW_PROMPTS_DAY_7.md](TOMORROW_PROMPTS_DAY_7.md)** - Day 7 detailed plan (Google Calendar integration)
-- **[FINAL_REALISTIC_PLAN.md](FINAL_REALISTIC_PLAN.md)** - Complete 3-4 week implementation plan
-- **[SPECIALIZED_FEATURES.md](SPECIALIZED_FEATURES.md)** - Practice-specific features (ASD, immigration evals, crypto)
-- **[PLUG_AND_PLAY_STRATEGY.md](PLUG_AND_PLAY_STRATEGY.md)** - API integration strategy and costs
+- **[docs/ABOUT.md](docs/ABOUT.md)** - Detailed version info and features
+- **[docs/TODO.md](docs/TODO.md)** - Current tasks and Day 8 priorities
+- **[docs/CLAUDE.md](docs/CLAUDE.md)** - Development guidelines and principles
+- **[docs/daily/](docs/daily/)** - Daily milestone documentation (Days 1, 2, 5, 6, 7)
+- **[docs/sessions/](docs/sessions/)** - Session handoffs and next-day prompts
+- **[docs/planning/](docs/planning/)** - Strategic planning documents
+  - [FINAL_REALISTIC_PLAN.md](docs/planning/FINAL_REALISTIC_PLAN.md) - Complete implementation plan
+  - [SPECIALIZED_FEATURES.md](docs/planning/SPECIALIZED_FEATURES.md) - Practice-specific features
+  - [PLUG_AND_PLAY_STRATEGY.md](docs/planning/PLUG_AND_PLAY_STRATEGY.md) - API integration strategy
 
 ### For Practice
 - **Practice Name:** Russell Mental Health

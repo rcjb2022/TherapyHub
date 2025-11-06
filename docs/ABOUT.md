@@ -478,12 +478,23 @@ russell-mental-health/
 ├── package.json
 ├── tsconfig.json
 ├── tailwind.config.js
-├── ABOUT.md              # This file (version info and roadmap)
-├── README.md             # Project overview and quick start
-├── TODO.md               # Current task list
-├── TODO_OCT_31_2025.md   # Day 2 task list
-├── DAY_1_COMPLETE.md     # Day 1 milestone documentation
-└── DAY_2_COMPLETE.md     # Day 2 milestone documentation
+└── README_QR.md          # Quick reference for developers
+```
+
+**Documentation Structure:**
+```
+TherapyHub/
+├── docs/                 # All project documentation
+│   ├── ABOUT.md          # This file (version info and roadmap)
+│   ├── TODO.md           # Current task list
+│   ├── CLAUDE.md         # Development guidelines
+│   ├── daily/            # Daily milestone documentation
+│   │   ├── DAY_1_COMPLETE.md
+│   │   ├── DAY_2_COMPLETE.md
+│   │   └── ...
+│   ├── sessions/         # Session handoffs & next-day prompts
+│   └── planning/         # Strategic planning documents
+└── README.md             # Project overview and quick start
 ```
 
 ---
@@ -507,13 +518,14 @@ russell-mental-health/
 ## 📚 Documentation
 
 **For Developers:**
-- `README.md` - Project overview and quick start
-- `TODO.md` - Current task list and priorities
-- `DAY_1_COMPLETE.md` - Day 1 milestone details
-- `DAY_2_COMPLETE.md` - Day 2 milestone details
-- `ABOUT.md` - This file (version info and roadmap)
-- `CLAUDE.md` - Claude AI development guidelines
-- `prisma/schema.prisma` - Database schema
+- `README.md` - Project overview and quick start (root directory)
+- `docs/TODO.md` - Current task list and priorities
+- `docs/daily/` - Daily milestone documentation (Days 1, 2, 5, 6, 7)
+- `docs/ABOUT.md` - This file (version info and roadmap)
+- `docs/CLAUDE.md` - Claude AI development guidelines
+- `docs/sessions/` - Session handoffs and next-day prompts
+- `docs/planning/` - Strategic planning documents
+- `russell-mental-health/prisma/schema.prisma` - Database schema
 
 **For Users:**
 - User manual (planned)
