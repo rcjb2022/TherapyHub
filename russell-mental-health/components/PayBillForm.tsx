@@ -24,11 +24,11 @@ export function PayBillForm({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  // Max payment: Math.max(balance, $500)
-  const maxPayment = Math.max(currentBalance, 500)
+  // Max payment: Always $500 (allows prepayments)
+  const maxPayment = 500
 
-  // Default payment button amount (balance or $500, whichever is less)
-  const defaultPaymentAmount = Math.min(currentBalance, 500)
+  // Default payment button amount
+  const defaultPaymentAmount = currentBalance > 0 ? Math.min(currentBalance, 500) : 100
 
   const handlePayFull = async () => {
     await processPayment(defaultPaymentAmount)
@@ -42,7 +42,7 @@ export function PayBillForm({
     }
 
     if (amountNum > maxPayment) {
-      setError(`Payment cannot exceed ${maxPayment > currentBalance ? '$500.00' : `$${currentBalance.toFixed(2)}`}`)
+      setError(`Payment cannot exceed $${maxPayment.toFixed(2)}`)
       return
     }
 
@@ -87,17 +87,6 @@ export function PayBillForm({
     }
   }
 
-  if (currentBalance <= 0) {
-    return (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-        <p className="text-lg font-semibold text-green-900">All Paid Up! ✓</p>
-        <p className="mt-1 text-sm text-green-700">
-          You have no outstanding balance.
-        </p>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-4">
       {/* Error Message */}
@@ -118,10 +107,17 @@ export function PayBillForm({
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">Outstanding Balance</p>
-            <p className="text-3xl font-bold text-red-600">
-              ${currentBalance.toFixed(2)}
+            <p className="text-sm text-gray-600">
+              {currentBalance > 0 ? 'Outstanding Balance' : currentBalance < 0 ? 'Account Credit' : 'Current Balance'}
             </p>
+            <p className={`text-3xl font-bold ${currentBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+              ${Math.abs(currentBalance).toFixed(2)}
+            </p>
+            {currentBalance <= 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                You can prepay up to $500.00
+              </p>
+            )}
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">Card on File</p>
@@ -155,12 +151,12 @@ export function PayBillForm({
         >
           {loading ? (
             'Processing...'
+          ) : currentBalance > 500 ? (
+            'Pay $500.00 Now'
+          ) : currentBalance > 0 ? (
+            `Pay Full Balance ($${currentBalance.toFixed(2)})`
           ) : (
-            <>
-              {currentBalance > 500
-                ? 'Pay $500.00 Now'
-                : `Pay Full Balance ($${currentBalance.toFixed(2)})`}
-            </>
+            `Prepay $${defaultPaymentAmount.toFixed(2)}`
           )}
         </button>
         <p className="mt-2 text-center text-xs text-gray-500">
