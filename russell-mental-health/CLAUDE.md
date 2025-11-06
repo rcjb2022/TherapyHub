@@ -147,33 +147,79 @@ When updating Prisma schema:
 
 ## 📚 Daily Documentation Requirements
 
+### CRITICAL: Documentation Exists in TWO Locations
+
+**You MUST read, understand, and update documentation in BOTH locations:**
+
+#### Location 1: Main TherapyHub Folder (`/TherapyHub/`)
+**Files to read and update:**
+- `README.md` - Main project documentation (THE SOURCE OF TRUTH)
+- `HANDOFF_DAY_X.md` - Session handoff documents
+- `TOMORROW_PROMPTS_DAY_X.md` - Next session prompts and workflows
+- Planning documents (FINAL_REALISTIC_PLAN.md, SPECIALIZED_FEATURES.md, etc.)
+
+**Purpose:** Project-level documentation, session handoffs, planning
+
+#### Location 2: Russell Mental Health Subdirectory (`/TherapyHub/russell-mental-health/`)
+**Files to read and update:**
+- `TODO.md` - Current tasks and priorities
+- `ABOUT.md` - Detailed version history and technical documentation
+- `CLAUDE.md` - This file (development guidelines)
+- `DAY_X_COMPLETE.md` - Daily milestone documentation
+- `README_QR.md` - Quick reference for developers
+
+**Purpose:** Technical documentation, task tracking, daily progress
+
+### At Start of EVERY Session:
+1. **Read BOTH locations** - Check for updated docs, handoffs, instructions
+2. **Read HANDOFF_DAY_X.md** in main folder - Understand where you left off
+3. **Read TODO.md** in russell-mental-health/ - Know current priorities
+4. **Read CLAUDE.md** in russell-mental-health/ - Follow these guidelines
+
 ### End of Each Session - ALWAYS Update:
 
-1. **TODO.md**
+**In russell-mental-health/ subdirectory:**
+
+1. **TODO.md** (russell-mental-health/TODO.md)
    - Mark completed tasks with ✅
    - Update "In Progress" section
    - Add new tasks discovered during session
    - Update "Next Session" notes
    - Include any blockers or issues
 
-2. **README.md**
-   - Update version number if milestone reached
-   - Update "Current Phase" section
-   - Add completed features to relevant section
-   - Update roadmap progress
-
-3. **ABOUT.md**
+2. **ABOUT.md** (russell-mental-health/ABOUT.md)
    - Add to version history if significant changes
    - Update "Current Version" section
    - Document any new features or bug fixes
    - Keep roadmap synchronized
 
-4. **Daily Recap Document**
-   - Create `DAY_X_COMPLETE.md` for each major milestone
+3. **DAY_X_COMPLETE.md** (russell-mental-health/DAY_X_COMPLETE.md)
+   - Create for each major milestone (day completion)
    - Document what was built
    - List bugs fixed
    - Include test results
    - Note any technical decisions made
+
+**In main TherapyHub/ folder:**
+
+4. **README.md** (TherapyHub/README.md)
+   - Update version number if milestone reached
+   - Update "Current Phase" section
+   - Add completed features to relevant section
+   - Update roadmap progress
+
+5. **HANDOFF_DAY_X.md** (TherapyHub/HANDOFF_DAY_X.md)
+   - Create session handoff document
+   - What was built today
+   - What's working
+   - Next session priorities
+   - Required setup for next session
+
+6. **TOMORROW_PROMPTS_DAY_X.md** (TherapyHub/TOMORROW_PROMPTS_DAY_X.md)
+   - Detailed prompts for next session
+   - Step-by-step workflows
+   - Troubleshooting guides
+   - Testing checklists
 
 ### Commit Messages
 - Clear, descriptive commit messages
