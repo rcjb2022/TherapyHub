@@ -44,23 +44,27 @@ npm run dev
 | [ABOUT.md](ABOUT.md) | Detailed technical documentation |
 | [TODO.md](TODO.md) | Current tasks & Day 6 priorities |
 | [CLAUDE.md](CLAUDE.md) | Development guidelines & principles |
-| [DAY_5_COMPLETE.md](DAY_5_COMPLETE.md) | Latest milestone (Day 5) |
-| [../HANDOFF_DAY_6.md](../HANDOFF_DAY_6.md) | Next session detailed plan |
+| [DAY_6_COMPLETE.md](DAY_6_COMPLETE.md) | Latest milestone (Day 6) |
+| [DAY_5_COMPLETE.md](DAY_5_COMPLETE.md) | Previous milestone (Day 5) |
+| [../HANDOFF_DAY_6.md](../HANDOFF_DAY_6.md) | Session handoff |
+| [../TOMORROW_PROMPTS_DAY_7.md](../TOMORROW_PROMPTS_DAY_7.md) | Next session detailed plan |
 
 ---
 
-## 📊 Current Status (v0.5.0 - Day 5 Complete)
+## 📊 Current Status (v0.6.0 - Day 6 Complete)
 
 **Latest Achievements:**
-- ✅ Google Cloud Storage integration (HIPAA-compliant signed URLs)
-- ✅ File upload system (insurance cards, IDs, legal documents)
-- ✅ Document library organized by category
-- ✅ Complete billing & payment system (Stripe)
-- ✅ All 7 intake forms with file upload functionality
+- ✅ Full appointment scheduling system (FullCalendar + Luxon)
+- ✅ Eastern Time display with automatic DST handling
+- ✅ Create, edit, delete, drag-and-drop appointments
+- ✅ One-time payments with Stripe Elements (card not saved)
+- ✅ Prepayment support up to $500 (builds account credit)
+- ✅ Critical bug fixes (patient payment auth, timezone display)
 
-**Next Up (Day 6 - Nov 5, 2025):**
-- 🎯 Appointment Scheduling System (FullCalendar)
-- 📊 Patient Dashboard Improvements
+**Next Up (Day 7 - Nov 7, 2025):**
+- 🎯 Google Calendar Integration (two-way sync)
+- 📧 Email Reminders (Gmail API)
+- 🔔 Appointment Conflict Detection
 
 **For full roadmap:** See [../README.md](../README.md)
 
@@ -108,7 +112,7 @@ russell-mental-health/          # ← You are here
 
 ---
 
-**Version:** 0.5.0 | **License:** Proprietary | **© 2025** Bethany R. Russell, Ph.D., P.A.
+**Version:** 0.6.0 | **License:** Proprietary | **© 2025** Bethany R. Russell, Ph.D., P.A.
 
 <div align="center">
   <sub>Russell Mental Health | Babcock Ranch, FL | www.RussellMentalHealth.com</sub>

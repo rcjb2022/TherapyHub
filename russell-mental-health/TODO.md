@@ -1,12 +1,105 @@
 # Russell Mental Health Platform - TODO List
 
-**Version:** 0.5.0
-**Last Updated:** November 4, 2025 (Day 5 - Complete)
-**Status:** File Upload System COMPLETE ✅ - Ready for Appointment Scheduling 🚀
+**Version:** 0.6.0
+**Last Updated:** November 6, 2025 (Day 6 - Complete)
+**Status:** Calendar System & Enhanced Payments COMPLETE ✅ - Ready for Google Calendar Integration 🚀
 
 ---
 
-## ✅ Completed Today (Day 5 - Nov 4, 2025)
+## ✅ Completed Today (Day 6 - Nov 6, 2025)
+
+### Appointment Scheduling System 🗓️ ⭐
+- [x] **FullCalendar Integration with Luxon Timezone Support**
+  - Installed @fullcalendar/luxon2 and luxon packages
+  - Proper Eastern Time display for ALL users globally
+  - Handles DST transitions automatically
+  - Added "All times shown in Eastern Time (ET)" indicators
+
+- [x] **Complete Calendar System**
+  - Therapist calendar at `/dashboard/calendar`
+  - Patient calendar at `/dashboard/appointments` (read-only)
+  - Day, Week, Month views with 15-minute time slots
+  - Color-coded events (Blue=Scheduled, Green=Completed, Gray=Cancelled)
+  - 24-hour scheduling support for crisis appointments
+
+- [x] **Appointment CRUD Operations**
+  - Create appointments with comprehensive modal
+  - Edit appointments (click event to modify)
+  - Delete/cancel appointments with status tracking
+  - Drag-and-drop rescheduling
+  - Real-time calendar updates
+
+- [x] **Appointment Features**
+  - Patient selection dropdown (active patients only)
+  - 15-minute interval time picker dropdown (replaced scrolling input)
+  - Duration options: 30, 45, 60, 90 minutes
+  - Appointment types: Initial, Therapy, Medication, Assessment, Crisis, Family
+  - Session types: Office, Telehealth, Phone
+  - CPT codes: 90791, 90832, 90834, 90837, 90839, 90846, 90847, 90853, 96127
+  - Recurring appointments: Daily, Weekly, Monthly (up to 90 days)
+  - Google Meet link auto-generation for telehealth
+  - Notes field for session-specific information
+
+### Enhanced Patient Payment System 💳 ⭐
+- [x] **One-Time Payment Feature**
+  - Stripe Elements integration (CardElement)
+  - Card entry without saving to Stripe Customer
+  - API endpoint: `/api/stripe/one-time-payment`
+  - Payment processed securely (PCI compliant)
+
+- [x] **Tabbed Payment Interface**
+  - PatientBillingClient wrapper component
+  - Two tabs: "Pay with Saved Card" | "One-Time Payment"
+  - Seamless switching between payment methods
+  - Clean, intuitive UI
+
+- [x] **Prepayment Feature**
+  - Allow prepayments up to $500 when balance is $0
+  - Creates account credit (negative balance)
+  - Balance display adapts:
+    - Positive: "Outstanding Balance" (red)
+    - Zero: "Current Balance" (green) + prepayment notice
+    - Negative: "Account Credit" (green)
+  - Button text adapts: "Pay Balance" vs "Prepay $100"
+
+### Critical Bug Fixes (Gemini + User Feedback) 🐛 ⭐
+- [x] **Patient Payment Authorization (CRITICAL)**
+  - Fixed 403 error preventing patients from paying own bills
+  - Updated `/api/stripe/charge` to allow THERAPIST OR PATIENT
+  - Proper authorization checks for each role
+  - Patients can now successfully pay!
+
+- [x] **Timezone Display Issue (CRITICAL)**
+  - Calendar was showing UTC times instead of Eastern
+  - Root cause: FullCalendar needs Luxon plugin for named timezones
+  - Installed @fullcalendar/luxon2 + luxon packages
+  - Now `timeZone="America/New_York"` works correctly
+  - Times display accurately for all users globally
+
+- [x] **Server/Client Component Error**
+  - Removed `onSuccess` callback (can't pass from Server to Client)
+  - Use `router.refresh()` inside Client Component
+  - Cleaner code, faster refresh, follows Next.js 13+ patterns
+
+- [x] **Null Assertion Safety**
+  - Added null check for `user.therapist` before accessing `.id`
+  - Prevents runtime crashes if therapist profile missing
+  - More robust error handling
+
+- [x] **Stripe PaymentIntent Error**
+  - Set `payment_method_types: ['card']` to avoid redirect methods
+  - Fixes "must provide return_url" error
+  - Card payments work perfectly
+
+- [x] **Time Picker UX Issue**
+  - Replaced native time input with 15-minute dropdown
+  - User feedback: "Makes it faster, no scrolling through 60 minutes"
+  - Format: "9:00 AM", "9:15 AM", etc.
+  - Much better scheduling experience
+
+---
+
+## ✅ Completed Earlier (Day 5 - Nov 4, 2025)
 
 ### File Upload System & Document Management 📁 ⭐
 - [x] **Google Cloud Storage Integration**
