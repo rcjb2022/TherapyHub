@@ -11,7 +11,7 @@
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { fromZonedTime } from 'date-fns-tz'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -86,7 +86,7 @@ export function AppointmentModal({
   const [recurringPattern, setRecurringPattern] = useState('none')
 
   // Fetch existing appointment data (for edit mode)
-  const fetchAppointmentData = useCallback(async (id: string) => {
+  const fetchAppointmentData = async (id: string) => {
     setLoadingAppointment(true)
     try {
       const response = await fetch(`/api/appointments/${id}`)
@@ -103,10 +103,9 @@ export function AppointmentModal({
         setNotes(apt.notes || '')
 
         // Parse start time from UTC to Eastern for display
-        // Use explicit timezone formatting to ensure consistency regardless of browser timezone
         const start = new Date(apt.startTime)
-        setStartDate(start.toLocaleDateString('en-CA', { timeZone: TIMEZONE }))
-        setStartTime(start.toLocaleTimeString('en-GB', { timeZone: TIMEZONE, hour: '2-digit', minute: '2-digit' }))
+        setStartDate(start.toISOString().split('T')[0])
+        setStartTime(start.toTimeString().slice(0, 5))
 
         // Note: We don't support editing recurring appointments yet
         setRecurringPattern('none')
@@ -119,10 +118,34 @@ export function AppointmentModal({
     } finally {
       setLoadingAppointment(false)
     }
-  }, [])
+  }
+
+  // Load patients and therapists (and appointment data if editing)
+  useEffect(() => {
+    if (isOpen) {
+      fetchPatientsAndTherapists()
+
+      // If editing, load appointment data
+      if (isEditMode && appointmentId) {
+        fetchAppointmentData(appointmentId)
+      } else {
+        // Set default start time if provided
+        if (defaultStartTime) {
+          const rounded = roundToNearestQuarterHour(defaultStartTime)
+          setStartDate(rounded.toISOString().split('T')[0])
+          setStartTime(rounded.toTimeString().slice(0, 5))
+        } else {
+          // Default to next hour
+          const next = roundToNearestQuarterHour(new Date(Date.now() + 60 * 60 * 1000))
+          setStartDate(next.toISOString().split('T')[0])
+          setStartTime(next.toTimeString().slice(0, 5))
+        }
+      }
+    }
+  }, [isOpen, defaultStartTime, isEditMode, appointmentId])
 
   // Fetch patients and therapists
-  const fetchPatientsAndTherapists = useCallback(async () => {
+  const fetchPatientsAndTherapists = async () => {
     try {
       const [patientsRes, therapistsRes] = await Promise.all([
         fetch('/api/patients'),
@@ -146,31 +169,7 @@ export function AppointmentModal({
     } catch (err) {
       console.error('Failed to load patients/therapists:', err)
     }
-  }, [])
-
-  // Load patients and therapists (and appointment data if editing)
-  useEffect(() => {
-    if (isOpen) {
-      fetchPatientsAndTherapists()
-
-      // If editing, load appointment data
-      if (isEditMode && appointmentId) {
-        fetchAppointmentData(appointmentId)
-      } else {
-        // Set default start time if provided
-        if (defaultStartTime) {
-          const rounded = roundToNearestQuarterHour(defaultStartTime)
-          setStartDate(rounded.toLocaleDateString('en-CA', { timeZone: TIMEZONE }))
-          setStartTime(rounded.toLocaleTimeString('en-GB', { timeZone: TIMEZONE, hour: '2-digit', minute: '2-digit' }))
-        } else {
-          // Default to next hour
-          const next = roundToNearestQuarterHour(new Date(Date.now() + 60 * 60 * 1000))
-          setStartDate(next.toLocaleDateString('en-CA', { timeZone: TIMEZONE }))
-          setStartTime(next.toLocaleTimeString('en-GB', { timeZone: TIMEZONE, hour: '2-digit', minute: '2-digit' }))
-        }
-      }
-    }
-  }, [isOpen, defaultStartTime, isEditMode, appointmentId, fetchAppointmentData, fetchPatientsAndTherapists])
+  }
 
   // Handle appointment type change
   const handleTypeChange = (type: string) => {
