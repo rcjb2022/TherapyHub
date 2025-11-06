@@ -33,43 +33,43 @@ export default async function PatientDetailPage({
     return <div>Therapist not found</div>
   }
 
-  // Fetch patient
-  const patient = await prisma.patient.findFirst({
-    where: {
-      id: id,
-      therapistId: user.therapist.id,
-    },
-    include: {
-      insurancePrimary: true,
-      insuranceSecondary: true,
-      forms: {
-        orderBy: { createdAt: 'desc' },
+  // Fetch patient data and total appointment count in parallel for better performance
+  const [patient, totalAppointmentCount] = await Promise.all([
+    prisma.patient.findFirst({
+      where: {
+        id: id,
+        therapistId: user.therapist.id,
       },
-      appointments: {
-        orderBy: { startTime: 'desc' },
-        take: 10, // Show last 10 appointments
+      include: {
+        insurancePrimary: true,
+        insuranceSecondary: true,
+        forms: {
+          orderBy: { createdAt: 'desc' },
+        },
+        appointments: {
+          orderBy: { startTime: 'desc' },
+          take: 10, // Show last 10 appointments
+        },
+        clinicalNotes: {
+          orderBy: { sessionDate: 'desc' },
+          take: 5,
+        },
+        documents: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
       },
-      clinicalNotes: {
-        orderBy: { sessionDate: 'desc' },
-        take: 5,
+    }),
+    prisma.appointment.count({
+      where: {
+        patientId: id,
       },
-      documents: {
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      },
-      payments: {
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-      },
-    },
-  })
-
-  // Get total appointment count for this patient
-  const totalAppointmentCount = await prisma.appointment.count({
-    where: {
-      patientId: id,
-    },
-  })
+    }),
+  ])
 
   // Get pending forms (SUBMITTED status)
   const pendingForms = patient?.forms.filter((f) => f.status === 'SUBMITTED') || []
@@ -533,27 +533,6 @@ export default async function PatientDetailPage({
             </div>
           </div>
 
-          {/* All Documents */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">All Documents</h2>
-            {patient.documents.length > 0 ? (
-              <div className="space-y-3">
-                {patient.documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between border-l-4 border-gray-500 bg-gray-50 p-3">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{doc.name}</p>
-                      <p className="text-xs text-gray-600">{doc.type}</p>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      {new Date(doc.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-600">No documents uploaded yet</p>
-            )}
-          </div>
         </div>
       </div>
     </div>

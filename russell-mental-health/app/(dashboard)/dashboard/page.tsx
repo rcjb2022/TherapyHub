@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { UsersIcon, CalendarIcon, ClipboardDocumentCheckIcon, CurrencyDollarIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
+import { UsersIcon, CalendarIcon, ClipboardDocumentCheckIcon, CurrencyDollarIcon, DocumentTextIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -60,6 +60,33 @@ export default async function DashboardPage() {
     0
   )
   const patientsWithBalanceCount = patientsWithBalances.length
+
+  // Fetch today's appointments (all status: scheduled, cancelled, completed)
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+
+  const endOfToday = new Date()
+  endOfToday.setHours(23, 59, 59, 999)
+
+  const todaysAppointments = await prisma.appointment.findMany({
+    where: {
+      startTime: {
+        gte: startOfToday,
+        lte: endOfToday,
+      },
+    },
+    include: {
+      patient: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+    },
+    orderBy: {
+      startTime: 'asc',
+    },
+  })
 
   const statCards = [
     {
@@ -147,25 +174,101 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Today's Schedule */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Today's Schedule</h2>
-          <p className="text-sm text-gray-600">No appointments scheduled for today</p>
-          <button className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-            View Calendar
-          </button>
+      {/* Today's Schedule */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Today's Schedule
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </span>
+          </h2>
+          <Link
+            href="/dashboard/calendar"
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            View Full Calendar →
+          </Link>
         </div>
 
-        {/* Recent Activity */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
-          <p className="text-sm text-gray-600">No recent activity</p>
-          <button className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            View All Activity
-          </button>
-        </div>
+        {todaysAppointments.length > 0 ? (
+          <div className="space-y-3">
+            {todaysAppointments.map((apt) => {
+              const appointmentTime = new Date(apt.startTime)
+              const now = new Date()
+              const isPast = appointmentTime < now
+              const isCurrent = appointmentTime <= now && new Date(apt.endTime) >= now
+
+              return (
+                <div
+                  key={apt.id}
+                  className={`flex items-center justify-between rounded-lg p-4 border-l-4 ${
+                    apt.status === 'CANCELLED'
+                      ? 'border-gray-400 bg-gray-50'
+                      : isCurrent
+                      ? 'border-green-500 bg-green-50'
+                      : isPast
+                      ? 'border-blue-400 bg-blue-50 opacity-60'
+                      : 'border-blue-500 bg-blue-50'
+                  }`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {appointmentTime.toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          timeZone: 'America/New_York',
+                        })}
+                      </p>
+                      <span className="text-xs text-gray-500">•</span>
+                      <p className="text-sm font-medium text-gray-900">
+                        {apt.patient.firstName} {apt.patient.lastName}
+                      </p>
+                      {isCurrent && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                          In Session
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {apt.appointmentType.replace(/_/g, ' ')} • {apt.duration} min
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {apt.status === 'CANCELLED' ? (
+                      <span className="text-xs font-medium text-gray-500">Cancelled</span>
+                    ) : apt.googleMeetLink && !isPast ? (
+                      <a
+                        href={apt.googleMeetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                      >
+                        <VideoCameraIcon className="h-4 w-4" />
+                        Join Session
+                      </a>
+                    ) : isPast && apt.status !== 'COMPLETED' ? (
+                      <span className="text-xs font-medium text-gray-500">Past</span>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <p className="mt-2 text-sm text-gray-600">No appointments scheduled for today</p>
+            <Link
+              href="/dashboard/calendar"
+              className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              Schedule Appointment
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )
