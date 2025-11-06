@@ -31,6 +31,19 @@ export default async function VideoSessionPage({ params }: VideoSessionPageProps
 
   const { appointmentId } = await params
 
+  // Get full user object with relations
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: {
+      therapist: true,
+      patient: true,
+    },
+  })
+
+  if (!user) {
+    redirect('/login')
+  }
+
   // Fetch appointment with patient and therapist details
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
@@ -64,12 +77,12 @@ export default async function VideoSessionPage({ params }: VideoSessionPageProps
   // Authorization check: User must be either:
   // 1. The therapist for this appointment
   // 2. The patient for this appointment
-  const isTherapist = session.user.role === 'THERAPIST' &&
-                     session.user.therapist?.id === appointment.therapistId
-  const isPatient = session.user.role === 'PATIENT' &&
-                   appointment.patient.userId === session.user.id
+  // 3. An admin (can access all appointments)
+  const isAdmin = session.user.role === 'ADMIN'
+  const isTherapist = user.therapist?.id === appointment.therapistId
+  const isPatient = user.patient?.id === appointment.patientId
 
-  if (!isTherapist && !isPatient) {
+  if (!isTherapist && !isPatient && !isAdmin) {
     // Unauthorized - redirect to dashboard
     redirect('/dashboard')
   }
