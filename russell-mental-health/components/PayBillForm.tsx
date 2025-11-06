@@ -1,20 +1,20 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 interface PayBillFormProps {
   patientId: string
   currentBalance: number
   cardLast4: string
-  onSuccess?: () => void
 }
 
 export function PayBillForm({
   patientId,
   currentBalance,
   cardLast4,
-  onSuccess,
 }: PayBillFormProps) {
+  const router = useRouter()
   const [amount, setAmount] = useState('')
   const [showCustomAmount, setShowCustomAmount] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -72,9 +72,9 @@ export function PayBillForm({
       setAmount('')
       setShowCustomAmount(false)
 
-      // Call onSuccess callback after short delay
+      // Refresh the page data after short delay to show updated balance
       setTimeout(() => {
-        if (onSuccess) onSuccess()
+        router.refresh()
       }, 1500)
     } catch (err: any) {
       console.error('Payment error:', err)

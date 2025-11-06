@@ -116,10 +116,6 @@ export default async function PatientBillingPage() {
             patientId={patient.id}
             currentBalance={Number(patient.balance)}
             cardLast4={cardLast4}
-            onSuccess={() => {
-              // Refresh the page to show updated balance
-              window.location.reload()
-            }}
           />
         </div>
       )}
