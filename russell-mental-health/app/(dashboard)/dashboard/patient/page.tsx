@@ -62,6 +62,26 @@ export default async function PatientDashboardPage() {
 
   const patient = user.patient
 
+  // Get upcoming appointments
+  const upcomingAppointments = await prisma.appointment.findMany({
+    where: {
+      patientId: patient.id,
+      startTime: {
+        gte: new Date(), // Future appointments only
+      },
+      status: {
+        in: ['SCHEDULED', 'CONFIRMED'],
+      },
+    },
+    orderBy: {
+      startTime: 'asc',
+    },
+    take: 1, // Just get the next one
+  })
+
+  const nextAppointment = upcomingAppointments[0]
+  const upcomingCount = upcomingAppointments.length
+
   // Separate forms by status
   const pendingForms = patient.forms.filter((f) => f.status === 'DRAFT' || f.status === 'SUBMITTED')
   const completedForms = patient.forms.filter((f) => f.status === 'COMPLETED')
@@ -119,12 +139,36 @@ export default async function PatientDashboardPage() {
           className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Upcoming Appointments</p>
-              <p className="mt-2 text-3xl font-bold text-gray-900">0</p>
-              <p className="mt-2 text-xs font-medium text-blue-600">
-                View Calendar →
-              </p>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-600">Next Appointment</p>
+              {nextAppointment ? (
+                <>
+                  <p className="mt-2 text-lg font-bold text-gray-900">
+                    {new Date(nextAppointment.startTime).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </p>
+                  <p className="text-sm font-semibold text-gray-700">
+                    {new Date(nextAppointment.startTime).toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      timeZone: 'America/New_York',
+                    })}
+                  </p>
+                  <p className="mt-2 text-xs font-medium text-blue-600">
+                    View Calendar →
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-2 text-3xl font-bold text-gray-900">0</p>
+                  <p className="mt-2 text-xs font-medium text-blue-600">
+                    No upcoming appointments
+                  </p>
+                </>
+              )}
             </div>
             <div className="rounded-full bg-green-50 p-3">
               <CalendarIcon className="h-6 w-6 text-green-600" />

@@ -23,7 +23,8 @@ function getCalendarClient(): calendar_v3.Calendar {
     const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
 
     // Use domain-wide delegation to impersonate the calendar owner
-    const calendarEmail = process.env.GOOGLE_CALENDAR_ID || 'drbethany@russellmentalhealth.com'
+    // Use GOOGLE_IMPERSONATED_EMAIL for impersonation (not GOOGLE_CALENDAR_ID which could be 'primary')
+    const impersonatedEmail = process.env.GOOGLE_IMPERSONATED_EMAIL || process.env.GOOGLE_CALENDAR_ID || 'drbethany@russellmentalhealth.com'
 
     auth = new google.auth.GoogleAuth({
       credentials,
@@ -32,7 +33,7 @@ function getCalendarClient(): calendar_v3.Calendar {
         'https://www.googleapis.com/auth/calendar.events'
       ],
       clientOptions: {
-        subject: calendarEmail, // Impersonate this user (Domain-Wide Delegation)
+        subject: impersonatedEmail, // Impersonate this user (Domain-Wide Delegation)
       },
     })
   } else if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH) {
@@ -42,7 +43,8 @@ function getCalendarClient(): calendar_v3.Calendar {
       const credentials = JSON.parse(fs.readFileSync(keyPath, 'utf-8'))
 
       // Use domain-wide delegation to impersonate the calendar owner
-      const calendarEmail = process.env.GOOGLE_CALENDAR_ID || 'drbethany@russellmentalhealth.com'
+      // Use GOOGLE_IMPERSONATED_EMAIL for impersonation (not GOOGLE_CALENDAR_ID which could be 'primary')
+      const impersonatedEmail = process.env.GOOGLE_IMPERSONATED_EMAIL || process.env.GOOGLE_CALENDAR_ID || 'drbethany@russellmentalhealth.com'
 
       auth = new google.auth.GoogleAuth({
         credentials,
@@ -51,7 +53,7 @@ function getCalendarClient(): calendar_v3.Calendar {
           'https://www.googleapis.com/auth/calendar.events'
         ],
         clientOptions: {
-          subject: calendarEmail, // Impersonate this user (Domain-Wide Delegation)
+          subject: impersonatedEmail, // Impersonate this user (Domain-Wide Delegation)
         },
       })
     } else {
