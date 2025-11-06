@@ -6,7 +6,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { UsersIcon, CalendarIcon, ClipboardDocumentCheckIcon, CurrencyDollarIcon, DocumentTextIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
+import { UsersIcon, CalendarIcon, ClipboardDocumentCheckIcon, CurrencyDollarIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
+import { JoinSessionButton } from '@/components/JoinSessionButton'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -229,21 +230,13 @@ export default async function DashboardPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {apt.status === 'CANCELLED' ? (
-                      <span className="text-xs font-medium text-gray-500">Cancelled</span>
-                    ) : apt.googleMeetLink && !isPast ? (
-                      <a
-                        href={apt.googleMeetLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                      >
-                        <VideoCameraIcon className="h-4 w-4" />
-                        Join Session
-                      </a>
-                    ) : isPast && apt.status !== 'COMPLETED' ? (
-                      <span className="text-xs font-medium text-gray-500">Past</span>
-                    ) : null}
+                    <JoinSessionButton
+                      appointmentId={apt.id}
+                      startTime={apt.startTime}
+                      endTime={apt.endTime}
+                      googleMeetLink={apt.googleMeetLink}
+                      status={apt.status}
+                    />
                   </div>
                 </div>
               )

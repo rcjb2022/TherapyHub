@@ -16,6 +16,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
 import { TIMEZONE } from '@/lib/appointment-utils'
+import { canJoinSession } from '@/lib/video-utils'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
@@ -76,6 +77,7 @@ export function AppointmentDetailsModal({
   const [canceling, setCanceling] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [joinStatus, setJoinStatus] = useState<ReturnType<typeof canJoinSession> | null>(null)
 
   // Fetch appointment details
   const fetchAppointment = useCallback(async () => {
@@ -103,6 +105,24 @@ export function AppointmentDetailsModal({
       fetchAppointment()
     }
   }, [isOpen, appointmentId, fetchAppointment])
+
+  // Update join status when appointment loads and every minute
+  useEffect(() => {
+    if (appointment) {
+      const updateJoinStatus = () => {
+        const start = new Date(appointment.startTime)
+        const end = new Date(appointment.endTime)
+        setJoinStatus(canJoinSession(start, end))
+      }
+
+      // Initial check
+      updateJoinStatus()
+
+      // Update every minute
+      const interval = setInterval(updateJoinStatus, 60000)
+      return () => clearInterval(interval)
+    }
+  }, [appointment])
 
   // Cancel appointment
   const handleCancel = async () => {
@@ -253,24 +273,48 @@ export function AppointmentDetailsModal({
               </div>
 
               {/* Google Meet Link */}
-              {appointment.googleMeetLink && (
+              {appointment.googleMeetLink && appointment.status !== 'CANCELLED' && (
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <VideoIcon className="h-5 w-5 text-blue-600" />
                     <h3 className="font-semibold text-gray-900">Video Session</h3>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <a
-                      href={appointment.googleMeetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1"
-                    >
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                        <VideoIcon className="h-4 w-4 mr-2" />
-                        Join Video Session
+                    {joinStatus?.canJoin ? (
+                      <a
+                        href={appointment.googleMeetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1"
+                      >
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                          <VideoIcon className="h-4 w-4 mr-2" />
+                          Join Video Session
+                        </Button>
+                      </a>
+                    ) : joinStatus?.reason === 'too_early' ? (
+                      <Button disabled className="flex-1 bg-gray-300 text-gray-600 cursor-not-allowed">
+                        <ClockIcon className="h-4 w-4 mr-2" />
+                        Opens in {joinStatus.minutesUntil} min
                       </Button>
-                    </a>
+                    ) : joinStatus?.reason === 'ended' ? (
+                      <Button disabled className="flex-1 bg-gray-300 text-gray-600 cursor-not-allowed">
+                        <ClockIcon className="h-4 w-4 mr-2" />
+                        Session Ended
+                      </Button>
+                    ) : (
+                      <a
+                        href={appointment.googleMeetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1"
+                      >
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                          <VideoIcon className="h-4 w-4 mr-2" />
+                          Join Video Session
+                        </Button>
+                      </a>
+                    )}
                     <Button
                       onClick={handleCopyMeetLink}
                       variant="outline"

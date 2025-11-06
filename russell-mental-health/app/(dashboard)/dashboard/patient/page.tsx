@@ -6,7 +6,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { DocumentTextIcon, CalendarIcon, VideoCameraIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import { DocumentTextIcon, CalendarIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import { JoinSessionButton } from '@/components/JoinSessionButton'
 
 const formNames: Record<string, string> = {
   'patient-information': 'Patient Information',
@@ -344,17 +345,13 @@ export default async function PatientDashboardPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {apt.googleMeetLink && (
-                      <a
-                        href={apt.googleMeetLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                      >
-                        <VideoCameraIcon className="h-4 w-4" />
-                        Join Session
-                      </a>
-                    )}
+                    <JoinSessionButton
+                      appointmentId={apt.id}
+                      startTime={apt.startTime}
+                      endTime={apt.endTime}
+                      googleMeetLink={apt.googleMeetLink}
+                      status={apt.status}
+                    />
                   </div>
                 </div>
               )
