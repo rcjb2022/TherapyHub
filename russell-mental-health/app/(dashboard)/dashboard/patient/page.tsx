@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { DocumentTextIcon, CalendarIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
+import { DocumentTextIcon, CalendarIcon, CurrencyDollarIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
 import { JoinSessionButton } from '@/components/JoinSessionButton'
 
 const formNames: Record<string, string> = {
