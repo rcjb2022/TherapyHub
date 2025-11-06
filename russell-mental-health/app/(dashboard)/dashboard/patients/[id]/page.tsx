@@ -407,9 +407,11 @@ export default async function PatientDetailPage({
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Recent Appointments</h2>
-              {totalAppointmentCount > patient.appointments.length && (
+              {totalAppointmentCount > 0 && (
                 <span className="text-xs text-gray-500">
-                  Showing last {patient.appointments.length} of {totalAppointmentCount} total
+                  {totalAppointmentCount > patient.appointments.length
+                    ? `Showing last ${patient.appointments.length} of ${totalAppointmentCount} total`
+                    : `${totalAppointmentCount} total`}
                 </span>
               )}
             </div>

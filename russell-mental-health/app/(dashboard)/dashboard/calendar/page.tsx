@@ -27,6 +27,12 @@ export default async function CalendarPage() {
     redirect('/login')
   }
 
+  // CRITICAL: Redirect patients to their own appointments page
+  // Patients should NOT see all appointments (HIPAA violation)
+  if (session.user.role === 'PATIENT') {
+    redirect('/dashboard/appointments')
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
