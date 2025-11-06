@@ -222,10 +222,11 @@ export function AppointmentModal({
 
   if (!isOpen) return null
 
-  // Calculate end time for display
+  // Calculate end time for display (in Eastern time)
   let endTimeDisplay = ''
   if (startDate && startTime) {
-    const start = new Date(`${startDate}T${startTime}`)
+    const timeZone = 'America/New_York'
+    const start = fromZonedTime(`${startDate}T${startTime}`, timeZone)
     const end = calculateEndTime(start, duration)
     endTimeDisplay = formatTime(end)
   }

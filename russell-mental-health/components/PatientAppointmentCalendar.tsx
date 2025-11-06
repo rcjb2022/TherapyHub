@@ -10,6 +10,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toZonedTime } from 'date-fns-tz'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -51,17 +52,25 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
         const data = await response.json()
 
         // Transform to calendar events
+        // Convert UTC times from database to Eastern time for display
+        const timeZone = 'America/New_York'
         const now = new Date()
         const calendarEvents: CalendarEvent[] = data.map((apt: any) => {
-          const startTime = new Date(apt.startTime)
-          const minutesUntilStart = (startTime.getTime() - now.getTime()) / (1000 * 60)
+          const startUTC = new Date(apt.startTime)
+          const endUTC = new Date(apt.endTime)
+
+          // Convert UTC to Eastern time
+          const startEastern = toZonedTime(startUTC, timeZone)
+          const endEastern = toZonedTime(endUTC, timeZone)
+
+          const minutesUntilStart = (startUTC.getTime() - now.getTime()) / (1000 * 60)
           const canJoin = minutesUntilStart <= 15 && minutesUntilStart >= -60 // 15 min before to 60 min after
 
           return {
             id: apt.id,
             title: `Session with ${apt.therapist.user.name}`,
-            start: apt.startTime,
-            end: apt.endTime,
+            start: startEastern.toISOString(),
+            end: endEastern.toISOString(),
             backgroundColor: getStatusColor(apt.status),
             borderColor: getStatusColor(apt.status),
             extendedProps: {
@@ -132,7 +141,6 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
             center: 'title',
             right: 'dayGridMonth,timeGridWeek',
           }}
-          timeZone="America/New_York"
           slotMinTime="00:00:00" // 24-hour access (crisis appointments)
           slotMaxTime="24:00:00"
           allDaySlot={false}

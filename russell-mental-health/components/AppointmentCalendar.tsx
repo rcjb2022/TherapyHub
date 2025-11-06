@@ -13,6 +13,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toZonedTime } from 'date-fns-tz'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -73,17 +74,22 @@ export function AppointmentCalendar() {
         const data: AppointmentFromAPI[] = await response.json()
 
         // Transform appointments to FullCalendar events
-        // Ensure dates are in ISO 8601 format for proper timezone handling
+        // Convert UTC times from database to Eastern time for display
+        const timeZone = 'America/New_York'
         const calendarEvents: CalendarEvent[] = data.map((apt) => {
-          // Convert to Date objects then back to ISO strings to ensure proper format
-          const start = new Date(apt.startTime)
-          const end = new Date(apt.endTime)
+          // Database stores times in UTC, convert to Eastern for display
+          const startUTC = new Date(apt.startTime)
+          const endUTC = new Date(apt.endTime)
+
+          // Convert UTC to Eastern time
+          const startEastern = toZonedTime(startUTC, timeZone)
+          const endEastern = toZonedTime(endUTC, timeZone)
 
           return {
             id: apt.id,
             title: `${apt.patient.firstName} ${apt.patient.lastName}`,
-            start: start.toISOString(),
-            end: end.toISOString(),
+            start: startEastern.toISOString(),
+            end: endEastern.toISOString(),
             backgroundColor: getStatusColor(apt.status),
             borderColor: getStatusColor(apt.status),
             extendedProps: {
@@ -199,8 +205,7 @@ export function AppointmentCalendar() {
             right: 'dayGridMonth,timeGridWeek,timeGridDay',
           }}
 
-          // Time settings (Florida/Eastern time)
-          timeZone="America/New_York"
+          // Time settings (Florida/Eastern time - handled via toZonedTime conversion above)
           slotMinTime="00:00:00" // 12 AM (midnight) - allow crisis appointments
           slotMaxTime="24:00:00" // 12 AM next day (full 24 hours)
           slotDuration="00:15:00" // 15-minute slots
