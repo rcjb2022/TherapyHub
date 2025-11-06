@@ -147,33 +147,76 @@ When updating Prisma schema:
 
 ## 📚 Daily Documentation Requirements
 
+### CRITICAL: Documentation Structure
+
+**All project documentation is now organized in `/TherapyHub/docs/` with the following structure:**
+
+```
+TherapyHub/
+├── README.md                    (Main project documentation - THE SOURCE OF TRUTH)
+├── russell-mental-health/
+│   └── README_QR.md            (Quick reference for developers)
+└── docs/
+    ├── ABOUT.md                (Version history and technical documentation)
+    ├── TODO.md                 (Current tasks and priorities)
+    ├── CLAUDE.md               (This file - development guidelines)
+    ├── daily/                  (Daily completion documentation)
+    │   └── DAY_X_COMPLETE.md
+    ├── sessions/               (Session handoffs and next session prompts)
+    │   ├── HANDOFF_DAY_X.md
+    │   └── TOMORROW_PROMPTS_DAY_X.md
+    └── planning/               (Strategic planning documents)
+        ├── FINAL_REALISTIC_PLAN.md
+        ├── SPECIALIZED_FEATURES.md
+        └── [other planning docs]
+```
+
+### At Start of EVERY Session:
+1. **Read docs/sessions/HANDOFF_DAY_X.md** - Understand where you left off
+2. **Read docs/TODO.md** - Know current priorities and tasks
+3. **Read docs/CLAUDE.md** - Follow development guidelines (this file)
+4. **Read docs/sessions/TOMORROW_PROMPTS_DAY_X.md** - Detailed workflows for today
+
 ### End of Each Session - ALWAYS Update:
 
-1. **TODO.md**
+1. **docs/TODO.md**
    - Mark completed tasks with ✅
    - Update "In Progress" section
    - Add new tasks discovered during session
    - Update "Next Session" notes
    - Include any blockers or issues
 
-2. **README.md**
-   - Update version number if milestone reached
-   - Update "Current Phase" section
-   - Add completed features to relevant section
-   - Update roadmap progress
-
-3. **ABOUT.md**
+2. **docs/ABOUT.md**
    - Add to version history if significant changes
    - Update "Current Version" section
    - Document any new features or bug fixes
    - Keep roadmap synchronized
 
-4. **Daily Recap Document**
-   - Create `DAY_X_COMPLETE.md` for each major milestone
+3. **docs/daily/DAY_X_COMPLETE.md**
+   - Create for each major milestone (day completion)
    - Document what was built
    - List bugs fixed
    - Include test results
    - Note any technical decisions made
+
+4. **README.md** (root directory)
+   - Update version number if milestone reached
+   - Update "Current Phase" section
+   - Add completed features to relevant section
+   - Update roadmap progress
+
+5. **docs/sessions/HANDOFF_DAY_X.md**
+   - Create session handoff document
+   - What was built today
+   - What's working
+   - Next session priorities
+   - Required setup for next session
+
+6. **docs/sessions/TOMORROW_PROMPTS_DAY_X.md**
+   - Detailed prompts for next session
+   - Step-by-step workflows
+   - Troubleshooting guides
+   - Testing checklists
 
 ### Commit Messages
 - Clear, descriptive commit messages

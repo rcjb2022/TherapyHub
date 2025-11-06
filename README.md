@@ -1,13 +1,17 @@
 # TherapyHub - Russell Mental Health Platform
 
-**Version:** 0.6.0 (Day 6 Complete)
-**Status:** 🚀 Calendar System & Enhanced Payments Complete - Ready for Google Calendar Integration
+**Version:** 0.7.0 (Day 7 Complete)
+**Status:** 🚀 Patient UX & Video Session Foundation Complete - Ready for Video Recording & AI Features
 **Practice:** Russell Mental Health - Dr. Bethany R. Russell, Ph.D., P.A.
 
 ---
 
-## 🎉 Project Status: Day 6 Complete!
+## 🎉 Project Status: Day 7 Complete!
 
+✅ **Patient & Therapist UX fully consistent - "Today's Schedule" on both dashboards**
+✅ **Enhanced calendar modal with large prominent blue buttons**
+✅ **Video session waiting room operational with 30-minute join window**
+✅ **Session Vault foundation created for Day 8 video recording features**
 ✅ **Full appointment scheduling system with FullCalendar**
 ✅ **Eastern Time display with automatic DST handling (Luxon plugin)**
 ✅ **Create, edit, delete, drag-and-drop appointments**
@@ -48,13 +52,16 @@ TherapyHub/
 ├── russell-mental-health/          # Main Next.js application
 │   ├── app/                        # Next.js App Router pages
 │   ├── prisma/                     # Database schema (18 models)
-│   ├── ABOUT.md                    # Version info & roadmap
-│   ├── DAY_1_COMPLETE.md          # Day 1 milestone documentation
+│   ├── README_QR.md                # Quick reference for developers
 │   └── package.json
-├── FINAL_REALISTIC_PLAN.md         # Complete implementation plan
-├── SPECIALIZED_FEATURES.md         # Practice-specific features
-├── PLUG_AND_PLAY_STRATEGY.md      # API integration guide
-└── README.md                       # This file
+├── docs/                           # All project documentation
+│   ├── ABOUT.md                    # Version info & roadmap
+│   ├── TODO.md                     # Current tasks & priorities
+│   ├── CLAUDE.md                   # Development guidelines
+│   ├── daily/                      # Daily completion docs
+│   ├── sessions/                   # Handoffs & next-day prompts
+│   └── planning/                   # Strategic planning docs
+└── README.md                       # This file (project overview)
 ```
 
 ---
@@ -102,7 +109,7 @@ TherapyHub/
 
 ---
 
-## 📊 Current Version: 0.6.0
+## 📊 Current Version: 0.7.0
 
 ### ✅ Completed (Day 1 - Oct 30, 2025)
 
@@ -131,7 +138,7 @@ TherapyHub/
 - Day 1 milestone documented
 - Development setup guides
 
-**See:** [russell-mental-health/DAY_1_COMPLETE.md](russell-mental-health/DAY_1_COMPLETE.md) for details
+**See:** [docs/daily/DAY_1_COMPLETE.md](docs/daily/DAY_1_COMPLETE.md) for details
 
 ---
 
@@ -229,12 +236,32 @@ TherapyHub/
 - Production-ready error handling
 - Build-test-iterate approach at logical checkpoints
 
+**Day 7 (Nov 6, 2025) - Patient UX & Video Session Foundation:** ⭐
+- **Patient Dashboard "Today's Schedule"** - Matches therapist dashboard exactly
+- **In-Progress Session Highlighting** - Green border + "In Session" badge
+- **Color-Coded Appointments** - Green (current), Blue (upcoming), Gray (cancelled)
+- **Enhanced Calendar Modal** - Large prominent blue button (py-6, text-lg)
+- **Next.js Link Integration** - Button asChild pattern for client-side navigation
+- **Session Vault Foundation** - Placeholder page documenting Day 8 video features (`/dashboard/video`)
+- **UX Consistency Achievement** - Patient experience matches therapist exactly
+- **Video Session Waiting Room** - Working with 30-minute join window
+- **6 Critical Bug Fixes:**
+  - AppointmentModal button styling (explicit blue)
+  - React useCallback implementation (prevents stale closures)
+  - Video session authorization (fetch full user object)
+  - Patient dashboard VideoCameraIcon import
+  - Calendar join button routing (now uses waiting room)
+  - Time window standardization (30 minutes everywhere)
+- **Security Improvements** - Authorization checks both role AND ID
+- **Mobile Responsive** - All pages optimized for mobile devices
+
 **See:**
-- [russell-mental-health/DAY_6_COMPLETE.md](russell-mental-health/DAY_6_COMPLETE.md) for Day 6 details
-- [russell-mental-health/DAY_5_COMPLETE.md](russell-mental-health/DAY_5_COMPLETE.md) for Day 5 details
-- [russell-mental-health/TODO.md](russell-mental-health/TODO.md) for Day 7 priorities
-- [HANDOFF_DAY_6.md](HANDOFF_DAY_6.md) for session handoff
-- [TOMORROW_PROMPTS_DAY_7.md](TOMORROW_PROMPTS_DAY_7.md) for next session plan
+- [docs/daily/DAY_7_COMPLETE.md](docs/daily/DAY_7_COMPLETE.md) for Day 7 details
+- [docs/daily/DAY_6_COMPLETE.md](docs/daily/DAY_6_COMPLETE.md) for Day 6 details
+- [docs/daily/DAY_5_COMPLETE.md](docs/daily/DAY_5_COMPLETE.md) for Day 5 details
+- [docs/TODO.md](docs/TODO.md) for Day 8 priorities
+- [docs/sessions/HANDOFF_DAY_7.md](docs/sessions/HANDOFF_DAY_7.md) for session handoff
+- [docs/sessions/TOMORROW_PROMPTS_DAY_8.md](docs/sessions/TOMORROW_PROMPTS_DAY_8.md) for next session plan
 
 ---
 
@@ -317,23 +344,41 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - [x] Account credit system (negative balance display)
 - [x] Critical bug fixes (patient payment auth, timezone display, Stripe errors)
 
-### 📋 Planned: Version 0.7.0 (Week 2)
-- [ ] Google Calendar sync (two-way)
-- [ ] Automated email reminders (Gmail API)
-- [ ] SMS reminders (Twilio - optional)
-- [ ] Appointment no-show tracking
-- [ ] Appointment history and reports
-- [ ] Custom WebRTC video sessions
+### ✅ Completed: Version 0.7.0 (Day 7 - Nov 6, 2025) ⭐
+- [x] Patient dashboard "Today's Schedule" section
+- [x] Enhanced calendar modal with large prominent buttons
+- [x] In-progress session highlighting
+- [x] Color-coded appointments (green/blue/gray)
+- [x] Session Vault foundation page
+- [x] Video session waiting room operational
+- [x] UX consistency (patient matches therapist)
+- [x] 30-minute join window standardized
+- [x] Next.js Link integration for navigation
+- [x] 6 critical bug fixes (auth, routing, styling, icons)
+- [x] Mobile responsive optimizations
 
-### 📋 Planned: Version 0.8.0 (Week 2-3)
+### 📋 Planned: Version 0.8.0 (Day 8 - Nov 7, 2025)
+- [ ] Video session recording (WebRTC + MediaRecorder)
+- [ ] Save recordings to Google Cloud Storage
+- [ ] 30-day automatic deletion (HIPAA retention)
+- [ ] Recording consent flow
+- [ ] Gemini AI integration
+- [ ] Auto-transcribe recorded sessions
+- [ ] Generate SOAP notes from transcripts
+- [ ] Treatment plan suggestions
+- [ ] Session Vault UI (sessions list, video player, transcript viewer)
+
+### 📋 Planned: Version 0.9.0 (Week 2-3)
 - [ ] Clinical note templates (SOAP format)
 - [ ] ICD-10 diagnosis code lookup
 - [ ] CPT code assignment
 - [ ] Note signing and locking
 - [ ] E-signature functionality
 - [ ] Treatment plan templates
+- [ ] Google Calendar sync (two-way)
+- [ ] Automated email reminders (Gmail API)
 
-### 📋 Planned: Version 0.9.0 (Week 3)
+### 📋 Planned: Version 1.0.0 (Week 3)
 - [ ] Office Ally API integration
 - [ ] Real-time insurance claim submission (EDI 837)
 - [ ] ERA (835) response processing
@@ -341,7 +386,7 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - [ ] Claim status tracking and management
 - [ ] Denial handling and appeals
 
-### 📋 Planned: Version 1.0.0 (Week 4)
+### 📋 Planned: Version 1.1.0 (Week 4 - Production Launch)
 - [ ] Security audit and penetration testing
 - [ ] HIPAA compliance final review
 - [ ] Performance optimization
@@ -408,18 +453,15 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 
 ### For Developers
 - **[README.md](README.md)** - This file (project overview, quick start)
-- **[russell-mental-health/ABOUT.md](russell-mental-health/ABOUT.md)** - Detailed version info and features
-- **[russell-mental-health/TODO.md](russell-mental-health/TODO.md)** - Current tasks and Day 6 priorities
-- **[russell-mental-health/CLAUDE.md](russell-mental-health/CLAUDE.md)** - Development guidelines and principles
-- **[russell-mental-health/DAY_1_COMPLETE.md](russell-mental-health/DAY_1_COMPLETE.md)** - Day 1 milestone
-- **[russell-mental-health/DAY_2_COMPLETE.md](russell-mental-health/DAY_2_COMPLETE.md)** - Day 2 milestone
-- **[russell-mental-health/DAY_6_COMPLETE.md](russell-mental-health/DAY_6_COMPLETE.md)** - Day 6 milestone
-- **[russell-mental-health/DAY_5_COMPLETE.md](russell-mental-health/DAY_5_COMPLETE.md)** - Day 5 milestone
-- **[HANDOFF_DAY_6.md](HANDOFF_DAY_6.md)** - Day 6 session handoff
-- **[TOMORROW_PROMPTS_DAY_7.md](TOMORROW_PROMPTS_DAY_7.md)** - Day 7 detailed plan (Google Calendar integration)
-- **[FINAL_REALISTIC_PLAN.md](FINAL_REALISTIC_PLAN.md)** - Complete 3-4 week implementation plan
-- **[SPECIALIZED_FEATURES.md](SPECIALIZED_FEATURES.md)** - Practice-specific features (ASD, immigration evals, crypto)
-- **[PLUG_AND_PLAY_STRATEGY.md](PLUG_AND_PLAY_STRATEGY.md)** - API integration strategy and costs
+- **[docs/ABOUT.md](docs/ABOUT.md)** - Detailed version info and features
+- **[docs/TODO.md](docs/TODO.md)** - Current tasks and Day 8 priorities
+- **[docs/CLAUDE.md](docs/CLAUDE.md)** - Development guidelines and principles
+- **[docs/daily/](docs/daily/)** - Daily milestone documentation (Days 1, 2, 5, 6, 7)
+- **[docs/sessions/](docs/sessions/)** - Session handoffs and next-day prompts
+- **[docs/planning/](docs/planning/)** - Strategic planning documents
+  - [FINAL_REALISTIC_PLAN.md](docs/planning/FINAL_REALISTIC_PLAN.md) - Complete implementation plan
+  - [SPECIALIZED_FEATURES.md](docs/planning/SPECIALIZED_FEATURES.md) - Practice-specific features
+  - [PLUG_AND_PLAY_STRATEGY.md](docs/planning/PLUG_AND_PLAY_STRATEGY.md) - API integration strategy
 
 ### For Practice
 - **Practice Name:** Russell Mental Health
@@ -520,7 +562,7 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 
 ---
 
-**Last Updated:** November 6, 2025 (End of Day 6)
-**Current Phase:** Day 6 Complete - Calendar System & Enhanced Payments
-**Current Version:** 0.6.0
-**Next Milestone:** Google Calendar Integration (Day 7 - Nov 7, 2025)
+**Last Updated:** November 6, 2025 (End of Day 7)
+**Current Phase:** Day 7 Complete - Patient UX & Video Session Foundation
+**Current Version:** 0.7.0
+**Next Milestone:** Video Recording & AI Features (Day 8 - Nov 7, 2025)
