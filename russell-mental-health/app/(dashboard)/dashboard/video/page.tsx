@@ -23,6 +23,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { VideoCameraIcon, SparklesIcon, DocumentTextIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 
 export default async function VideoSessionsManagementPage() {
@@ -141,12 +142,12 @@ export default async function VideoSessionsManagementPage() {
 
         {/* Temporary Navigation */}
         <div className="mt-8 text-center">
-          <a
+          <Link
             href="/dashboard"
             className="inline-block rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700"
           >
             Return to Dashboard
-          </a>
+          </Link>
         </div>
       </div>
     </div>
