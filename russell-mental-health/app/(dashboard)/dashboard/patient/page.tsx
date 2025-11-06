@@ -313,47 +313,52 @@ export default async function PatientDashboardPage() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Appointments</h2>
         {upcomingAppointments.length > 0 ? (
           <div className="space-y-3">
-            {upcomingAppointments.map((apt) => (
-              <div
-                key={apt.id}
-                className="flex items-center justify-between border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg"
-              >
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
-                    {new Date(apt.startTime).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </p>
-                  <p className="text-sm text-gray-700 mt-1">
-                    {new Date(apt.startTime).toLocaleTimeString('en-US', {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      timeZone: 'America/New_York',
-                    })}{' '}
-                    - {apt.duration} minutes
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {apt.appointmentType.replace(/_/g, ' ')}
-                  </p>
+            {upcomingAppointments.map((apt) => {
+              // Create Date object once per iteration for efficiency
+              const startTime = new Date(apt.startTime)
+
+              return (
+                <div
+                  key={apt.id}
+                  className="flex items-center justify-between border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg"
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      {startTime.toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </p>
+                    <p className="text-sm text-gray-700 mt-1">
+                      {startTime.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        timeZone: 'America/New_York',
+                      })}{' '}
+                      - {apt.duration} minutes
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {apt.appointmentType.replace(/_/g, ' ')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {apt.googleMeetLink && (
+                      <a
+                        href={apt.googleMeetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                      >
+                        <VideoCameraIcon className="h-4 w-4" />
+                        Join Session
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {apt.googleMeetLink && (
-                    <a
-                      href={apt.googleMeetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                    >
-                      <VideoCameraIcon className="h-4 w-4" />
-                      Join Session
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <p className="text-sm text-gray-600">No upcoming appointments scheduled.</p>

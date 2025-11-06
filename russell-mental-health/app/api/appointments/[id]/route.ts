@@ -135,8 +135,9 @@ export async function PATCH(
 
     // Prepare database update
     const updateData: Partial<import('@prisma/client').Appointment> = {}
-    if (startTime !== undefined) updateData.startTime = new Date(startTime)
-    if (endTime !== undefined) updateData.endTime = new Date(endTime)
+    // Use truthiness check for dates to avoid invalid Date objects from empty strings or null
+    if (startTime) updateData.startTime = new Date(startTime)
+    if (endTime) updateData.endTime = new Date(endTime)
     if (duration !== undefined) updateData.duration = duration
     if (appointmentType !== undefined) updateData.appointmentType = appointmentType
     if (sessionType !== undefined) updateData.sessionType = sessionType
