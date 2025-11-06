@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+// Time to wait before refreshing data after successful payment (ms)
+const REFRESH_DELAY_MS = 1500
+
 interface PayBillFormProps {
   patientId: string
   currentBalance: number
@@ -75,7 +78,7 @@ export function PayBillForm({
       // Refresh the page data after short delay to show updated balance
       setTimeout(() => {
         router.refresh()
-      }, 1500)
+      }, REFRESH_DELAY_MS)
     } catch (err: any) {
       console.error('Payment error:', err)
       setError(err.message || 'Failed to process payment')

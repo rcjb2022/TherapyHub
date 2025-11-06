@@ -60,18 +60,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
-    // Access control: Only therapist can charge patients
-    if (user.role !== 'THERAPIST') {
+    // Access control: Allow therapists OR patients paying their own bill
+    if (user.role === 'THERAPIST') {
+      // Therapist charging a patient: verify patient belongs to this therapist
+      if (patient.therapistId !== user.therapist!.id) {
+        return NextResponse.json(
+          { error: 'You can only charge your own patients' },
+          { status: 403 }
+        )
+      }
+    } else if (user.role === 'PATIENT') {
+      // Patient paying own bill: verify they're paying their own account
+      if (patient.id !== user.patient?.id) {
+        return NextResponse.json(
+          { error: 'You can only pay your own balance' },
+          { status: 403 }
+        )
+      }
+    } else {
+      // Neither therapist nor patient
       return NextResponse.json(
-        { error: 'Only therapists can charge patients' },
-        { status: 403 }
-      )
-    }
-
-    // Verify patient belongs to this therapist
-    if (patient.therapistId !== user.therapist!.id) {
-      return NextResponse.json(
-        { error: 'You can only charge your own patients' },
+        { error: 'Unauthorized to make payments' },
         { status: 403 }
       )
     }
