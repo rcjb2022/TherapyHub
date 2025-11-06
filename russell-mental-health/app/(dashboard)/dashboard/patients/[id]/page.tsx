@@ -533,27 +533,6 @@ export default async function PatientDetailPage({
             </div>
           </div>
 
-          {/* All Documents */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">All Documents</h2>
-            {patient.documents.length > 0 ? (
-              <div className="space-y-3">
-                {patient.documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between border-l-4 border-gray-500 bg-gray-50 p-3">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{doc.name}</p>
-                      <p className="text-xs text-gray-600">{doc.type}</p>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      {new Date(doc.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-600">No documents uploaded yet</p>
-            )}
-          </div>
         </div>
       </div>
     </div>
