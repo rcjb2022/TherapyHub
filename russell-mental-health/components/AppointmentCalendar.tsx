@@ -73,21 +73,28 @@ export function AppointmentCalendar() {
         const data: AppointmentFromAPI[] = await response.json()
 
         // Transform appointments to FullCalendar events
-        const calendarEvents: CalendarEvent[] = data.map((apt) => ({
-          id: apt.id,
-          title: `${apt.patient.firstName} ${apt.patient.lastName}`,
-          start: apt.startTime,
-          end: apt.endTime,
-          backgroundColor: getStatusColor(apt.status),
-          borderColor: getStatusColor(apt.status),
-          extendedProps: {
-            patientName: `${apt.patient.firstName} ${apt.patient.lastName}`,
-            therapistName: apt.therapist.user.name,
-            appointmentType: apt.appointmentType,
-            status: apt.status,
-            googleMeetLink: apt.googleMeetLink || undefined,
-          },
-        }))
+        // Ensure dates are in ISO 8601 format for proper timezone handling
+        const calendarEvents: CalendarEvent[] = data.map((apt) => {
+          // Convert to Date objects then back to ISO strings to ensure proper format
+          const start = new Date(apt.startTime)
+          const end = new Date(apt.endTime)
+
+          return {
+            id: apt.id,
+            title: `${apt.patient.firstName} ${apt.patient.lastName}`,
+            start: start.toISOString(),
+            end: end.toISOString(),
+            backgroundColor: getStatusColor(apt.status),
+            borderColor: getStatusColor(apt.status),
+            extendedProps: {
+              patientName: `${apt.patient.firstName} ${apt.patient.lastName}`,
+              therapistName: apt.therapist.user.name,
+              appointmentType: apt.appointmentType,
+              status: apt.status,
+              googleMeetLink: apt.googleMeetLink || undefined,
+            },
+          }
+        })
 
         setEvents(calendarEvents)
       }
@@ -227,16 +234,18 @@ export function AppointmentCalendar() {
           contentHeight="auto"
           aspectRatio={1.8}
 
-          // Time format
+          // Time format (Eastern time)
           slotLabelFormat={{
             hour: 'numeric',
             minute: '2-digit',
             meridiem: 'short',
+            timeZoneName: 'short', // Show EST/EDT
           }}
           eventTimeFormat={{
             hour: 'numeric',
             minute: '2-digit',
             meridiem: 'short',
+            timeZoneName: 'short', // Show EST/EDT
           }}
         />
       </div>

@@ -140,10 +140,17 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
           events={events}
           eventClick={handleEventClick}
           height="100%"
+          slotLabelFormat={{
+            hour: 'numeric',
+            minute: '2-digit',
+            meridiem: 'short',
+            timeZoneName: 'short', // Show EST/EDT
+          }}
           eventTimeFormat={{
             hour: 'numeric',
             minute: '2-digit',
             meridiem: 'short',
+            timeZoneName: 'short', // Show EST/EDT
           }}
         />
       </div>

@@ -152,6 +152,8 @@ export function AppointmentModal({
     }
 
     // Parse start time
+    // Note: The HTML datetime-local input interprets the time in the user's local timezone
+    // For a Florida-based practice, we assume users are in Eastern timezone
     const startDateTime = new Date(`${startDate}T${startTime}`)
 
     // Validate appointment time
