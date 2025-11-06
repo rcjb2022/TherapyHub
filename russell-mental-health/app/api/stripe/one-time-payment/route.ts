@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
         amount: Math.round(amount * 100), // Convert to cents
         currency: 'usd',
         payment_method: paymentMethodId,
+        payment_method_types: ['card'], // Only accept card payments
         confirm: true,
         receipt_email: patient.email,
         description: `One-time payment for ${patient.firstName} ${patient.lastName}`,
