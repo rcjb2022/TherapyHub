@@ -13,7 +13,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { toZonedTime } from 'date-fns-tz'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -22,6 +21,7 @@ import { EventClickArg } from '@fullcalendar/core'
 import { Button } from '@/components/ui/button'
 import { PlusIcon, RefreshCwIcon } from 'lucide-react'
 import { AppointmentModal } from './AppointmentModal'
+import { TIMEZONE } from '@/lib/appointment-utils'
 
 // API Response types
 interface AppointmentFromAPI {
@@ -74,22 +74,14 @@ export function AppointmentCalendar() {
         const data: AppointmentFromAPI[] = await response.json()
 
         // Transform appointments to FullCalendar events
-        // Convert UTC times from database to Eastern time for display
-        const timeZone = 'America/New_York'
+        // Pass dates as-is (ISO format with UTC timezone)
+        // FullCalendar's timeZone prop will handle display conversion
         const calendarEvents: CalendarEvent[] = data.map((apt) => {
-          // Database stores times in UTC, convert to Eastern for display
-          const startUTC = new Date(apt.startTime)
-          const endUTC = new Date(apt.endTime)
-
-          // Convert UTC to Eastern time
-          const startEastern = toZonedTime(startUTC, timeZone)
-          const endEastern = toZonedTime(endUTC, timeZone)
-
           return {
             id: apt.id,
             title: `${apt.patient.firstName} ${apt.patient.lastName}`,
-            start: startEastern.toISOString(),
-            end: endEastern.toISOString(),
+            start: apt.startTime,  // ISO string from API (UTC)
+            end: apt.endTime,      // ISO string from API (UTC)
             backgroundColor: getStatusColor(apt.status),
             borderColor: getStatusColor(apt.status),
             extendedProps: {
@@ -205,7 +197,8 @@ export function AppointmentCalendar() {
             right: 'dayGridMonth,timeGridWeek,timeGridDay',
           }}
 
-          // Time settings (Florida/Eastern time - handled via toZonedTime conversion above)
+          // Time settings (Florida/Eastern time)
+          timeZone={TIMEZONE}
           slotMinTime="00:00:00" // 12 AM (midnight) - allow crisis appointments
           slotMaxTime="24:00:00" // 12 AM next day (full 24 hours)
           slotDuration="00:15:00" // 15-minute slots

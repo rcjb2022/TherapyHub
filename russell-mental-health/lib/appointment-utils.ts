@@ -4,6 +4,9 @@
  * CPT codes, appointment types, durations, and validation helpers
  */
 
+// Timezone for the practice (Florida - Eastern Time)
+export const TIMEZONE = 'America/New_York'
+
 // CPT Codes for mental health services
 export const CPT_CODES = [
   {
