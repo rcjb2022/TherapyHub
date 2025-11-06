@@ -46,8 +46,9 @@ export function OneTimePaymentForm({
       return
     }
 
-    if (amountNum > Math.max(currentBalance, 500)) {
-      setError(`Payment cannot exceed ${currentBalance > 500 ? '$500.00' : `$${currentBalance.toFixed(2)}`}`)
+    // Max payment is always $500 (allows prepayments)
+    if (amountNum > 500) {
+      setError('Payment cannot exceed $500.00')
       return
     }
 
@@ -103,17 +104,6 @@ export function OneTimePaymentForm({
     }
   }
 
-  if (currentBalance <= 0) {
-    return (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-        <p className="text-lg font-semibold text-green-900">All Paid Up! ✓</p>
-        <p className="mt-1 text-sm text-green-700">
-          You have no outstanding balance.
-        </p>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-4">
       {/* Error Message */}
@@ -132,10 +122,17 @@ export function OneTimePaymentForm({
 
       {/* Current Balance */}
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <p className="text-sm text-gray-600">Outstanding Balance</p>
-        <p className="text-3xl font-bold text-red-600">
-          ${currentBalance.toFixed(2)}
+        <p className="text-sm text-gray-600">
+          {currentBalance > 0 ? 'Outstanding Balance' : currentBalance < 0 ? 'Account Credit' : 'Current Balance'}
         </p>
+        <p className={`text-3xl font-bold ${currentBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+          ${Math.abs(currentBalance).toFixed(2)}
+        </p>
+        {currentBalance <= 0 && (
+          <p className="text-xs text-gray-500 mt-1">
+            You can prepay up to $500.00
+          </p>
+        )}
       </div>
 
       {/* Multiple Payments Warning */}
@@ -164,14 +161,14 @@ export function OneTimePaymentForm({
               placeholder="0.00"
               step="0.01"
               min="0.01"
-              max={Math.max(currentBalance, 500)}
+              max={500}
               disabled={loading}
               className="ml-2 block w-full rounded-md border-gray-300 px-3 py-2 text-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-gray-100"
               required
             />
           </div>
           <p className="mt-1 text-xs text-gray-500">
-            Maximum: ${Math.max(currentBalance, 500).toFixed(2)}
+            Maximum: $500.00
           </p>
         </div>
 
