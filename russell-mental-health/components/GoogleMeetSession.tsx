@@ -72,9 +72,6 @@ export function GoogleMeetSession({ appointment, userRole }: GoogleMeetSessionPr
                       <div className="h-2 w-2 bg-green-600 rounded-full animate-pulse"></div>
                       <span className="text-sm font-medium">Session Active</span>
                     </div>
-                    <p className="text-gray-700 text-sm">
-                      Your therapist {userRole === 'PATIENT' ? 'is waiting for you' : 'may already be in the meeting'}
-                    </p>
                   </div>
 
                   {/* Join Button - Primary */}
