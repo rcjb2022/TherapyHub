@@ -98,14 +98,6 @@ export default async function DashboardPage() {
       href: '/dashboard/patients',
     },
     {
-      name: 'Upcoming Appointments',
-      value: upcomingAppointments.toString(),
-      icon: CalendarIcon,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      href: '/dashboard/calendar',
-    },
-    {
       name: 'Pending Forms',
       value: pendingForms.toString(),
       icon: DocumentTextIcon,
