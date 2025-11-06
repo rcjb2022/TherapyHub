@@ -1,13 +1,17 @@
 # TherapyHub - Russell Mental Health Platform
 
-**Version:** 0.6.0 (Day 6 Complete)
-**Status:** 🚀 Calendar System & Enhanced Payments Complete - Ready for Google Calendar Integration
+**Version:** 0.7.0 (Day 7 Complete)
+**Status:** 🚀 Patient UX & Video Session Foundation Complete - Ready for Video Recording & AI Features
 **Practice:** Russell Mental Health - Dr. Bethany R. Russell, Ph.D., P.A.
 
 ---
 
-## 🎉 Project Status: Day 6 Complete!
+## 🎉 Project Status: Day 7 Complete!
 
+✅ **Patient & Therapist UX fully consistent - "Today's Schedule" on both dashboards**
+✅ **Enhanced calendar modal with large prominent blue buttons**
+✅ **Video session waiting room operational with 30-minute join window**
+✅ **Session Vault foundation created for Day 8 video recording features**
 ✅ **Full appointment scheduling system with FullCalendar**
 ✅ **Eastern Time display with automatic DST handling (Luxon plugin)**
 ✅ **Create, edit, delete, drag-and-drop appointments**
@@ -102,7 +106,7 @@ TherapyHub/
 
 ---
 
-## 📊 Current Version: 0.6.0
+## 📊 Current Version: 0.7.0
 
 ### ✅ Completed (Day 1 - Oct 30, 2025)
 
@@ -229,12 +233,32 @@ TherapyHub/
 - Production-ready error handling
 - Build-test-iterate approach at logical checkpoints
 
+**Day 7 (Nov 6, 2025) - Patient UX & Video Session Foundation:** ⭐
+- **Patient Dashboard "Today's Schedule"** - Matches therapist dashboard exactly
+- **In-Progress Session Highlighting** - Green border + "In Session" badge
+- **Color-Coded Appointments** - Green (current), Blue (upcoming), Gray (cancelled)
+- **Enhanced Calendar Modal** - Large prominent blue button (py-6, text-lg)
+- **Next.js Link Integration** - Button asChild pattern for client-side navigation
+- **Session Vault Foundation** - Placeholder page documenting Day 8 video features (`/dashboard/video`)
+- **UX Consistency Achievement** - Patient experience matches therapist exactly
+- **Video Session Waiting Room** - Working with 30-minute join window
+- **6 Critical Bug Fixes:**
+  - AppointmentModal button styling (explicit blue)
+  - React useCallback implementation (prevents stale closures)
+  - Video session authorization (fetch full user object)
+  - Patient dashboard VideoCameraIcon import
+  - Calendar join button routing (now uses waiting room)
+  - Time window standardization (30 minutes everywhere)
+- **Security Improvements** - Authorization checks both role AND ID
+- **Mobile Responsive** - All pages optimized for mobile devices
+
 **See:**
+- [russell-mental-health/DAY_7_COMPLETE.md](russell-mental-health/DAY_7_COMPLETE.md) for Day 7 details
 - [russell-mental-health/DAY_6_COMPLETE.md](russell-mental-health/DAY_6_COMPLETE.md) for Day 6 details
 - [russell-mental-health/DAY_5_COMPLETE.md](russell-mental-health/DAY_5_COMPLETE.md) for Day 5 details
-- [russell-mental-health/TODO.md](russell-mental-health/TODO.md) for Day 7 priorities
-- [HANDOFF_DAY_6.md](HANDOFF_DAY_6.md) for session handoff
-- [TOMORROW_PROMPTS_DAY_7.md](TOMORROW_PROMPTS_DAY_7.md) for next session plan
+- [russell-mental-health/TODO.md](russell-mental-health/TODO.md) for Day 8 priorities
+- [HANDOFF_DAY_7.md](HANDOFF_DAY_7.md) for session handoff
+- [TOMORROW_PROMPTS_DAY_8.md](TOMORROW_PROMPTS_DAY_8.md) for next session plan
 
 ---
 
@@ -317,23 +341,41 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - [x] Account credit system (negative balance display)
 - [x] Critical bug fixes (patient payment auth, timezone display, Stripe errors)
 
-### 📋 Planned: Version 0.7.0 (Week 2)
-- [ ] Google Calendar sync (two-way)
-- [ ] Automated email reminders (Gmail API)
-- [ ] SMS reminders (Twilio - optional)
-- [ ] Appointment no-show tracking
-- [ ] Appointment history and reports
-- [ ] Custom WebRTC video sessions
+### ✅ Completed: Version 0.7.0 (Day 7 - Nov 6, 2025) ⭐
+- [x] Patient dashboard "Today's Schedule" section
+- [x] Enhanced calendar modal with large prominent buttons
+- [x] In-progress session highlighting
+- [x] Color-coded appointments (green/blue/gray)
+- [x] Session Vault foundation page
+- [x] Video session waiting room operational
+- [x] UX consistency (patient matches therapist)
+- [x] 30-minute join window standardized
+- [x] Next.js Link integration for navigation
+- [x] 6 critical bug fixes (auth, routing, styling, icons)
+- [x] Mobile responsive optimizations
 
-### 📋 Planned: Version 0.8.0 (Week 2-3)
+### 📋 Planned: Version 0.8.0 (Day 8 - Nov 7, 2025)
+- [ ] Video session recording (WebRTC + MediaRecorder)
+- [ ] Save recordings to Google Cloud Storage
+- [ ] 30-day automatic deletion (HIPAA retention)
+- [ ] Recording consent flow
+- [ ] Gemini AI integration
+- [ ] Auto-transcribe recorded sessions
+- [ ] Generate SOAP notes from transcripts
+- [ ] Treatment plan suggestions
+- [ ] Session Vault UI (sessions list, video player, transcript viewer)
+
+### 📋 Planned: Version 0.9.0 (Week 2-3)
 - [ ] Clinical note templates (SOAP format)
 - [ ] ICD-10 diagnosis code lookup
 - [ ] CPT code assignment
 - [ ] Note signing and locking
 - [ ] E-signature functionality
 - [ ] Treatment plan templates
+- [ ] Google Calendar sync (two-way)
+- [ ] Automated email reminders (Gmail API)
 
-### 📋 Planned: Version 0.9.0 (Week 3)
+### 📋 Planned: Version 1.0.0 (Week 3)
 - [ ] Office Ally API integration
 - [ ] Real-time insurance claim submission (EDI 837)
 - [ ] ERA (835) response processing
@@ -341,7 +383,7 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - [ ] Claim status tracking and management
 - [ ] Denial handling and appeals
 
-### 📋 Planned: Version 1.0.0 (Week 4)
+### 📋 Planned: Version 1.1.0 (Week 4 - Production Launch)
 - [ ] Security audit and penetration testing
 - [ ] HIPAA compliance final review
 - [ ] Performance optimization
@@ -520,7 +562,7 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 
 ---
 
-**Last Updated:** November 6, 2025 (End of Day 6)
-**Current Phase:** Day 6 Complete - Calendar System & Enhanced Payments
-**Current Version:** 0.6.0
-**Next Milestone:** Google Calendar Integration (Day 7 - Nov 7, 2025)
+**Last Updated:** November 6, 2025 (End of Day 7)
+**Current Phase:** Day 7 Complete - Patient UX & Video Session Foundation
+**Current Version:** 0.7.0
+**Next Milestone:** Video Recording & AI Features (Day 8 - Nov 7, 2025)
