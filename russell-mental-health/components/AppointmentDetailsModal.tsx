@@ -11,7 +11,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
@@ -78,7 +78,7 @@ export function AppointmentDetailsModal({
   const [error, setError] = useState<string | null>(null)
 
   // Fetch appointment details
-  const fetchAppointment = async () => {
+  const fetchAppointment = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -95,15 +95,14 @@ export function AppointmentDetailsModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [appointmentId])
 
   // Load appointment when modal opens
   useEffect(() => {
     if (isOpen && appointmentId) {
       fetchAppointment()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, appointmentId])
+  }, [isOpen, appointmentId, fetchAppointment])
 
   // Cancel appointment
   const handleCancel = async () => {
@@ -122,8 +121,8 @@ export function AppointmentDetailsModal({
         onRefresh()
         onClose()
       } else {
-        const data = await response.json()
-        alert(`Failed to cancel appointment: ${data.error || 'Unknown error'}`)
+        const data = await response.json().catch(() => ({ error: response.statusText || 'Unknown error' }))
+        alert(`Failed to cancel appointment: ${data.error}`)
       }
     } catch (err) {
       console.error('Failed to cancel appointment:', err)

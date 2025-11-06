@@ -47,7 +47,7 @@ export default async function PatientDetailPage({
       },
       appointments: {
         orderBy: { startTime: 'desc' },
-        take: 5,
+        take: 10, // Show last 10 appointments
       },
       clinicalNotes: {
         orderBy: { sessionDate: 'desc' },
@@ -61,6 +61,13 @@ export default async function PatientDetailPage({
         orderBy: { createdAt: 'desc' },
         take: 5,
       },
+    },
+  })
+
+  // Get total appointment count for this patient
+  const totalAppointmentCount = await prisma.appointment.count({
+    where: {
+      patientId: id,
     },
   })
 
@@ -398,7 +405,14 @@ export default async function PatientDetailPage({
 
           {/* Recent Appointments */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">Recent Appointments</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Recent Appointments</h2>
+              {totalAppointmentCount > patient.appointments.length && (
+                <span className="text-xs text-gray-500">
+                  Showing last {patient.appointments.length} of {totalAppointmentCount} total
+                </span>
+              )}
+            </div>
             {patient.appointments.length > 0 ? (
               <div className="space-y-3">
                 {patient.appointments.map((apt) => (
@@ -426,6 +440,13 @@ export default async function PatientDetailPage({
               </div>
             ) : (
               <p className="text-sm text-gray-600">No appointments yet</p>
+            )}
+            {totalAppointmentCount > 0 && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-xs text-gray-500">
+                  All {totalAppointmentCount} appointment{totalAppointmentCount !== 1 ? 's' : ''} are recorded in the system for compliance.
+                </p>
+              </div>
             )}
           </div>
 

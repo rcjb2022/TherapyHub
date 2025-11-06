@@ -176,8 +176,8 @@ export function AppointmentCalendar({ userRole }: AppointmentCalendarProps) {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to reschedule appointment')
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.error || 'Failed to reschedule appointment')
       }
 
       console.log('✅ Appointment rescheduled successfully')
