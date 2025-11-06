@@ -147,75 +147,72 @@ When updating Prisma schema:
 
 ## 📚 Daily Documentation Requirements
 
-### CRITICAL: Documentation Exists in TWO Locations
+### CRITICAL: Documentation Structure
 
-**You MUST read, understand, and update documentation in BOTH locations:**
+**All project documentation is now organized in `/TherapyHub/docs/` with the following structure:**
 
-#### Location 1: Main TherapyHub Folder (`/TherapyHub/`)
-**Files to read and update:**
-- `README.md` - Main project documentation (THE SOURCE OF TRUTH)
-- `HANDOFF_DAY_X.md` - Session handoff documents
-- `TOMORROW_PROMPTS_DAY_X.md` - Next session prompts and workflows
-- Planning documents (FINAL_REALISTIC_PLAN.md, SPECIALIZED_FEATURES.md, etc.)
-
-**Purpose:** Project-level documentation, session handoffs, planning
-
-#### Location 2: Russell Mental Health Subdirectory (`/TherapyHub/russell-mental-health/`)
-**Files to read and update:**
-- `TODO.md` - Current tasks and priorities
-- `ABOUT.md` - Detailed version history and technical documentation
-- `CLAUDE.md` - This file (development guidelines)
-- `DAY_X_COMPLETE.md` - Daily milestone documentation
-- `README_QR.md` - Quick reference for developers
-
-**Purpose:** Technical documentation, task tracking, daily progress
+```
+TherapyHub/
+├── README.md                    (Main project documentation - THE SOURCE OF TRUTH)
+├── russell-mental-health/
+│   └── README_QR.md            (Quick reference for developers)
+└── docs/
+    ├── ABOUT.md                (Version history and technical documentation)
+    ├── TODO.md                 (Current tasks and priorities)
+    ├── CLAUDE.md               (This file - development guidelines)
+    ├── daily/                  (Daily completion documentation)
+    │   └── DAY_X_COMPLETE.md
+    ├── sessions/               (Session handoffs and next session prompts)
+    │   ├── HANDOFF_DAY_X.md
+    │   └── TOMORROW_PROMPTS_DAY_X.md
+    └── planning/               (Strategic planning documents)
+        ├── FINAL_REALISTIC_PLAN.md
+        ├── SPECIALIZED_FEATURES.md
+        └── [other planning docs]
+```
 
 ### At Start of EVERY Session:
-1. **Read BOTH locations** - Check for updated docs, handoffs, instructions
-2. **Read HANDOFF_DAY_X.md** in main folder - Understand where you left off
-3. **Read TODO.md** in russell-mental-health/ - Know current priorities
-4. **Read CLAUDE.md** in russell-mental-health/ - Follow these guidelines
+1. **Read docs/sessions/HANDOFF_DAY_X.md** - Understand where you left off
+2. **Read docs/TODO.md** - Know current priorities and tasks
+3. **Read docs/CLAUDE.md** - Follow development guidelines (this file)
+4. **Read docs/sessions/TOMORROW_PROMPTS_DAY_X.md** - Detailed workflows for today
 
 ### End of Each Session - ALWAYS Update:
 
-**In russell-mental-health/ subdirectory:**
-
-1. **TODO.md** (russell-mental-health/TODO.md)
+1. **docs/TODO.md**
    - Mark completed tasks with ✅
    - Update "In Progress" section
    - Add new tasks discovered during session
    - Update "Next Session" notes
    - Include any blockers or issues
 
-2. **ABOUT.md** (russell-mental-health/ABOUT.md)
+2. **docs/ABOUT.md**
    - Add to version history if significant changes
    - Update "Current Version" section
    - Document any new features or bug fixes
    - Keep roadmap synchronized
 
-3. **DAY_X_COMPLETE.md** (russell-mental-health/DAY_X_COMPLETE.md)
+3. **docs/daily/DAY_X_COMPLETE.md**
    - Create for each major milestone (day completion)
    - Document what was built
    - List bugs fixed
    - Include test results
    - Note any technical decisions made
 
-**In main TherapyHub/ folder:**
-
-4. **README.md** (TherapyHub/README.md)
+4. **README.md** (root directory)
    - Update version number if milestone reached
    - Update "Current Phase" section
    - Add completed features to relevant section
    - Update roadmap progress
 
-5. **HANDOFF_DAY_X.md** (TherapyHub/HANDOFF_DAY_X.md)
+5. **docs/sessions/HANDOFF_DAY_X.md**
    - Create session handoff document
    - What was built today
    - What's working
    - Next session priorities
    - Required setup for next session
 
-6. **TOMORROW_PROMPTS_DAY_X.md** (TherapyHub/TOMORROW_PROMPTS_DAY_X.md)
+6. **docs/sessions/TOMORROW_PROMPTS_DAY_X.md**
    - Detailed prompts for next session
    - Step-by-step workflows
    - Troubleshooting guides
