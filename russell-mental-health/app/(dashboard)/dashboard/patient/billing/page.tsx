@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
-import { PayBillForm } from '@/components/PayBillForm'
+import { PatientBillingClient } from '@/components/PatientBillingClient'
 import { PaymentHistoryTable } from '@/components/PaymentHistoryTable'
 
 export default async function PatientBillingPage() {
@@ -92,33 +92,13 @@ export default async function PatientBillingPage() {
         </p>
       </div>
 
-      {/* Payment Method Check */}
-      {!hasPaymentMethod && (
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6">
-          <h2 className="text-lg font-semibold text-yellow-900">No Payment Method on File</h2>
-          <p className="mt-2 text-sm text-yellow-700">
-            Please add a payment method before making payments.
-          </p>
-          <Link
-            href="/dashboard/patient/forms/payment-information"
-            className="mt-4 inline-block rounded-lg bg-yellow-600 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-700"
-          >
-            Add Payment Method
-          </Link>
-        </div>
-      )}
-
-      {/* Current Balance & Payment Form */}
-      {hasPaymentMethod && (
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-6 text-lg font-semibold text-gray-900">Make a Payment</h2>
-          <PayBillForm
-            patientId={patient.id}
-            currentBalance={Number(patient.balance)}
-            cardLast4={cardLast4}
-          />
-        </div>
-      )}
+      {/* Payment Options */}
+      <PatientBillingClient
+        patientId={patient.id}
+        currentBalance={Number(patient.balance)}
+        hasPaymentMethod={!!hasPaymentMethod}
+        cardLast4={cardLast4}
+      />
 
       {/* Payment History */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
