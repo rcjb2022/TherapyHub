@@ -22,6 +22,7 @@ import luxon2Plugin from '@fullcalendar/luxon2'
 import { Button } from '@/components/ui/button'
 import { PlusIcon, RefreshCwIcon } from 'lucide-react'
 import { AppointmentModal } from './AppointmentModal'
+import { AppointmentDetailsModal } from './AppointmentDetailsModal'
 import { TIMEZONE } from '@/lib/appointment-utils'
 
 // API Response types
@@ -57,6 +58,7 @@ interface CalendarEvent {
     appointmentType?: string
     status?: string
     googleMeetLink?: string
+    patientId?: string
   }
 }
 
@@ -65,6 +67,9 @@ export function AppointmentCalendar() {
   const [loading, setLoading] = useState(true)
   const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ start: Date; end: Date } | null>(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null)
+  const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null)
 
   // Fetch appointments from API
   const fetchAppointments = async () => {
@@ -78,14 +83,18 @@ export function AppointmentCalendar() {
         // Pass dates as-is (ISO format with UTC timezone)
         // FullCalendar's timeZone prop will handle display conversion
         const calendarEvents: CalendarEvent[] = data.map((apt) => {
+          // Add video indicator if Google Meet link exists
+          const videoIndicator = apt.googleMeetLink ? ' 📹' : ''
+
           return {
             id: apt.id,
-            title: `${apt.patient.firstName} ${apt.patient.lastName}`,
+            title: `${apt.patient.firstName} ${apt.patient.lastName}${videoIndicator}`,
             start: apt.startTime,  // ISO string from API (UTC)
             end: apt.endTime,      // ISO string from API (UTC)
             backgroundColor: getStatusColor(apt.status),
             borderColor: getStatusColor(apt.status),
             extendedProps: {
+              patientId: apt.patient.id,
               patientName: `${apt.patient.firstName} ${apt.patient.lastName}`,
               therapistName: apt.therapist.user.name,
               appointmentType: apt.appointmentType,
@@ -120,9 +129,10 @@ export function AppointmentCalendar() {
 
   // Handle event click (view/edit appointment)
   const handleEventClick = (arg: EventClickArg) => {
-    console.log('Event clicked:', arg.event)
-    // TODO: Open appointment details modal
-    alert(`Appointment: ${arg.event.title}\n\nClick functionality coming in Phase 3!`)
+    const appointmentId = arg.event.id
+    console.log('Event clicked:', appointmentId)
+    setSelectedAppointmentId(appointmentId)
+    setShowDetailsModal(true)
   }
 
   // Handle event drag (reschedule)
@@ -131,14 +141,59 @@ export function AppointmentCalendar() {
     const newStart = arg.event.start
     const newEnd = arg.event.end
 
-    console.log('Event dropped:', { appointmentId, newStart, newEnd })
+    if (!newStart || !newEnd) {
+      alert('Invalid drop time')
+      arg.revert()
+      return
+    }
 
-    // TODO: Update appointment via API (Phase 4)
-    // For now, just log
-    alert('Drag-and-drop rescheduling coming in Phase 4!')
+    console.log('Event dropped:', {
+      appointmentId,
+      oldStart: arg.oldEvent.start,
+      newStart,
+      newEnd,
+    })
 
-    // Revert for now
-    arg.revert()
+    try {
+      // Calculate duration
+      const duration = Math.round((newEnd.getTime() - newStart.getTime()) / (1000 * 60))
+
+      // Update appointment via API
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          startTime: newStart.toISOString(),
+          endTime: newEnd.toISOString(),
+          duration,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to reschedule appointment')
+      }
+
+      console.log('✅ Appointment rescheduled successfully')
+
+      // Refresh calendar to sync with Google Calendar
+      fetchAppointments()
+    } catch (error) {
+      console.error('Failed to reschedule appointment:', error)
+      alert(
+        `Failed to reschedule appointment: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
+      // Revert the drag operation
+      arg.revert()
+    }
+  }
+
+  // Handle edit appointment from details modal
+  const handleEditAppointment = (appointmentId: string) => {
+    setEditingAppointmentId(appointmentId)
+    setShowNewAppointmentModal(true)
   }
 
   return (
@@ -258,6 +313,7 @@ export function AppointmentCalendar() {
         onClose={() => {
           setShowNewAppointmentModal(false)
           setSelectedSlot(null)
+          setEditingAppointmentId(null)
         }}
         onSuccess={() => {
           fetchAppointments() // Refresh calendar
@@ -265,6 +321,22 @@ export function AppointmentCalendar() {
         defaultStartTime={selectedSlot?.start}
         defaultEndTime={selectedSlot?.end}
       />
+
+      {/* Appointment Details Modal */}
+      {selectedAppointmentId && (
+        <AppointmentDetailsModal
+          appointmentId={selectedAppointmentId}
+          isOpen={showDetailsModal}
+          onClose={() => {
+            setShowDetailsModal(false)
+            setSelectedAppointmentId(null)
+          }}
+          onEdit={handleEditAppointment}
+          onRefresh={() => {
+            fetchAppointments() // Refresh calendar after cancel/edit
+          }}
+        />
+      )}
     </div>
   )
 }
