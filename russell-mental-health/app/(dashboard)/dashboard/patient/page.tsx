@@ -63,12 +63,43 @@ export default async function PatientDashboardPage() {
 
   const patient = user.patient
 
-  // Get upcoming appointments (next 10)
+  // Fetch today's appointments (all status: scheduled, cancelled, completed)
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+
+  const endOfToday = new Date()
+  endOfToday.setHours(23, 59, 59, 999)
+
+  const todaysAppointments = await prisma.appointment.findMany({
+    where: {
+      patientId: patient.id,
+      startTime: {
+        gte: startOfToday,
+        lte: endOfToday,
+      },
+    },
+    include: {
+      therapist: {
+        select: {
+          user: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      startTime: 'asc',
+    },
+  })
+
+  // Get upcoming appointments (next 10, excluding today)
   const upcomingAppointments = await prisma.appointment.findMany({
     where: {
       patientId: patient.id,
       startTime: {
-        gte: new Date(), // Future appointments only
+        gt: endOfToday, // Future appointments after today
       },
       status: {
         in: ['SCHEDULED', 'CONFIRMED'],
@@ -80,8 +111,8 @@ export default async function PatientDashboardPage() {
     take: 10,
   })
 
-  // Get next appointment (first from upcoming)
-  const nextAppointment = upcomingAppointments[0] || null
+  // Get next appointment (first from today or upcoming)
+  const nextAppointment = todaysAppointments[0] || upcomingAppointments[0] || null
 
   // Separate forms by status
   const pendingForms = patient.forms.filter((f) => f.status === 'DRAFT' || f.status === 'SUBMITTED')
@@ -309,10 +340,94 @@ export default async function PatientDashboardPage() {
         </div>
       )}
 
-      {/* Upcoming Appointments */}
+      {/* Today's Schedule */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Appointments</h2>
-        {upcomingAppointments.length > 0 ? (
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Today's Schedule
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </span>
+          </h2>
+          <Link
+            href="/dashboard/appointments"
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            View All Appointments →
+          </Link>
+        </div>
+
+        {todaysAppointments.length > 0 ? (
+          <div className="space-y-3">
+            {todaysAppointments.map((apt) => {
+              const appointmentTime = new Date(apt.startTime)
+              const now = new Date()
+              const isPast = appointmentTime < now
+              const isCurrent = appointmentTime <= now && new Date(apt.endTime) >= now
+
+              return (
+                <div
+                  key={apt.id}
+                  className={`flex items-center justify-between rounded-lg p-4 border-l-4 ${
+                    apt.status === 'CANCELLED'
+                      ? 'border-gray-400 bg-gray-50'
+                      : isCurrent
+                      ? 'border-green-500 bg-green-50'
+                      : isPast
+                      ? 'border-blue-400 bg-blue-50 opacity-60'
+                      : 'border-blue-500 bg-blue-50'
+                  }`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {appointmentTime.toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          timeZone: 'America/New_York',
+                        })}
+                      </p>
+                      <span className="text-xs text-gray-500">•</span>
+                      <p className="text-sm font-medium text-gray-900">
+                        with {apt.therapist.user.name}
+                      </p>
+                      {isCurrent && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                          In Session
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">
+                      {apt.appointmentType.replace(/_/g, ' ')} • {apt.duration} min
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <JoinSessionButton
+                      appointmentId={apt.id}
+                      startTime={apt.startTime}
+                      endTime={apt.endTime}
+                      googleMeetLink={apt.googleMeetLink}
+                      status={apt.status}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <p className="mt-2 text-sm text-gray-600">No appointments scheduled for today</p>
+            <p className="mt-1 text-xs text-gray-500">Check back tomorrow or view your calendar for upcoming sessions</p>
+          </div>
+        )}
+      </div>
+
+      {/* Future Upcoming Appointments (Beyond Today) */}
+      {upcomingAppointments.length > 0 && (
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Appointments</h2>
           <div className="space-y-3">
             {upcomingAppointments.map((apt) => {
               // Create Date object once per iteration for efficiency
@@ -344,23 +459,12 @@ export default async function PatientDashboardPage() {
                       {apt.appointmentType.replace(/_/g, ' ')}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <JoinSessionButton
-                      appointmentId={apt.id}
-                      startTime={apt.startTime}
-                      endTime={apt.endTime}
-                      googleMeetLink={apt.googleMeetLink}
-                      status={apt.status}
-                    />
-                  </div>
                 </div>
               )
             })}
           </div>
-        ) : (
-          <p className="text-sm text-gray-600">No upcoming appointments scheduled.</p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

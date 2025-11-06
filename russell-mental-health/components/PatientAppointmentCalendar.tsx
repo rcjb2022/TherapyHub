@@ -15,6 +15,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import { EventClickArg } from '@fullcalendar/core'
 import luxon2Plugin from '@fullcalendar/luxon2'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { RefreshCwIcon, VideoIcon } from 'lucide-react'
 import { TIMEZONE } from '@/lib/appointment-utils'
@@ -167,70 +168,81 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
 
       {/* Appointment Details Modal */}
       {selectedAppointment && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4">Appointment Details</h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full shadow-xl">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Appointment Details</h2>
 
-            <div className="space-y-3 mb-6">
-              <div>
-                <p className="text-sm text-gray-600">Therapist</p>
-                <p className="text-base font-medium">{selectedAppointment.extendedProps?.therapistName}</p>
+            <div className="space-y-4 mb-8">
+              <div className="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg">
+                <p className="text-xs font-medium text-blue-600 uppercase tracking-wide mb-1">Therapist</p>
+                <p className="text-lg font-semibold text-gray-900">{selectedAppointment.extendedProps?.therapistName}</p>
               </div>
 
-              <div>
-                <p className="text-sm text-gray-600">Date & Time</p>
-                <p className="text-base font-medium">
+              <div className="border-l-4 border-green-500 bg-green-50 p-4 rounded-r-lg">
+                <p className="text-xs font-medium text-green-600 uppercase tracking-wide mb-1">Date & Time</p>
+                <p className="text-base font-semibold text-gray-900">
                   {new Date(selectedAppointment.start).toLocaleString('en-US', {
                     weekday: 'long',
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
                   })}
                 </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-600">Type</p>
-                <p className="text-base font-medium">
-                  {selectedAppointment.extendedProps?.appointmentType?.replace(/_/g, ' ')}
+                <p className="text-base font-semibold text-gray-900 mt-1">
+                  {new Date(selectedAppointment.start).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    timeZone: 'America/New_York',
+                  })} ET
                 </p>
               </div>
 
-              <div>
-                <p className="text-sm text-gray-600">Status</p>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(selectedAppointment.extendedProps?.status || '')}`}>
-                  {selectedAppointment.extendedProps?.status}
-                </span>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="border border-gray-200 bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Type</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {selectedAppointment.extendedProps?.appointmentType?.replace(/_/g, ' ')}
+                  </p>
+                </div>
+
+                <div className="border border-gray-200 bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">Status</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusBadgeColor(selectedAppointment.extendedProps?.status || '')}`}>
+                    {selectedAppointment.extendedProps?.status}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-3">
-              {selectedAppointment.extendedProps?.canJoin && selectedAppointment.extendedProps?.googleMeetLink && (
-                <a
-                  href={`/dashboard/video-session/${selectedAppointment.id}`}
-                  className="flex-1"
-                >
-                  <Button className="w-full">
-                    <VideoIcon className="h-4 w-4 mr-2" />
+            {/* Action Buttons */}
+            {selectedAppointment.extendedProps?.canJoin && selectedAppointment.extendedProps?.googleMeetLink ? (
+              <div className="space-y-3">
+                <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-semibold">
+                  <Link href={`/dashboard/video-session/${selectedAppointment.id}`}>
+                    <VideoIcon className="h-5 w-5 mr-2" />
                     Join Session
-                  </Button>
-                </a>
-              )}
-              <Button
-                onClick={() => setSelectedAppointment(null)}
-                variant={selectedAppointment.extendedProps?.canJoin ? 'outline' : 'default'}
-                className={selectedAppointment.extendedProps?.canJoin ? '' : 'flex-1'}
-              >
-                Close
-              </Button>
-            </div>
-
-            {!selectedAppointment.extendedProps?.canJoin && (
-              <p className="text-xs text-gray-500 text-center mt-3">
-                Join button will appear 30 minutes before your appointment
-              </p>
+                  </Link>
+                </Button>
+                <Button
+                  onClick={() => setSelectedAppointment(null)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Close
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Button
+                  onClick={() => setSelectedAppointment(null)}
+                  className="w-full bg-gray-600 hover:bg-gray-700"
+                >
+                  Close
+                </Button>
+                <p className="text-xs text-gray-500 text-center">
+                  Join button will appear 30 minutes before your appointment
+                </p>
+              </div>
             )}
           </div>
         </div>
