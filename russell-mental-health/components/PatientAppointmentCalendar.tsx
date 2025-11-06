@@ -58,8 +58,11 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
         const now = new Date()
         const calendarEvents: CalendarEvent[] = data.map((apt: any) => {
           const startTime = new Date(apt.startTime)
+          const endTime = new Date(apt.endTime)
           const minutesUntilStart = (startTime.getTime() - now.getTime()) / (1000 * 60)
-          const canJoin = minutesUntilStart <= 15 && minutesUntilStart >= -60 // 15 min before to 60 min after
+          const minutesAfterEnd = (now.getTime() - endTime.getTime()) / (1000 * 60)
+          // Can join: 30 minutes before start → end time
+          const canJoin = minutesUntilStart <= 30 && minutesAfterEnd < 0
 
           return {
             id: apt.id,
@@ -205,13 +208,15 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
 
             <div className="flex gap-3">
               {selectedAppointment.extendedProps?.canJoin && selectedAppointment.extendedProps?.googleMeetLink && (
-                <Button
-                  onClick={() => window.open(selectedAppointment.extendedProps?.googleMeetLink, '_blank')}
+                <a
+                  href={`/dashboard/video-session/${selectedAppointment.id}`}
                   className="flex-1"
                 >
-                  <VideoIcon className="h-4 w-4 mr-2" />
-                  Join Session
-                </Button>
+                  <Button className="w-full">
+                    <VideoIcon className="h-4 w-4 mr-2" />
+                    Join Session
+                  </Button>
+                </a>
               )}
               <Button
                 onClick={() => setSelectedAppointment(null)}
@@ -224,7 +229,7 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
 
             {!selectedAppointment.extendedProps?.canJoin && (
               <p className="text-xs text-gray-500 text-center mt-3">
-                Join button will appear 15 minutes before your appointment
+                Join button will appear 30 minutes before your appointment
               </p>
             )}
           </div>
