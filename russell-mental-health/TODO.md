@@ -1,12 +1,74 @@
 # Russell Mental Health Platform - TODO List
 
-**Version:** 0.6.0
-**Last Updated:** November 6, 2025 (Day 6 - Complete)
-**Status:** Calendar System & Enhanced Payments COMPLETE ✅ - Ready for Google Calendar Integration 🚀
+**Version:** 0.7.0
+**Last Updated:** November 6, 2025 (Day 7 - Complete)
+**Status:** Patient UX & Video Session Foundation COMPLETE ✅ - Ready for Video Recording & AI Features 🎬
 
 ---
 
-## ✅ Completed Today (Day 6 - Nov 6, 2025)
+## ✅ Completed Today (Day 7 - Nov 6, 2025)
+
+### Patient UX Improvements 👥 ⭐
+- [x] **Patient Dashboard "Today's Schedule"**
+  - Matches therapist dashboard style exactly
+  - In-progress session highlighting (green border + badge)
+  - Color-coded appointments (Green=Current, Blue=Upcoming, Gray=Cancelled)
+  - Large join buttons appear 30 minutes before appointment
+  - Empty state when no appointments today
+  - Links to full calendar view
+
+- [x] **Enhanced Calendar Modal Redesign**
+  - Large prominent blue button (py-6, text-lg) - impossible to miss
+  - Color-coded sections (blue=therapist, green=date/time)
+  - Professional layout with borders and spacing
+  - Next.js Link integration for instant navigation
+  - Mobile responsive design
+  - Help text when join button not available
+
+- [x] **Session Vault Foundation**
+  - Created `/dashboard/video` placeholder page (therapist only)
+  - Documented future features: recordings, AI transcription, SOAP notes
+  - Access control (patients redirected)
+  - Ready for Day 8 implementation
+
+- [x] **UX Consistency Achievement**
+  - Patient experience now matches therapist experience exactly
+  - Consistent join flow (30-min window, waiting room)
+  - Consistent color coding across all pages
+  - Consistent button styling and sizing
+
+### Bug Fixes 🐛 ⭐
+- [x] **AppointmentModal Button Styling**
+  - Save button now clearly defined with explicit blue styling
+  - Matches other action buttons throughout app
+
+- [x] **React useCallback Implementation**
+  - Wrapped fetch functions in useCallback
+  - Added proper useEffect dependencies
+  - Prevents stale closures (Gemini code review)
+
+- [x] **Video Session Authorization Fix**
+  - Fixed therapist redirect issue
+  - Now fetches full user object with relations
+  - Checks BOTH role AND ID for security
+
+- [x] **Patient Dashboard Icon Import**
+  - Added missing VideoCameraIcon import
+  - Fixed ReferenceError crash
+
+- [x] **Critical: Calendar Join Button Routing**
+  - Patient calendar was bypassing waiting room
+  - Fixed to route through `/dashboard/video-session/[id]`
+  - Security flow now consistent everywhere
+
+- [x] **Time Window Standardization**
+  - Changed from 15 minutes to 30 minutes everywhere
+  - Updated all help text
+  - Fixed end time checking logic
+
+---
+
+## ✅ Completed Earlier (Day 6 - Nov 6, 2025)
 
 ### Appointment Scheduling System 🗓️ ⭐
 - [x] **FullCalendar Integration with Luxon Timezone Support**
@@ -609,38 +671,76 @@ npm install @fullcalendar/core @fullcalendar/react @fullcalendar/daygrid @fullca
 
 ---
 
-## 📝 Notes for Next Session (Day 6 - Nov 5, 2025)
+## 📝 Notes for Next Session (Day 8 - Nov 7, 2025)
 
 ### What's Working Perfectly:
-- ✅ Authentication & session management (therapist + patient)
-- ✅ Dashboard with real-time stats
-- ✅ Patient CRUD operations
-- ✅ All 7 intake forms working with file uploads
-- ✅ Forms pre-populate and save correctly
-- ✅ Form success messages with progress tracking
-- ✅ Universal review component (therapist side)
-- ✅ Pending forms workflow complete
-- ✅ Status tracking (DRAFT → SUBMITTED → COMPLETED)
-- ✅ Complete billing & payment system (Stripe integration)
-- ✅ File upload system (Google Cloud Storage)
-- ✅ Document library with organized categories
-- ✅ HIPAA-compliant signed URLs for documents
-- ✅ Full end-to-end workflow tested and validated
+- ✅ Complete appointment scheduling system (FullCalendar + Luxon)
+- ✅ Patient & therapist UX fully consistent
+- ✅ Today's Schedule on both dashboards
+- ✅ Video session waiting room operational
+- ✅ Large prominent join buttons everywhere
+- ✅ 30-minute join window standardized
+- ✅ Color-coded appointments (green/blue/gray)
+- ✅ Mobile responsive design throughout
+- ✅ Security: patients only see own data
+- ✅ HIPAA-compliant authorization (role + ID)
+- ✅ All calendar features tested and validated
+- ✅ Session Vault foundation documented
 
-### Focus for Day 6 (Nov 5, 2025):
-1. **Appointment Scheduling System** - FullCalendar integration (4 phases)
-   - Phase 1: Calendar foundation with day/week/month views
-   - Phase 2: Create appointments with patient selection, CPT codes
-   - Phase 3: View/edit/cancel appointments
-   - Phase 4: Drag-and-drop rescheduling
-2. **Patient Dashboard Improvements** - Appointments widget, form completion count
-3. **Build-Test-Iterate** - Test at each checkpoint before continuing
+### Focus for Day 8 (Nov 7, 2025): 🎬⭐
+
+**Priority 1: Video Session Recording (WebRTC)**
+- [ ] Install simple-peer and socket.io packages
+- [ ] Implement MediaRecorder API for recording
+- [ ] Record both therapist and patient streams
+- [ ] Save recordings to Google Cloud Storage
+- [ ] Set 30-day automatic deletion (HIPAA retention)
+- [ ] Recording controls (start/stop) for therapist
+- [ ] Privacy: recording consent flow
+- [ ] Visual indicator when recording (red dot)
+- [ ] Link recordings to appointments in database
+
+**Priority 2: Gemini AI Integration**
+- [ ] Set up Gemini API authentication
+- [ ] Auto-transcribe recorded sessions
+- [ ] Generate SOAP notes from transcripts
+- [ ] Extract key themes and topics
+- [ ] Treatment plan suggestions
+- [ ] Session summary generation
+- [ ] Therapist review and edit interface
+
+**Priority 3: Session Vault UI**
+- [ ] Replace `/dashboard/video` placeholder with real UI
+- [ ] Sessions list table (date, patient, duration, recording status)
+- [ ] Filter by patient, date range, recording status
+- [ ] Search functionality
+- [ ] Session detail modal
+- [ ] Video player component (HTML5 with controls)
+- [ ] Transcript viewer with timestamps
+- [ ] SOAP notes editor
+- [ ] Export to PDF
 
 ### Development Philosophy:
-- ✅ No mock data or placeholders ever (CLAUDE.md principle)
 - ✅ Build → Test → Iterate at logical checkpoints
-- ✅ Fix issues immediately before moving on
+- ✅ Test recording with 30-second clips first
+- ✅ HIPAA compliance: encrypt at rest and in transit
+- ✅ Privacy first: explicit consent required
+- ✅ Error handling: recording can fail, handle gracefully
 - ✅ All code production-ready from day 1
+
+### Required Setup for Day 8:
+```bash
+# Install WebRTC and AI packages
+npm install simple-peer socket.io socket.io-client
+npm install @google-ai/generativelanguage
+
+# Enable GCP APIs
+# - Gemini API
+# - Cloud Speech-to-Text (optional)
+
+# Add environment variables
+GEMINI_API_KEY=your_gemini_api_key
+```
 
 ### Server Startup Commands:
 ```bash
@@ -663,14 +763,9 @@ npx prisma studio
 - Check Prisma Studio for existing patients
 - Or create new patient via therapist dashboard
 
-**Stripe Test Cards:**
-- Success: 4242 4242 4242 4242
-- Decline: 4000 0000 0000 0002
-- Insufficient Funds: 4000 0000 0000 9995
-
 ---
 
-**Last Updated:** November 4, 2025 (End of Day 5)
-**Next Session:** November 5, 2025 (Day 6)
-**Current Branch:** `claude/finish-interrupted-work-011CUoiaquueU6CvhophKZ8i`
-**Status:** ✅ File Upload System COMPLETE - Ready for Appointment Scheduling 🚀
+**Last Updated:** November 6, 2025 (End of Day 7)
+**Next Session:** November 7, 2025 (Day 8)
+**Current Branch:** `claude/resume-code-execution-011CUqQDV9KYqCM9M9Qf8jB9`
+**Status:** ✅ Patient UX & Video Foundation COMPLETE - Ready for Video Recording & AI 🎬⭐
