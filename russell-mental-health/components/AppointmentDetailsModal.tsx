@@ -11,7 +11,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { toZonedTime } from 'date-fns-tz'
@@ -36,6 +36,7 @@ interface AppointmentDetailsModalProps {
   onClose: () => void
   onEdit: (appointmentId: string) => void
   onRefresh: () => void
+  userRole: string
 }
 
 interface AppointmentDetails {
@@ -68,6 +69,7 @@ export function AppointmentDetailsModal({
   onClose,
   onEdit,
   onRefresh,
+  userRole,
 }: AppointmentDetailsModalProps) {
   const [appointment, setAppointment] = useState<AppointmentDetails | null>(null)
   const [loading, setLoading] = useState(false)
@@ -76,7 +78,7 @@ export function AppointmentDetailsModal({
   const [error, setError] = useState<string | null>(null)
 
   // Fetch appointment details
-  const fetchAppointment = async () => {
+  const fetchAppointment = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -93,15 +95,14 @@ export function AppointmentDetailsModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [appointmentId])
 
   // Load appointment when modal opens
   useEffect(() => {
     if (isOpen && appointmentId) {
       fetchAppointment()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, appointmentId])
+  }, [isOpen, appointmentId, fetchAppointment])
 
   // Cancel appointment
   const handleCancel = async () => {
@@ -120,8 +121,8 @@ export function AppointmentDetailsModal({
         onRefresh()
         onClose()
       } else {
-        const data = await response.json()
-        alert(`Failed to cancel appointment: ${data.error || 'Unknown error'}`)
+        const data = await response.json().catch(() => ({ error: response.statusText || 'Unknown error' }))
+        alert(`Failed to cancel appointment: ${data.error}`)
       }
     } catch (err) {
       console.error('Failed to cancel appointment:', err)
@@ -334,36 +335,51 @@ export function AppointmentDetailsModal({
 
         {/* Actions */}
         {appointment && appointment.status === 'SCHEDULED' && (
-          <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4 flex flex-col sm:flex-row gap-3 justify-end">
-            <Button
-              onClick={() => {
-                onEdit(appointmentId)
-                onClose()
-              }}
-              variant="outline"
-              className="sm:w-auto"
-            >
-              <PencilIcon className="h-4 w-4 mr-2" />
-              Edit Appointment
-            </Button>
-            <Button
-              onClick={handleCancel}
-              disabled={canceling}
-              variant="destructive"
-              className="sm:w-auto"
-            >
-              {canceling ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Cancelling...
-                </>
-              ) : (
-                <>
-                  <XCircleIcon className="h-4 w-4 mr-2" />
-                  Cancel Appointment
-                </>
-              )}
-            </Button>
+          <div className="sticky bottom-0 bg-gray-50 border-t px-6 py-4">
+            {userRole === 'THERAPIST' || userRole === 'ADMIN' ? (
+              // Therapist actions: Edit and Cancel
+              <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                <Button
+                  onClick={() => {
+                    onEdit(appointmentId)
+                    onClose()
+                  }}
+                  variant="outline"
+                  className="sm:w-auto"
+                >
+                  <PencilIcon className="h-4 w-4 mr-2" />
+                  Edit Appointment
+                </Button>
+                <Button
+                  onClick={handleCancel}
+                  disabled={canceling}
+                  variant="destructive"
+                  className="sm:w-auto"
+                >
+                  {canceling ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Cancelling...
+                    </>
+                  ) : (
+                    <>
+                      <XCircleIcon className="h-4 w-4 mr-2" />
+                      Cancel Appointment
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              // Patient message: Cannot cancel directly
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-gray-700">
+                  <strong>Need to cancel this appointment?</strong>
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Please contact your therapist directly to reschedule or cancel. Thank you!
+                </p>
+              </div>
+            )}
           </div>
         )}
       </Card>

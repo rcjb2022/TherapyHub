@@ -134,15 +134,15 @@ export async function PATCH(
     } = body
 
     // Prepare database update
-    const updateData: any = {}
-    if (startTime) updateData.startTime = new Date(startTime)
-    if (endTime) updateData.endTime = new Date(endTime)
+    const updateData: Partial<import('@prisma/client').Appointment> = {}
+    if (startTime !== undefined) updateData.startTime = new Date(startTime)
+    if (endTime !== undefined) updateData.endTime = new Date(endTime)
     if (duration !== undefined) updateData.duration = duration
-    if (appointmentType) updateData.appointmentType = appointmentType
-    if (sessionType) updateData.sessionType = sessionType
+    if (appointmentType !== undefined) updateData.appointmentType = appointmentType
+    if (sessionType !== undefined) updateData.sessionType = sessionType
     if (cptCode !== undefined) updateData.cptCode = cptCode
     if (notes !== undefined) updateData.notes = notes
-    if (status) updateData.status = status
+    if (status !== undefined) updateData.status = status
 
     // Update in database
     const updatedAppointment = await prisma.appointment.update({

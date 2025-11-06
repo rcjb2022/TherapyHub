@@ -10,6 +10,9 @@
  */
 
 import { Metadata } from 'next'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 import { AppointmentCalendar } from '@/components/AppointmentCalendar'
 
 export const metadata: Metadata = {
@@ -17,7 +20,13 @@ export const metadata: Metadata = {
   description: 'Appointment scheduling and calendar management',
 }
 
-export default function CalendarPage() {
+export default async function CalendarPage() {
+  const session = await getServerSession(authOptions)
+
+  if (!session) {
+    redirect('/login')
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -34,7 +43,7 @@ export default function CalendarPage() {
 
       {/* Calendar Component */}
       <div className="flex-1 overflow-hidden">
-        <AppointmentCalendar />
+        <AppointmentCalendar userRole={session.user.role} />
       </div>
     </div>
   )
