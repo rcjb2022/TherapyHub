@@ -17,9 +17,9 @@ import { redirect, notFound } from 'next/navigation'
 import { VideoSessionClient } from '@/components/VideoSessionClient'
 
 interface VideoSessionPageProps {
-  params: {
+  params: Promise<{
     appointmentId: string
-  }
+  }>
 }
 
 export default async function VideoSessionPage({ params }: VideoSessionPageProps) {
@@ -29,7 +29,7 @@ export default async function VideoSessionPage({ params }: VideoSessionPageProps
     redirect('/login')
   }
 
-  const { appointmentId } = params
+  const { appointmentId } = await params
 
   // Fetch appointment with patient and therapist details
   const appointment = await prisma.appointment.findUnique({
