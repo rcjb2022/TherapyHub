@@ -75,12 +75,13 @@ export default async function VideoSessionPage({ params }: VideoSessionPageProps
   }
 
   // Authorization check: User must be either:
-  // 1. The therapist for this appointment
-  // 2. The patient for this appointment
+  // 1. The therapist for this appointment (AND have THERAPIST role)
+  // 2. The patient for this appointment (AND have PATIENT role)
   // 3. An admin (can access all appointments)
-  const isAdmin = session.user.role === 'ADMIN'
-  const isTherapist = user.therapist?.id === appointment.therapistId
-  const isPatient = user.patient?.id === appointment.patientId
+  // Security: Check BOTH role and ID to prevent role confusion attacks
+  const isAdmin = user.role === 'ADMIN'
+  const isTherapist = user.role === 'THERAPIST' && user.therapist?.id === appointment.therapistId
+  const isPatient = user.role === 'PATIENT' && user.patient?.id === appointment.patientId
 
   if (!isTherapist && !isPatient && !isAdmin) {
     // Unauthorized - redirect to dashboard
