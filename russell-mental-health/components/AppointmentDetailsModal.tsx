@@ -282,9 +282,7 @@ export function AppointmentDetailsModal({
                   <div className="flex flex-col sm:flex-row gap-2">
                     {joinStatus?.canJoin ? (
                       <a
-                        href={appointment.googleMeetLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={`/dashboard/video-session/${appointmentId}`}
                         className="flex-1"
                       >
                         <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
@@ -304,9 +302,7 @@ export function AppointmentDetailsModal({
                       </Button>
                     ) : (
                       <a
-                        href={appointment.googleMeetLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={`/dashboard/video-session/${appointmentId}`}
                         className="flex-1"
                       >
                         <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
