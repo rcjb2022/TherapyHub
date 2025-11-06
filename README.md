@@ -1,13 +1,18 @@
 # TherapyHub - Russell Mental Health Platform
 
-**Version:** 0.5.0 (Day 5 Complete)
-**Status:** 🚀 File Upload System Complete - Ready for Appointment Scheduling
+**Version:** 0.6.0 (Day 6 Complete)
+**Status:** 🚀 Calendar System & Enhanced Payments Complete - Ready for Google Calendar Integration
 **Practice:** Russell Mental Health - Dr. Bethany R. Russell, Ph.D., P.A.
 
 ---
 
-## 🎉 Project Status: Day 5 Complete!
+## 🎉 Project Status: Day 6 Complete!
 
+✅ **Full appointment scheduling system with FullCalendar**
+✅ **Eastern Time display with automatic DST handling (Luxon plugin)**
+✅ **Create, edit, delete, drag-and-drop appointments**
+✅ **One-time payments with Stripe Elements (card not saved)**
+✅ **Prepayment support up to $500 (builds account credit)**
 ✅ **Authentication system working (therapist + patient)**
 ✅ **Dashboard with patient stats and pending forms tracking**
 ✅ **Patient CRUD operations (create, view, edit)**
@@ -97,7 +102,7 @@ TherapyHub/
 
 ---
 
-## 📊 Current Version: 0.5.0
+## 📊 Current Version: 0.6.0
 
 ### ✅ Completed (Day 1 - Oct 30, 2025)
 
@@ -130,7 +135,7 @@ TherapyHub/
 
 ---
 
-### ✅ Completed (Day 2-5 - Oct 31 - Nov 4, 2025)
+### ✅ Completed (Day 2-6 - Oct 31 - Nov 6, 2025)
 
 **Day 2 (Oct 31, 2025) - Authentication & Forms Foundation:**
 - NextAuth.js fully configured with credentials provider
@@ -190,6 +195,31 @@ TherapyHub/
 - Applied functional setState pattern to prevent race conditions
 - Removed all fallback/mock code per CLAUDE.md principles
 
+**Day 6 (Nov 6, 2025) - Calendar System & Enhanced Payments:** ⭐
+- Installed FullCalendar with Luxon timezone plugin (`@fullcalendar/luxon2`, `luxon`)
+- **Proper Eastern Time Display:** All appointments show in ET regardless of user location
+- **Automatic DST Handling:** Luxon handles Daylight Saving Time transitions automatically
+- Therapist calendar at `/dashboard/calendar` (day/week/month views)
+- Patient calendar at `/dashboard/appointments` (read-only view)
+- Create appointments with comprehensive modal (patient, date/time, duration, CPT codes)
+- 15-minute interval time picker (replaced native scrolling input per user feedback)
+- Edit appointments (click event to modify any field)
+- Delete/cancel appointments with status tracking
+- Drag-and-drop rescheduling with real-time updates
+- Color-coded events (Blue=Scheduled, Green=Completed, Gray=Cancelled)
+- Google Meet link auto-generation for telehealth appointments
+- Recurring appointments support (daily, weekly, monthly up to 90 days)
+- **One-Time Payment Feature:** Stripe Elements integration without saving card
+- **Tabbed Payment Interface:** "Pay with Saved Card" vs "One-Time Payment" tabs
+- **Prepayment Support:** Allow prepayments up to $500 when balance is $0
+- **Account Credit System:** Negative balance = credit, displayed as "Account Credit"
+- **CRITICAL FIX:** Patients can now pay their own bills (was 403 error)
+- **CRITICAL FIX:** Stripe PaymentIntent error resolved with `payment_method_types: ['card']`
+- Fixed timezone display issue with Luxon plugin (was showing UTC)
+- Fixed Server/Client component error (removed callbacks, use router.refresh())
+- Fixed null assertion risk with therapist profile check
+- Updated balance display logic (Outstanding/Current/Credit)
+
 **Technical Improvements:**
 - Proper TypeScript types throughout
 - React controlled components for form management
@@ -200,9 +230,11 @@ TherapyHub/
 - Build-test-iterate approach at logical checkpoints
 
 **See:**
+- [russell-mental-health/DAY_6_COMPLETE.md](russell-mental-health/DAY_6_COMPLETE.md) for Day 6 details
 - [russell-mental-health/DAY_5_COMPLETE.md](russell-mental-health/DAY_5_COMPLETE.md) for Day 5 details
-- [russell-mental-health/TODO.md](russell-mental-health/TODO.md) for Day 6 priorities
-- [HANDOFF_DAY_6.md](HANDOFF_DAY_6.md) for next session plan
+- [russell-mental-health/TODO.md](russell-mental-health/TODO.md) for Day 7 priorities
+- [HANDOFF_DAY_6.md](HANDOFF_DAY_6.md) for session handoff
+- [TOMORROW_PROMPTS_DAY_7.md](TOMORROW_PROMPTS_DAY_7.md) for next session plan
 
 ---
 
@@ -272,12 +304,18 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - [x] Image previews with lazy loading
 - [x] Fast PDF viewing
 
-### 🚧 In Progress: Version 0.6.0 (Day 6 - Nov 5, 2025)
-- [ ] **Phase 1:** Calendar foundation (FullCalendar, day/week/month views)
-- [ ] **Phase 2:** Create appointments (patient selection, CPT codes)
-- [ ] **Phase 3:** View/edit/cancel appointments
-- [ ] **Phase 4:** Drag-and-drop rescheduling
-- [ ] Patient dashboard improvements (appointments widget, form count)
+### ✅ Completed: Version 0.6.0 (Day 6 - Nov 6, 2025) ⭐
+- [x] FullCalendar integration with Luxon timezone plugin
+- [x] Eastern Time display with automatic DST handling
+- [x] Calendar foundation (day/week/month views)
+- [x] Create appointments (patient selection, CPT codes, duration, types)
+- [x] View/edit/cancel appointments with status tracking
+- [x] Drag-and-drop rescheduling
+- [x] 15-minute interval time picker (user feedback improvement)
+- [x] One-time payment feature (Stripe Elements)
+- [x] Prepayment support up to $500
+- [x] Account credit system (negative balance display)
+- [x] Critical bug fixes (patient payment auth, timezone display, Stripe errors)
 
 ### 📋 Planned: Version 0.7.0 (Week 2)
 - [ ] Google Calendar sync (two-way)
@@ -334,7 +372,8 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - TypeScript 5.0+
 - Tailwind CSS 3.4+
 - Hero Icons 2.0
-- FullCalendar (planned for Day 6)
+- FullCalendar (@fullcalendar/core, @fullcalendar/react, @fullcalendar/luxon2)
+- Luxon (timezone handling with DST support)
 - React Hook Form + Zod
 - Stripe React Components (@stripe/react-stripe-js, @stripe/stripe-js)
 
@@ -374,8 +413,10 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - **[russell-mental-health/CLAUDE.md](russell-mental-health/CLAUDE.md)** - Development guidelines and principles
 - **[russell-mental-health/DAY_1_COMPLETE.md](russell-mental-health/DAY_1_COMPLETE.md)** - Day 1 milestone
 - **[russell-mental-health/DAY_2_COMPLETE.md](russell-mental-health/DAY_2_COMPLETE.md)** - Day 2 milestone
+- **[russell-mental-health/DAY_6_COMPLETE.md](russell-mental-health/DAY_6_COMPLETE.md)** - Day 6 milestone
 - **[russell-mental-health/DAY_5_COMPLETE.md](russell-mental-health/DAY_5_COMPLETE.md)** - Day 5 milestone
-- **[HANDOFF_DAY_6.md](HANDOFF_DAY_6.md)** - Day 6 detailed plan (appointment scheduling)
+- **[HANDOFF_DAY_6.md](HANDOFF_DAY_6.md)** - Day 6 session handoff
+- **[TOMORROW_PROMPTS_DAY_7.md](TOMORROW_PROMPTS_DAY_7.md)** - Day 7 detailed plan (Google Calendar integration)
 - **[FINAL_REALISTIC_PLAN.md](FINAL_REALISTIC_PLAN.md)** - Complete 3-4 week implementation plan
 - **[SPECIALIZED_FEATURES.md](SPECIALIZED_FEATURES.md)** - Practice-specific features (ASD, immigration evals, crypto)
 - **[PLUG_AND_PLAY_STRATEGY.md](PLUG_AND_PLAY_STRATEGY.md)** - API integration strategy and costs
@@ -479,7 +520,7 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 
 ---
 
-**Last Updated:** November 4, 2025 (End of Day 5)
-**Current Phase:** Day 5 Complete - File Upload System & Document Management
-**Current Version:** 0.5.0
-**Next Milestone:** Appointment Scheduling System (Day 6 - Nov 5, 2025)
+**Last Updated:** November 6, 2025 (End of Day 6)
+**Current Phase:** Day 6 Complete - Calendar System & Enhanced Payments
+**Current Version:** 0.6.0
+**Next Milestone:** Google Calendar Integration (Day 7 - Nov 7, 2025)
