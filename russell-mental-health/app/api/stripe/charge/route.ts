@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
 
     // Access control: Allow therapists OR patients paying their own bill
     if (user.role === 'THERAPIST') {
-      // Therapist charging a patient: verify patient belongs to this therapist
-      if (patient.therapistId !== user.therapist!.id) {
+      // Therapist charging a patient: verify therapist profile exists and patient belongs to them
+      if (!user.therapist || patient.therapistId !== user.therapist.id) {
         return NextResponse.json(
           { error: 'You can only charge your own patients' },
           { status: 403 }
