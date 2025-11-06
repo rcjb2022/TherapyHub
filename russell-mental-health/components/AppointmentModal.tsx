@@ -36,6 +36,7 @@ interface AppointmentModalProps {
   onSuccess: () => void
   defaultStartTime?: Date
   defaultEndTime?: Date
+  appointmentId?: string // Optional - if provided, we're in edit mode
 }
 
 interface Patient {
@@ -60,12 +61,17 @@ export function AppointmentModal({
   onSuccess,
   defaultStartTime,
   defaultEndTime,
+  appointmentId,
 }: AppointmentModalProps) {
   // Form state
   const [patients, setPatients] = useState<Patient[]>([])
   const [therapists, setTherapists] = useState<Therapist[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadingAppointment, setLoadingAppointment] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Track edit mode
+  const isEditMode = !!appointmentId
 
   // Form fields
   const [patientId, setPatientId] = useState('')
@@ -79,24 +85,64 @@ export function AppointmentModal({
   const [notes, setNotes] = useState('')
   const [recurringPattern, setRecurringPattern] = useState('none')
 
-  // Load patients and therapists
+  // Fetch existing appointment data (for edit mode)
+  const fetchAppointmentData = async (id: string) => {
+    setLoadingAppointment(true)
+    try {
+      const response = await fetch(`/api/appointments/${id}`)
+      if (response.ok) {
+        const apt = await response.json()
+
+        // Pre-populate form fields
+        setPatientId(apt.patientId)
+        setTherapistId(apt.therapistId)
+        setAppointmentType(apt.appointmentType)
+        setSessionType(apt.sessionType)
+        setCptCode(apt.cptCode || '90837')
+        setDuration(apt.duration)
+        setNotes(apt.notes || '')
+
+        // Parse start time from UTC to Eastern for display
+        const start = new Date(apt.startTime)
+        setStartDate(start.toISOString().split('T')[0])
+        setStartTime(start.toTimeString().slice(0, 5))
+
+        // Note: We don't support editing recurring appointments yet
+        setRecurringPattern('none')
+      } else {
+        setError('Failed to load appointment data')
+      }
+    } catch (err) {
+      console.error('Failed to fetch appointment:', err)
+      setError('Failed to load appointment data')
+    } finally {
+      setLoadingAppointment(false)
+    }
+  }
+
+  // Load patients and therapists (and appointment data if editing)
   useEffect(() => {
     if (isOpen) {
       fetchPatientsAndTherapists()
 
-      // Set default start time if provided
-      if (defaultStartTime) {
-        const rounded = roundToNearestQuarterHour(defaultStartTime)
-        setStartDate(rounded.toISOString().split('T')[0])
-        setStartTime(rounded.toTimeString().slice(0, 5))
+      // If editing, load appointment data
+      if (isEditMode && appointmentId) {
+        fetchAppointmentData(appointmentId)
       } else {
-        // Default to next hour
-        const next = roundToNearestQuarterHour(new Date(Date.now() + 60 * 60 * 1000))
-        setStartDate(next.toISOString().split('T')[0])
-        setStartTime(next.toTimeString().slice(0, 5))
+        // Set default start time if provided
+        if (defaultStartTime) {
+          const rounded = roundToNearestQuarterHour(defaultStartTime)
+          setStartDate(rounded.toISOString().split('T')[0])
+          setStartTime(rounded.toTimeString().slice(0, 5))
+        } else {
+          // Default to next hour
+          const next = roundToNearestQuarterHour(new Date(Date.now() + 60 * 60 * 1000))
+          setStartDate(next.toISOString().split('T')[0])
+          setStartTime(next.toTimeString().slice(0, 5))
+        }
       }
     }
-  }, [isOpen, defaultStartTime])
+  }, [isOpen, defaultStartTime, isEditMode, appointmentId])
 
   // Fetch patients and therapists
   const fetchPatientsAndTherapists = async () => {
@@ -184,15 +230,19 @@ export function AppointmentModal({
     setLoading(true)
 
     try {
-      const response = await fetch('/api/appointments', {
-        method: 'POST',
+      // Use PATCH for edit mode, POST for create mode
+      const url = isEditMode ? `/api/appointments/${appointmentId}` : '/api/appointments'
+      const method = isEditMode ? 'PATCH' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(appointmentData),
       })
 
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to create appointment')
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || `Failed to ${isEditMode ? 'update' : 'create'} appointment`)
       }
 
       // Success!
@@ -202,7 +252,7 @@ export function AppointmentModal({
       // Reset form
       resetForm()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create appointment')
+      setError(err instanceof Error ? err.message : `Failed to ${isEditMode ? 'update' : 'create'} appointment`)
     } finally {
       setLoading(false)
     }
@@ -243,7 +293,7 @@ export function AppointmentModal({
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white shadow-2xl">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold">New Appointment</h2>
+          <h2 className="text-xl font-bold">{isEditMode ? 'Edit Appointment' : 'New Appointment'}</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition"
@@ -254,6 +304,14 @@ export function AppointmentModal({
 
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Loading appointment data */}
+            {loadingAppointment && (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-sm text-gray-600">Loading appointment...</span>
+              </div>
+            )}
+
             {/* Error message */}
             {error && (
               <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-800">
@@ -468,7 +526,9 @@ export function AppointmentModal({
                 disabled={loading}
                 className="flex-1"
               >
-                {loading ? 'Creating...' : 'Create Appointment'}
+                {loading
+                  ? (isEditMode ? 'Saving...' : 'Creating...')
+                  : (isEditMode ? 'Save Changes' : 'Create Appointment')}
               </Button>
               <Button
                 type="button"

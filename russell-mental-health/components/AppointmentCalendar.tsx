@@ -324,6 +324,7 @@ export function AppointmentCalendar({ userRole }: AppointmentCalendarProps) {
         }}
         defaultStartTime={selectedSlot?.start}
         defaultEndTime={selectedSlot?.end}
+        appointmentId={editingAppointmentId || undefined}
       />
 
       {/* Appointment Details Modal */}
