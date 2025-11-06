@@ -3,15 +3,15 @@
  *
  * Display and manage Google Meet video session
  * - Prominent "Join Google Meet" button (opens in new tab)
- * - Option to embed iframe (if browser/Google allows)
  * - Appointment details sidebar
- * - Clear instructions
+ * - Pre-session checklist and instructions
  * - Back to dashboard link
+ *
+ * Note: iframe embedding removed - Google Meet blocks it for security
  */
 
 'use client'
 
-import { useState } from 'react'
 import { VideoIcon, ExternalLinkIcon, UserIcon, CalendarIcon, ClockIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -38,7 +38,6 @@ interface GoogleMeetSessionProps {
 }
 
 export function GoogleMeetSession({ appointment, userRole }: GoogleMeetSessionProps) {
-  const [showIframe, setShowIframe] = useState(false)
   const startTime = new Date(appointment.startTime)
 
   return (
@@ -57,91 +56,49 @@ export function GoogleMeetSession({ appointment, userRole }: GoogleMeetSessionPr
 
             {/* Google Meet Card */}
             <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-              {!showIframe ? (
-                <div className="text-center">
-                  {/* Google Meet Icon/Logo */}
-                  <div className="mb-6">
-                    <div className="mx-auto w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
-                      <VideoIcon className="h-10 w-10 text-white" />
-                    </div>
-                  </div>
-
-                  {/* Session Status */}
-                  <div className="mb-6">
-                    <div className="inline-flex items-center gap-2 bg-green-100 text-green-900 rounded-full px-4 py-2 mb-4">
-                      <div className="h-2 w-2 bg-green-600 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-medium">Session Active</span>
-                    </div>
-                  </div>
-
-                  {/* Join Button - Primary */}
-                  <div className="space-y-3">
-                    <a
-                      href={appointment.googleMeetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block"
-                    >
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-6">
-                        <VideoIcon className="h-5 w-5 mr-2" />
-                        Join Google Meet
-                        <ExternalLinkIcon className="h-4 w-4 ml-2" />
-                      </Button>
-                    </a>
-
-                    {/* Alternative: Embed option */}
-                    <button
-                      onClick={() => setShowIframe(true)}
-                      className="w-full text-sm text-blue-600 hover:text-blue-700 underline"
-                    >
-                      Or try embedding the meeting here
-                    </button>
-                  </div>
-
-                  {/* Instructions */}
-                  <div className="mt-8 bg-blue-50 rounded-lg p-4 text-left">
-                    <h3 className="font-semibold text-gray-900 mb-2 text-sm">Before you join:</h3>
-                    <ul className="text-sm text-gray-700 space-y-1">
-                      <li>✓ Ensure your camera and microphone are working</li>
-                      <li>✓ Find a quiet, private space</li>
-                      <li>✓ Check your internet connection</li>
-                      <li>✓ Close unnecessary browser tabs</li>
-                    </ul>
+              <div className="text-center">
+                {/* Google Meet Icon/Logo */}
+                <div className="mb-6">
+                  <div className="mx-auto w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center">
+                    <VideoIcon className="h-10 w-10 text-white" />
                   </div>
                 </div>
-              ) : (
-                <div>
-                  {/* Embedded iframe */}
-                  <div className="aspect-video w-full bg-gray-900 rounded-lg overflow-hidden mb-4">
-                    <iframe
-                      src={appointment.googleMeetLink}
-                      className="w-full h-full"
-                      allow="camera; microphone; fullscreen"
-                      title="Google Meet Video Session"
-                    ></iframe>
+
+                {/* Session Status */}
+                <div className="mb-6">
+                  <div className="inline-flex items-center gap-2 bg-green-100 text-green-900 rounded-full px-4 py-2 mb-4">
+                    <div className="h-2 w-2 bg-green-600 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium">Session Active</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <button
-                      onClick={() => setShowIframe(false)}
-                      className="text-sm text-gray-600 hover:text-gray-800"
-                    >
-                      ← Back
-                    </button>
-                    <a
-                      href={appointment.googleMeetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                    >
-                      Open in new tab
-                      <ExternalLinkIcon className="h-3 w-3" />
-                    </a>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-4 text-center">
-                    Note: Embedded view may have limited functionality. Opening in a new tab is recommended.
-                  </p>
                 </div>
-              )}
+
+                {/* Join Button - Primary */}
+                <div className="mb-8">
+                  <a
+                    href={appointment.googleMeetLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg py-6">
+                      <VideoIcon className="h-5 w-5 mr-2" />
+                      Join Google Meet
+                      <ExternalLinkIcon className="h-4 w-4 ml-2" />
+                    </Button>
+                  </a>
+                </div>
+
+                {/* Instructions */}
+                <div className="bg-blue-50 rounded-lg p-4 text-left">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-sm">Before you join:</h3>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>✓ Ensure your camera and microphone are working</li>
+                    <li>✓ Find a quiet, private space</li>
+                    <li>✓ Check your internet connection</li>
+                    <li>✓ Close unnecessary browser tabs</li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
             {/* Back to Dashboard */}
