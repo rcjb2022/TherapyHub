@@ -21,6 +21,7 @@ import {
   CPT_CODES,
   DURATIONS,
   RECURRING_PATTERNS,
+  TIMEZONE,
   calculateEndTime,
   formatTime,
   validateAppointmentTime,
@@ -156,8 +157,7 @@ export function AppointmentModal({
     // CRITICAL: The HTML datetime-local input gives us date/time WITHOUT timezone info
     // We must explicitly treat this as Eastern time, regardless of user's browser timezone
     // Using date-fns-tz fromZonedTime to properly handle DST transitions
-    const timeZone = 'America/New_York'
-    const startDateTime = fromZonedTime(`${startDate}T${startTime}`, timeZone)
+    const startDateTime = fromZonedTime(`${startDate}T${startTime}`, TIMEZONE)
 
     // Validate appointment time
     const validation = validateAppointmentTime(startDateTime, duration)
@@ -225,8 +225,7 @@ export function AppointmentModal({
   // Calculate end time for display (in Eastern time)
   let endTimeDisplay = ''
   if (startDate && startTime) {
-    const timeZone = 'America/New_York'
-    const start = fromZonedTime(`${startDate}T${startTime}`, timeZone)
+    const start = fromZonedTime(`${startDate}T${startTime}`, TIMEZONE)
     const end = calculateEndTime(start, duration)
     endTimeDisplay = formatTime(end)
   }

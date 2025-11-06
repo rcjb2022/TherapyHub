@@ -10,13 +10,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { toZonedTime } from 'date-fns-tz'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import { EventClickArg } from '@fullcalendar/core'
 import { Button } from '@/components/ui/button'
 import { RefreshCwIcon, VideoIcon } from 'lucide-react'
+import { TIMEZONE } from '@/lib/appointment-utils'
 
 interface CalendarEvent {
   id: string
@@ -52,25 +52,19 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
         const data = await response.json()
 
         // Transform to calendar events
-        // Convert UTC times from database to Eastern time for display
-        const timeZone = 'America/New_York'
+        // Pass dates as-is (ISO format with UTC timezone)
+        // FullCalendar's timeZone prop will handle display conversion
         const now = new Date()
         const calendarEvents: CalendarEvent[] = data.map((apt: any) => {
-          const startUTC = new Date(apt.startTime)
-          const endUTC = new Date(apt.endTime)
-
-          // Convert UTC to Eastern time
-          const startEastern = toZonedTime(startUTC, timeZone)
-          const endEastern = toZonedTime(endUTC, timeZone)
-
-          const minutesUntilStart = (startUTC.getTime() - now.getTime()) / (1000 * 60)
+          const startTime = new Date(apt.startTime)
+          const minutesUntilStart = (startTime.getTime() - now.getTime()) / (1000 * 60)
           const canJoin = minutesUntilStart <= 15 && minutesUntilStart >= -60 // 15 min before to 60 min after
 
           return {
             id: apt.id,
             title: `Session with ${apt.therapist.user.name}`,
-            start: startEastern.toISOString(),
-            end: endEastern.toISOString(),
+            start: apt.startTime,  // ISO string from API (UTC)
+            end: apt.endTime,      // ISO string from API (UTC)
             backgroundColor: getStatusColor(apt.status),
             borderColor: getStatusColor(apt.status),
             extendedProps: {
@@ -141,6 +135,7 @@ export function PatientAppointmentCalendar({ patientId }: PatientAppointmentCale
             center: 'title',
             right: 'dayGridMonth,timeGridWeek',
           }}
+          timeZone={TIMEZONE}
           slotMinTime="00:00:00" // 24-hour access (crisis appointments)
           slotMaxTime="24:00:00"
           allDaySlot={false}
