@@ -20,6 +20,7 @@ interface VideoRoomProps {
     name: string
     role: 'THERAPIST' | 'PATIENT'
   }
+  onEndSession?: () => void
 }
 
 interface PeerConnection {
@@ -28,7 +29,7 @@ interface PeerConnection {
   userInfo: SocketUser
 }
 
-export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProps) {
+export default function VideoRoom({ socket, roomId, currentUser, onEndSession }: VideoRoomProps) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [peers, setPeers] = useState<Map<string, PeerConnection>>(new Map())
   const [isVideoEnabled, setIsVideoEnabled] = useState(true)
@@ -37,6 +38,7 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const peersRef = useRef<Map<string, PeerConnection>>(new Map())
+  const participantsMapRef = useRef<Map<string, SocketUser>>(new Map())
   const hasJoinedRoomRef = useRef(false)
 
   // Get STUN server from environment (Google's free STUN server by default)
@@ -164,13 +166,52 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
   )
 
   /**
+   * End the video session and clean up all resources
+   */
+  const endSession = useCallback(() => {
+    console.log('[VideoRoom] Ending session...')
+
+    // Stop all media tracks
+    if (localStream) {
+      localStream.getTracks().forEach((track) => {
+        track.stop()
+        console.log(`[VideoRoom] Stopped track: ${track.kind}`)
+      })
+      setLocalStream(null)
+    }
+
+    // Destroy all peer connections
+    peersRef.current.forEach((peerConnection) => {
+      peerConnection.peer.removeAllListeners('close')
+      peerConnection.peer.destroy()
+    })
+    peersRef.current.clear()
+    setPeers(new Map())
+
+    // Clear participants
+    participantsMapRef.current.clear()
+
+    // Leave the room
+    if (socket) {
+      socket.emit('leave-room', { roomId })
+    }
+
+    // Reset join flag
+    hasJoinedRoomRef.current = false
+
+    console.log('[VideoRoom] Session ended successfully')
+
+    // Call the onEndSession callback if provided
+    if (onEndSession) {
+      onEndSession()
+    }
+  }, [localStream, socket, roomId, onEndSession])
+
+  /**
    * Setup Socket.io event listeners for WebRTC signaling
    */
   useEffect(() => {
     if (!socket || !localStream) return
-
-    // Track all participants in the room (not just peers with active connections)
-    const participantsMap = new Map<string, SocketUser>()
 
     // When we successfully join a room, initiate connections to existing participants
     const handleRoomJoined = ({ participants }: { roomId: string; participants: SocketUser[] }) => {
@@ -178,7 +219,7 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
 
       // Store participant info
       participants.forEach((participant) => {
-        participantsMap.set(participant.socketId, participant)
+        participantsMapRef.current.set(participant.socketId, participant)
       })
 
       // Create peer connections to all existing participants (we are the initiator)
@@ -203,7 +244,7 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
     // When a new user joins, store their info - they will initiate connection to us
     const handleUserJoined = (user: SocketUser) => {
       console.log(`[VideoRoom] User joined: ${user.name}`)
-      participantsMap.set(user.socketId, user)
+      participantsMapRef.current.set(user.socketId, user)
     }
 
     // When we receive an offer, create peer (not initiator) and accept
@@ -218,7 +259,7 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
       }
 
       // Get user info from participants map
-      const userInfo = participantsMap.get(fromSocketId) || {
+      const userInfo = participantsMapRef.current.get(fromSocketId) || {
         socketId: fromSocketId,
         userId: 'unknown',
         role: 'PATIENT' as const,
@@ -279,10 +320,11 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
     const handleUserLeft = (user: SocketUser) => {
       console.log(`[VideoRoom] User left: ${user.name}`)
 
-      participantsMap.delete(user.socketId)
+      participantsMapRef.current.delete(user.socketId)
 
       const peerConnection = peersRef.current.get(user.socketId)
       if (peerConnection) {
+        peerConnection.peer.removeAllListeners('close')
         peerConnection.peer.destroy()
         peersRef.current.delete(user.socketId)
         setPeers(new Map(peersRef.current))
@@ -343,8 +385,9 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
       // Reset the join flag when component unmounts
       hasJoinedRoomRef.current = false
 
-      // Destroy all peer connections
+      // Destroy all peer connections (remove listeners first to prevent state updates on unmount)
       peersRef.current.forEach((peerConnection) => {
+        peerConnection.peer.removeAllListeners('close')
         peerConnection.peer.destroy()
       })
       peersRef.current.clear()
@@ -483,6 +526,16 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
               </>
             )}
+          </svg>
+        </button>
+
+        <button
+          onClick={endSession}
+          className="rounded-full bg-red-600 p-4 transition-colors hover:bg-red-700"
+          title="End Session"
+        >
+          <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
