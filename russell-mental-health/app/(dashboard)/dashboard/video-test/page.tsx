@@ -159,6 +159,10 @@ export default function VideoTestPage() {
     )
   }
 
+  const handleEndSession = () => {
+    setHasJoined(false)
+  }
+
   // Show video room
   return (
     <div className="h-screen">
@@ -170,6 +174,7 @@ export default function VideoTestPage() {
           name: session.user.name,
           role: session.user.role as 'THERAPIST' | 'PATIENT',
         }}
+        onEndSession={handleEndSession}
       />
     </div>
   )
