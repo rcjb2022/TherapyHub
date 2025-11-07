@@ -9,9 +9,17 @@
 
 const { createServer } = require('http')
 const { Server } = require('socket.io')
+const jwt = require('jsonwebtoken')
 
 const port = parseInt(process.env.SOCKET_PORT || '3001', 10)
 const dev = process.env.NODE_ENV !== 'production'
+
+// JWT secret from NextAuth (must match NEXTAUTH_SECRET in .env)
+const JWT_SECRET = process.env.NEXTAUTH_SECRET
+if (!JWT_SECRET) {
+  console.error('[Socket.io] FATAL: NEXTAUTH_SECRET is not set in environment variables')
+  process.exit(1)
+}
 
 // Create HTTP server for Socket.io
 const httpServer = createServer()
@@ -25,6 +33,34 @@ const io = new Server(httpServer, {
   },
 })
 
+// Authentication middleware - verify JWT token before allowing connection
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token
+
+  if (!token) {
+    return next(new Error('Authentication error: No token provided'))
+  }
+
+  try {
+    // Verify JWT token
+    const decoded = jwt.verify(token, JWT_SECRET)
+
+    // Attach authenticated user data to socket
+    socket.user = {
+      userId: decoded.sub || decoded.id, // NextAuth uses 'sub' for user ID
+      email: decoded.email,
+      name: decoded.name,
+      role: decoded.role || 'PATIENT', // Default to PATIENT if role not in token
+    }
+
+    console.log(`[Socket.io] Authenticated: ${socket.user.name} (${socket.user.role})`)
+    next()
+  } catch (err) {
+    console.error('[Socket.io] Authentication failed:', err.message)
+    return next(new Error('Authentication error: Invalid token'))
+  }
+})
+
 // Track active rooms and participants
 const rooms = new Map() // roomId -> Set of socketIds
 const socketToRoom = new Map() // socketId -> roomId
@@ -36,9 +72,13 @@ io.on('connection', (socket) => {
   /**
    * Join a video session room
    *
-   * Client sends: { roomId, userId, role, name }
+   * Client sends: { roomId }
+   * User data comes from authenticated socket.user (verified by middleware)
    */
-  socket.on('join-room', ({ roomId, userId, role, name }) => {
+  socket.on('join-room', ({ roomId }) => {
+    // Use authenticated user data from socket.user (set by auth middleware)
+    const { userId, role, name } = socket.user
+
     console.log(`[Socket.io] ${name} (${role}) joining room: ${roomId}`)
 
     // Leave previous room if any
