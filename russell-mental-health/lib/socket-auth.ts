@@ -24,28 +24,26 @@ export async function getSocketToken(): Promise<string | null> {
       return null
     }
 
-    // NextAuth stores the JWT in session.user (when using JWT strategy)
-    // We need to get the raw JWT token, not the decoded session
-    // The token is available in the cookie, we'll extract it client-side
+    // Call our API endpoint to get a Socket.io-specific JWT token
+    const response = await fetch('/api/socket/token')
 
-    // Get the session token from cookies
-    const cookies = document.cookie.split(';')
-    const sessionTokenCookie = cookies.find((c) =>
-      c.trim().startsWith('next-auth.session-token=') ||
-      c.trim().startsWith('__Secure-next-auth.session-token=')
-    )
-
-    if (sessionTokenCookie) {
-      // Use substring instead of split for robustness (handles = in cookie value)
-      const token = sessionTokenCookie.substring(sessionTokenCookie.indexOf('=') + 1)
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Socket Auth] Token retrieved successfully')
-      }
-      return token
+    if (!response.ok) {
+      console.error('[Socket Auth] Failed to get token:', response.status)
+      return null
     }
 
-    console.warn('[Socket Auth] Session exists but token not found in cookies')
-    return null
+    const data = await response.json()
+
+    if (!data.token) {
+      console.warn('[Socket Auth] No token in API response')
+      return null
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Socket Auth] Token retrieved successfully')
+    }
+
+    return data.token
   } catch (error) {
     console.error('[Socket Auth] Failed to get session token:', error)
     return null
