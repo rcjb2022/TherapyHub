@@ -45,7 +45,7 @@ export async function getSocketToken(): Promise<string | null> {
 
     return data.token
   } catch (error) {
-    console.error('[Socket Auth] Failed to get session token:', error)
+    console.error('[Socket Auth] Error getting socket token:', error)
     return null
   }
 }
