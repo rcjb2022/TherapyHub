@@ -4,7 +4,7 @@
  * Client-side component that manages the video session experience
  * - Checks timing with canJoinSession()
  * - Shows waiting room if too early
- * - Shows Google Meet session if in join window
+ * - Shows WebRTC session (with Google Meet fallback) if in join window
  * - Shows "Session ended" message if past end time
  * - Updates automatically every minute
  */
@@ -14,7 +14,7 @@
 import { useState, useEffect } from 'react'
 import { canJoinSession } from '@/lib/video-utils'
 import { VideoWaitingRoom } from '@/components/VideoWaitingRoom'
-import { GoogleMeetSession } from '@/components/GoogleMeetSession'
+import { WebRTCSession } from '@/components/WebRTCSession'
 
 interface AppointmentData {
   id: string
@@ -37,9 +37,11 @@ interface AppointmentData {
 interface VideoSessionClientProps {
   appointment: AppointmentData
   userRole: string
+  userId: string
+  userName: string
 }
 
-export function VideoSessionClient({ appointment, userRole }: VideoSessionClientProps) {
+export function VideoSessionClient({ appointment, userRole, userId, userName }: VideoSessionClientProps) {
   const start = new Date(appointment.startTime)
   const end = new Date(appointment.endTime)
 
@@ -93,6 +95,13 @@ export function VideoSessionClient({ appointment, userRole }: VideoSessionClient
     )
   }
 
-  // Can join - show Google Meet session
-  return <GoogleMeetSession appointment={appointment} userRole={userRole} />
+  // Can join - show WebRTC session (with Google Meet fallback)
+  return (
+    <WebRTCSession
+      appointment={appointment}
+      userRole={userRole}
+      userId={userId}
+      userName={userName}
+    />
+  )
 }
