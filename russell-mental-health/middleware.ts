@@ -4,16 +4,15 @@
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Get session token from cookies
-  const sessionToken =
-    req.cookies.get('next-auth.session-token')?.value ||
-    req.cookies.get('__Secure-next-auth.session-token')?.value
+  // Get and verify session token (validates signature and expiration)
+  const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
 
-  const isAuth = !!sessionToken
+  const isAuth = !!session
   const isAuthPage = pathname.startsWith('/login')
   const isDashboard = pathname.startsWith('/dashboard')
 

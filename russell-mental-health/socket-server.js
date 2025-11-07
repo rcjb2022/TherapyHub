@@ -50,13 +50,20 @@ io.use((socket, next) => {
     const decoded = jwt.verify(token, JWT_SECRET)
 
     // Validate required fields
+    const userId = decoded.sub || decoded.id
+    if (!userId) {
+      return next(new Error('Authentication error: Token missing user ID'))
+    }
+    if (!decoded.name) {
+      return next(new Error('Authentication error: Token missing name'))
+    }
     if (!decoded.role) {
       return next(new Error('Authentication error: Token missing role'))
     }
 
     // Attach authenticated user data to socket
     socket.user = {
-      userId: decoded.sub || decoded.id, // NextAuth uses 'sub' for user ID
+      userId, // NextAuth uses 'sub' for user ID
       email: decoded.email,
       name: decoded.name,
       role: decoded.role,
