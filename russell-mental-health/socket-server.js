@@ -174,10 +174,12 @@ io.on('connection', (socket) => {
       }
 
       // Notify other participants
-      socket.to(roomId).emit('user-left', {
-        socketId: socket.id,
-        ...userInfo,
-      })
+      if (userInfo) {
+        socket.to(roomId).emit('user-left', {
+          socketId: socket.id,
+          ...userInfo,
+        })
+      }
     }
 
     // Clean up tracking maps
