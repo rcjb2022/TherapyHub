@@ -1,17 +1,21 @@
 # TherapyHub - Russell Mental Health Platform
 
-**Version:** 0.7.0 (Day 7 Complete)
-**Status:** 🚀 Patient UX & Video Session Foundation Complete - Ready for Video Recording & AI Features
+**Version:** 0.8.0 (Day 8 Complete)
+**Status:** 🚀 WebRTC Video Sessions Complete - Ready for Recording & AI Features
 **Practice:** Russell Mental Health - Dr. Bethany R. Russell, Ph.D., P.A.
 
 ---
 
-## 🎉 Project Status: Day 7 Complete!
+## 🎉 Project Status: Day 8 Complete!
 
+✅ **WebRTC peer-to-peer video sessions fully operational**
+✅ **Fixed duplicate signaling and connection issues (clean single offer/answer)**
+✅ **End Session button with proper media cleanup (camera turns off)**
+✅ **Google Meet preserved as fallback for connection issues**
+✅ **Room ID strategy (appointment.id) ready for recording linkage**
 ✅ **Patient & Therapist UX fully consistent - "Today's Schedule" on both dashboards**
 ✅ **Enhanced calendar modal with large prominent blue buttons**
 ✅ **Video session waiting room operational with 30-minute join window**
-✅ **Session Vault foundation created for Day 8 video recording features**
 ✅ **Full appointment scheduling system with FullCalendar**
 ✅ **Eastern Time display with automatic DST handling (Luxon plugin)**
 ✅ **Create, edit, delete, drag-and-drop appointments**
@@ -255,13 +259,29 @@ TherapyHub/
 - **Security Improvements** - Authorization checks both role AND ID
 - **Mobile Responsive** - All pages optimized for mobile devices
 
+**Day 8 (Nov 7, 2025) - WebRTC Video Session Integration:** ⭐
+- **WebRTC Peer-to-Peer Video** - Fully functional using SimplePeer and Socket.io
+- **Fixed Duplicate Signaling** - Eliminated 13 offers/11 answers per connection (now clean single exchange)
+- **Fixed Connection Errors** - Resolved "InvalidStateError: Called in wrong state: stable"
+- **Proper State Management** - participantsMapRef prevents "Unknown User" display issues
+- **End Session Button** - Confirmation modal with proper media track cleanup
+- **Camera Properly Stops** - All tracks stopped on session end (camera light turns off)
+- **Google Meet Fallback** - Preserved as backup with "Switch to Google Meet" overlay
+- **Room ID Strategy** - Uses appointment.id (enables future recording linkage)
+- **WebRTCSession Component** - 294-line wrapper integrating WebRTC with appointment system
+- **Connection Status** - Indicators for connecting/connected/error states
+- **Resource Cleanup** - removeAllListeners before destroy (no React warnings)
+- **Error Handling** - Comprehensive try-catch blocks throughout
+- **TypeScript Types** - Added @types/simple-peer for type safety
+
 **See:**
+- [docs/daily/DAY_8_COMPLETE.md](docs/daily/DAY_8_COMPLETE.md) for Day 8 details
 - [docs/daily/DAY_7_COMPLETE.md](docs/daily/DAY_7_COMPLETE.md) for Day 7 details
 - [docs/daily/DAY_6_COMPLETE.md](docs/daily/DAY_6_COMPLETE.md) for Day 6 details
 - [docs/daily/DAY_5_COMPLETE.md](docs/daily/DAY_5_COMPLETE.md) for Day 5 details
-- [docs/TODO.md](docs/TODO.md) for Day 8 priorities
-- [docs/sessions/HANDOFF_DAY_7.md](docs/sessions/HANDOFF_DAY_7.md) for session handoff
-- [docs/sessions/TOMORROW_PROMPTS_DAY_8.md](docs/sessions/TOMORROW_PROMPTS_DAY_8.md) for next session plan
+- [docs/TODO.md](docs/TODO.md) for Day 9 priorities
+- [docs/sessions/HANDOFF_DAY_8.md](docs/sessions/HANDOFF_DAY_8.md) for session handoff
+- [docs/sessions/TOMORROW_PROMPTS_DAY_9.md](docs/sessions/TOMORROW_PROMPTS_DAY_9.md) for next session plan
 
 ---
 
@@ -357,8 +377,17 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - [x] 6 critical bug fixes (auth, routing, styling, icons)
 - [x] Mobile responsive optimizations
 
-### 📋 Planned: Version 0.8.0 (Day 8 - Nov 7, 2025)
-- [ ] Video session recording (WebRTC + MediaRecorder)
+### ✅ Completed: Version 0.8.0 (Day 8 - Nov 7, 2025)
+- [x] WebRTC peer-to-peer video sessions
+- [x] Fixed duplicate signaling and connection issues
+- [x] End Session button with proper cleanup
+- [x] Google Meet fallback preserved
+- [x] WebRTCSession wrapper component integration
+- [x] Room ID strategy (appointment.id for future recording linkage)
+- [x] Comprehensive error handling and state management
+
+### 📋 Planned: Version 0.9.0 (Day 9 - Nov 8, 2025)
+- [ ] Video session recording (MediaRecorder API)
 - [ ] Save recordings to Google Cloud Storage
 - [ ] 30-day automatic deletion (HIPAA retention)
 - [ ] Recording consent flow
@@ -368,7 +397,7 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - [ ] Treatment plan suggestions
 - [ ] Session Vault UI (sessions list, video player, transcript viewer)
 
-### 📋 Planned: Version 0.9.0 (Week 2-3)
+### 📋 Planned: Version 1.0.0 (Week 2-3)
 - [ ] Clinical note templates (SOAP format)
 - [ ] ICD-10 diagnosis code lookup
 - [ ] CPT code assignment
@@ -378,7 +407,7 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - [ ] Google Calendar sync (two-way)
 - [ ] Automated email reminders (Gmail API)
 
-### 📋 Planned: Version 1.0.0 (Week 3)
+### 📋 Planned: Version 1.1.0 (Week 3)
 - [ ] Office Ally API integration
 - [ ] Real-time insurance claim submission (EDI 837)
 - [ ] ERA (835) response processing
@@ -386,7 +415,7 @@ git pull origin claude/therapynotes-platform-planning-011CUdbcjuxDKk4oBeqePW5V
 - [ ] Claim status tracking and management
 - [ ] Denial handling and appeals
 
-### 📋 Planned: Version 1.1.0 (Week 4 - Production Launch)
+### 📋 Planned: Version 1.2.0 (Week 4 - Production Launch)
 - [ ] Security audit and penetration testing
 - [ ] HIPAA compliance final review
 - [ ] Performance optimization
@@ -562,7 +591,7 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 
 ---
 
-**Last Updated:** November 6, 2025 (End of Day 7)
-**Current Phase:** Day 7 Complete - Patient UX & Video Session Foundation
-**Current Version:** 0.7.0
-**Next Milestone:** Video Recording & AI Features (Day 8 - Nov 7, 2025)
+**Last Updated:** November 7, 2025 (End of Day 8)
+**Current Phase:** Day 8 Complete - WebRTC Video Sessions Operational
+**Current Version:** 0.8.0
+**Next Milestone:** Video Recording & AI Features (Day 9 - Nov 8, 2025)

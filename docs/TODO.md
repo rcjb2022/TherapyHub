@@ -1,12 +1,84 @@
 # Russell Mental Health Platform - TODO List
 
-**Version:** 0.7.0
-**Last Updated:** November 6, 2025 (Day 7 - Complete)
-**Status:** Patient UX & Video Session Foundation COMPLETE ✅ - Ready for Video Recording & AI Features 🎬
+**Version:** 0.8.0
+**Last Updated:** November 7, 2025 (Day 8 - Complete)
+**Status:** WebRTC Video Sessions COMPLETE ✅ - Ready for Recording & AI Features 🎥
 
 ---
 
-## ✅ Completed Today (Day 7 - Nov 6, 2025)
+## ✅ Completed Today (Day 8 - Nov 7, 2025)
+
+### WebRTC Video Session Integration 🎥 ⭐
+- [x] **Fixed WebRTC Connection Issues**
+  - Eliminated duplicate signaling (was 13 offers per connection)
+  - Fixed "InvalidStateError: Called in wrong state: stable"
+  - Prevented multiple room joins with hasJoinedRoomRef
+  - Added peer existence checks before creating connections
+  - Fixed camera staying on after session end
+  - Clean single offer/answer exchange per connection
+
+- [x] **State Management Improvements**
+  - Changed participantsMap to participantsMapRef for persistence
+  - Fixed "Unknown User" display after re-renders
+  - Proper cleanup: removeAllListeners before destroy
+  - Eliminated React warnings about state updates on unmounted components
+
+- [x] **WebRTC Session Integration**
+  - Created WebRTCSession.tsx wrapper component (294 lines)
+  - Integrated with existing appointment system
+  - Updated VideoSessionClient to use WebRTC as primary
+  - Passes userId, userName for peer identification
+  - Uses appointment.id as room ID (enables future recording linkage)
+
+- [x] **Google Meet Fallback Preserved**
+  - Google Meet displayed as fallback option
+  - "Having connection issues? Switch to Google Meet" overlay
+  - All existing Google Meet links still functional
+  - Seamless fallback for network issues
+
+- [x] **End Session Functionality**
+  - Added End Session button with confirmation modal
+  - Stops all media tracks (camera turns off)
+  - Destroys all peer connections properly
+  - Emits leave-room event to server
+  - Returns to dashboard on confirmation
+
+- [x] **UI/UX Enhancements**
+  - Updated AppointmentDetailsModal to show WebRTC + fallback
+  - Recording notice: "Sessions are recorded for your records"
+  - Google Meet backup link with copy button
+  - Session details sidebar with appointment info
+  - Connection status indicators (connecting, connected, error)
+
+- [x] **Type Safety & Bug Fixes**
+  - Installed @types/simple-peer for TypeScript
+  - Fixed video-test page socket cleanup
+  - Comprehensive error handling with try-catch blocks
+  - Fixed resource cleanup order (prevent memory leaks)
+
+- [x] **Testing & Validation**
+  - Two-tab testing: clean logs, no duplicate signaling
+  - Camera properly stops after session end
+  - No React warnings in console
+  - Peer connections established reliably
+  - Authorization checks working (role + ID verification)
+
+### Documentation & Handoff 📝 ⭐
+- [x] **End-of-Day Documentation Created**
+  - DAY_8_COMPLETE.md (comprehensive day summary)
+  - HANDOFF_DAY_8.md (session handoff for Day 9)
+  - TOMORROW_PROMPTS_DAY_9.md (detailed 8-phase workflow)
+  - All following CLAUDE.md format and style
+
+### Commits Made 🔄
+- [x] "Integrate WebRTC video sessions with Google Meet fallback"
+- [x] "Add End Session button and fix Gemini code review feedback"
+- [x] "Fix WebRTC connection issues: duplicate signaling and race conditions"
+- [x] "Phase 2: WebRTC peer-to-peer video connection"
+
+---
+
+## ✅ Completed Earlier (Day 7 - Nov 6, 2025)
 
 ### Patient UX Improvements 👥 ⭐
 - [x] **Patient Dashboard "Today's Schedule"**
@@ -671,54 +743,83 @@ npm install @fullcalendar/core @fullcalendar/react @fullcalendar/daygrid @fullca
 
 ---
 
-## 📝 Notes for Next Session (Day 8 - Nov 7, 2025)
+## 📝 Notes for Next Session (Day 9 - Nov 8, 2025)
 
 ### What's Working Perfectly:
 - ✅ Complete appointment scheduling system (FullCalendar + Luxon)
 - ✅ Patient & therapist UX fully consistent
 - ✅ Today's Schedule on both dashboards
-- ✅ Video session waiting room operational
+- ✅ **WebRTC peer-to-peer video sessions operational** 🎥
+- ✅ **Clean signaling (no duplicates, proper state management)** 🎥
+- ✅ **End Session button with proper cleanup** 🎥
+- ✅ **Google Meet fallback preserved** 🎥
+- ✅ Video session waiting room with 30-minute join window
 - ✅ Large prominent join buttons everywhere
-- ✅ 30-minute join window standardized
 - ✅ Color-coded appointments (green/blue/gray)
 - ✅ Mobile responsive design throughout
 - ✅ Security: patients only see own data
 - ✅ HIPAA-compliant authorization (role + ID)
 - ✅ All calendar features tested and validated
-- ✅ Session Vault foundation documented
+- ✅ Room ID strategy: appointment.id (ready for recording linkage)
 
-### Focus for Day 8 (Nov 7, 2025): 🎬⭐
+### Focus for Day 9 (Nov 8, 2025): 🎬⭐
 
-**Priority 1: Video Session Recording (WebRTC)**
-- [ ] Install simple-peer and socket.io packages
-- [ ] Implement MediaRecorder API for recording
-- [ ] Record both therapist and patient streams
-- [ ] Save recordings to Google Cloud Storage
-- [ ] Set 30-day automatic deletion (HIPAA retention)
-- [ ] Recording controls (start/stop) for therapist
-- [ ] Privacy: recording consent flow
+**Phase 6: Video Session Recording & AI Features**
+
+**Priority 1: MediaRecorder Integration (2-3 hours)**
+- [ ] Install recording dependencies (if needed)
+- [ ] Create MediaRecorderService utility class
+- [ ] Implement recording for local stream (therapist view)
+- [ ] Implement recording for remote stream (patient view)
+- [ ] Combine both streams into single recording
+- [ ] Handle recording start/stop/pause
 - [ ] Visual indicator when recording (red dot)
+- [ ] Test with 30-second clips first
+
+**Priority 2: Cloud Storage Integration (1-2 hours)**
+- [ ] Update VideoSession schema (add recordingUrl, recordingStatus)
+- [ ] Create /api/sessions/[id]/upload endpoint
+- [ ] Upload completed recordings to Google Cloud Storage
+- [ ] Generate signed URLs for playback (7-day expiration)
+- [ ] Set 30-day automatic deletion policy (HIPAA retention)
 - [ ] Link recordings to appointments in database
+- [ ] Test upload with small video files
 
-**Priority 2: Gemini AI Integration**
+**Priority 3: Gemini AI Integration (2-3 hours)**
+- [ ] Install @google/generative-ai package
 - [ ] Set up Gemini API authentication
-- [ ] Auto-transcribe recorded sessions
+- [ ] Create /api/ai/transcribe endpoint
+- [ ] Auto-transcribe audio from recordings
+- [ ] Create /api/ai/generate-notes endpoint
 - [ ] Generate SOAP notes from transcripts
-- [ ] Extract key themes and topics
-- [ ] Treatment plan suggestions
-- [ ] Session summary generation
-- [ ] Therapist review and edit interface
+- [ ] Extract key themes, sentiment, action items
+- [ ] Store AI-generated content in database
 
-**Priority 3: Session Vault UI**
-- [ ] Replace `/dashboard/video` placeholder with real UI
-- [ ] Sessions list table (date, patient, duration, recording status)
+**Priority 4: Session Vault UI (2-3 hours)**
+- [ ] Update /dashboard/video page with real UI
+- [ ] Sessions list table (date, patient, duration, status)
 - [ ] Filter by patient, date range, recording status
 - [ ] Search functionality
-- [ ] Session detail modal
+- [ ] Session detail view/modal
 - [ ] Video player component (HTML5 with controls)
 - [ ] Transcript viewer with timestamps
-- [ ] SOAP notes editor
-- [ ] Export to PDF
+- [ ] SOAP notes editor with AI suggestions
+- [ ] Export to PDF functionality
+
+**Priority 5: Privacy & Consent (1 hour)**
+- [ ] Add recording consent checkbox to appointment creation
+- [ ] Show consent status in session details
+- [ ] "Recording in progress" banner during session
+- [ ] Option to pause/stop recording
+- [ ] Audit log for recording access
+
+### Architecture Decisions:
+- **Recording Format:** WebM (browser native, good compression)
+- **Storage Location:** Google Cloud Storage (HIPAA-compliant)
+- **Retention Policy:** 30 days automatic deletion
+- **AI Model:** Gemini 1.5 Pro (multimodal, excellent transcription)
+- **Database Schema:** Add VideoSession.recordingUrl, recordingStatus, transcript, aiNotes
+- **Access Control:** Only therapist + patient for that specific appointment
 
 ### Development Philosophy:
 - ✅ Build → Test → Iterate at logical checkpoints
@@ -727,16 +828,16 @@ npm install @fullcalendar/core @fullcalendar/react @fullcalendar/daygrid @fullca
 - ✅ Privacy first: explicit consent required
 - ✅ Error handling: recording can fail, handle gracefully
 - ✅ All code production-ready from day 1
+- ✅ Phase approach: recording → storage → AI → UI
 
-### Required Setup for Day 8:
+### Required Setup for Day 9:
 ```bash
-# Install WebRTC and AI packages
-npm install simple-peer socket.io socket.io-client
-npm install @google-ai/generativelanguage
+# Install AI packages
+npm install @google/generative-ai
 
 # Enable GCP APIs
-# - Gemini API
-# - Cloud Speech-to-Text (optional)
+# - Gemini API (AI Platform)
+# - Cloud Storage (already enabled)
 
 # Add environment variables
 GEMINI_API_KEY=your_gemini_api_key
@@ -765,7 +866,7 @@ npx prisma studio
 
 ---
 
-**Last Updated:** November 6, 2025 (End of Day 7)
-**Next Session:** November 7, 2025 (Day 8)
-**Current Branch:** `claude/resume-code-execution-011CUqQDV9KYqCM9M9Qf8jB9`
-**Status:** ✅ Patient UX & Video Foundation COMPLETE - Ready for Video Recording & AI 🎬⭐
+**Last Updated:** November 7, 2025 (End of Day 8)
+**Next Session:** November 8, 2025 (Day 9)
+**Current Branch:** `claude/day-8-webrtc-recording-011CUttekmPUZj2B31mYJeJ9`
+**Status:** ✅ WebRTC Video Sessions COMPLETE - Ready for Recording & AI Features 🎬⭐

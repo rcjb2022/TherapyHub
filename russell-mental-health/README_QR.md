@@ -41,30 +41,33 @@ npm run dev
 | Document | Purpose |
 |----------|---------|
 | **[../README.md](../README.md)** | 📖 **MAIN README** - Complete project docs, roadmap, all features |
-| [ABOUT.md](ABOUT.md) | Detailed technical documentation |
-| [TODO.md](TODO.md) | Current tasks & Day 6 priorities |
-| [CLAUDE.md](CLAUDE.md) | Development guidelines & principles |
-| [DAY_6_COMPLETE.md](DAY_6_COMPLETE.md) | Latest milestone (Day 6) |
-| [DAY_5_COMPLETE.md](DAY_5_COMPLETE.md) | Previous milestone (Day 5) |
-| [../HANDOFF_DAY_6.md](../HANDOFF_DAY_6.md) | Session handoff |
-| [../TOMORROW_PROMPTS_DAY_7.md](../TOMORROW_PROMPTS_DAY_7.md) | Next session detailed plan |
+| [../docs/ABOUT.md](../docs/ABOUT.md) | Detailed technical documentation |
+| [../docs/TODO.md](../docs/TODO.md) | Current tasks & Day 9 priorities |
+| [../docs/CLAUDE.md](../docs/CLAUDE.md) | Development guidelines & principles |
+| [../docs/daily/DAY_8_COMPLETE.md](../docs/daily/DAY_8_COMPLETE.md) | Latest milestone (Day 8) |
+| [../docs/daily/DAY_7_COMPLETE.md](../docs/daily/DAY_7_COMPLETE.md) | Previous milestone (Day 7) |
+| [../docs/sessions/HANDOFF_DAY_8.md](../docs/sessions/HANDOFF_DAY_8.md) | Session handoff |
+| [../docs/sessions/TOMORROW_PROMPTS_DAY_9.md](../docs/sessions/TOMORROW_PROMPTS_DAY_9.md) | Next session detailed plan |
 
 ---
 
-## 📊 Current Status (v0.6.0 - Day 6 Complete)
+## 📊 Current Status (v0.8.0 - Day 8 Complete)
 
 **Latest Achievements:**
+- ✅ WebRTC peer-to-peer video sessions fully operational
+- ✅ Fixed duplicate signaling issues (clean single offer/answer exchange)
+- ✅ End Session button with proper media cleanup (camera turns off)
+- ✅ Google Meet preserved as fallback option
+- ✅ Room ID strategy (appointment.id) ready for recording linkage
 - ✅ Full appointment scheduling system (FullCalendar + Luxon)
-- ✅ Eastern Time display with automatic DST handling
-- ✅ Create, edit, delete, drag-and-drop appointments
-- ✅ One-time payments with Stripe Elements (card not saved)
-- ✅ Prepayment support up to $500 (builds account credit)
-- ✅ Critical bug fixes (patient payment auth, timezone display)
+- ✅ Patient & therapist UX fully consistent
+- ✅ One-time payments with Stripe Elements
 
-**Next Up (Day 7 - Nov 7, 2025):**
-- 🎯 Google Calendar Integration (two-way sync)
-- 📧 Email Reminders (Gmail API)
-- 🔔 Appointment Conflict Detection
+**Next Up (Day 9 - Nov 8, 2025):**
+- 🎥 Video Session Recording (MediaRecorder API)
+- 🤖 Gemini AI Integration (transcription, SOAP notes)
+- 📁 Session Vault UI (video player, transcript viewer)
+- 🔒 Recording consent and privacy controls
 
 **For full roadmap:** See [../README.md](../README.md)
 
@@ -106,13 +109,13 @@ russell-mental-health/          # ← You are here
 ## 💡 Need Help?
 
 - **Complete Documentation:** [../README.md](../README.md)
-- **Current Tasks:** [TODO.md](TODO.md)
-- **Development Guidelines:** [CLAUDE.md](CLAUDE.md)
-- **Latest Milestone:** [DAY_5_COMPLETE.md](DAY_5_COMPLETE.md)
+- **Current Tasks:** [../docs/TODO.md](../docs/TODO.md)
+- **Development Guidelines:** [../docs/CLAUDE.md](../docs/CLAUDE.md)
+- **Latest Milestone:** [../docs/daily/DAY_8_COMPLETE.md](../docs/daily/DAY_8_COMPLETE.md)
 
 ---
 
-**Version:** 0.6.0 | **License:** Proprietary | **© 2025** Bethany R. Russell, Ph.D., P.A.
+**Version:** 0.8.0 | **License:** Proprietary | **© 2025** Bethany R. Russell, Ph.D., P.A.
 
 <div align="center">
   <sub>Russell Mental Health | Babcock Ranch, FL | www.RussellMentalHealth.com</sub>
