@@ -21,9 +21,7 @@ export interface SocketUser {
 export interface ClientToServerEvents {
   'join-room': (data: {
     roomId: string
-    userId: string
-    role: 'THERAPIST' | 'PATIENT'
-    name: string
+    // Note: userId, role, name come from authenticated socket.user (server-side)
   }) => void
 
   'webrtc-offer': (data: { targetSocketId: string; offer: RTCSessionDescriptionInit }) => void

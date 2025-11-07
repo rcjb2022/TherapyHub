@@ -18,14 +18,18 @@ let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null
 /**
  * Get or create Socket.io connection
  *
+ * @param token - JWT token from NextAuth session (required for authentication)
  * @returns Socket.io client instance
  */
-export function getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
+export function getSocket(token?: string): Socket<ServerToClientEvents, ClientToServerEvents> {
   if (!socket) {
     // Create new connection to standalone Socket.io server (port 3001)
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001'
 
     socket = io(socketUrl, {
+      auth: {
+        token: token || '', // Send JWT token for authentication
+      },
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,

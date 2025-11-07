@@ -9,14 +9,28 @@
 
 import { useEffect, useState } from 'react'
 import { getSocket } from '@/lib/socket'
+import { getSocketToken } from '@/lib/socket-auth'
+import type { SocketUser } from '@/types/socket'
 
 export default function SocketTestPage() {
   const [connected, setConnected] = useState(false)
   const [socketId, setSocketId] = useState<string>('')
   const [messages, setMessages] = useState<string[]>([])
+  const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
-    const socket = getSocket()
+    // Get authentication token first
+    getSocketToken().then((authToken) => {
+      if (!authToken) {
+        addMessage('❌ Failed to get authentication token')
+        return
+      }
+
+      setToken(authToken)
+      addMessage('✅ Authentication token obtained')
+
+      // Connect to Socket.io with token
+      const socket = getSocket(authToken)
 
     // Connection status
     setConnected(socket.connected)
@@ -38,16 +52,17 @@ export default function SocketTestPage() {
       addMessage(`👤 User joined: ${user.name} (${user.role})`)
     }
 
-    socket.on('connect', onConnect)
-    socket.on('disconnect', onDisconnect)
-    socket.on('user-joined', onUserJoined)
+      socket.on('connect', onConnect)
+      socket.on('disconnect', onDisconnect)
+      socket.on('user-joined', onUserJoined)
 
-    // Clean up
-    return () => {
-      socket.off('connect', onConnect)
-      socket.off('disconnect', onDisconnect)
-      socket.off('user-joined', onUserJoined)
-    }
+      // Clean up
+      return () => {
+        socket.off('connect', onConnect)
+        socket.off('disconnect', onDisconnect)
+        socket.off('user-joined', onUserJoined)
+      }
+    })
   }, [])
 
   const addMessage = (message: string) => {
@@ -56,20 +71,23 @@ export default function SocketTestPage() {
   }
 
   const testJoinRoom = () => {
-    const socket = getSocket()
+    if (!token) {
+      addMessage('❌ Cannot join room: No authentication token')
+      return
+    }
+
+    const socket = getSocket(token)
     const testRoomId = 'test-room-123'
 
     addMessage(`🔵 Joining room: ${testRoomId}`)
 
+    // Only send roomId - server gets user data from authenticated socket.user
     socket.emit('join-room', {
       roomId: testRoomId,
-      userId: 'test-user-456',
-      role: 'THERAPIST' as const,
-      name: 'Test User',
     })
 
     // Listen for room-joined event (once per button click is OK)
-    socket.once('room-joined', ({ roomId, participants }: { roomId: string; participants: any[] }) => {
+    socket.once('room-joined', ({ roomId, participants }: { roomId: string; participants: SocketUser[] }) => {
       addMessage(`✅ Successfully joined room: ${roomId}`)
       addMessage(`👥 Room has ${participants.length} other participants`)
     })
