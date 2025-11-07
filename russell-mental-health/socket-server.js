@@ -51,14 +51,8 @@ io.use((socket, next) => {
 
     // Validate required fields
     const userId = decoded.sub || decoded.id
-    if (!userId) {
-      return next(new Error('Authentication error: Token missing user ID'))
-    }
-    if (!decoded.name) {
-      return next(new Error('Authentication error: Token missing name'))
-    }
-    if (!decoded.role) {
-      return next(new Error('Authentication error: Token missing role'))
+    if (!userId || !decoded.name || !decoded.role) {
+      return next(new Error('Authentication error: Invalid token payload'))
     }
 
     // Attach authenticated user data to socket
