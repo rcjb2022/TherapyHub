@@ -21,9 +21,10 @@ let socket: Socket | null = null
  */
 export function getSocket(): Socket {
   if (!socket) {
-    // Create new connection
-    socket = io({
-      path: '/socket.io',
+    // Create new connection to standalone Socket.io server (port 3001)
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001'
+
+    socket = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
