@@ -7,6 +7,9 @@
  * Usage: node socket-server.js
  */
 
+// Load environment variables from .env.local
+require('dotenv').config({ path: '.env.local' })
+
 const { createServer } = require('http')
 const { Server } = require('socket.io')
 const jwt = require('jsonwebtoken')
@@ -14,10 +17,11 @@ const jwt = require('jsonwebtoken')
 const port = parseInt(process.env.SOCKET_PORT || '3001', 10)
 const dev = process.env.NODE_ENV !== 'production'
 
-// JWT secret from NextAuth (must match NEXTAUTH_SECRET in .env)
+// JWT secret from NextAuth (must match NEXTAUTH_SECRET in .env.local)
 const JWT_SECRET = process.env.NEXTAUTH_SECRET
 if (!JWT_SECRET) {
   console.error('[Socket.io] FATAL: NEXTAUTH_SECRET is not set in environment variables')
+  console.error('[Socket.io] Make sure .env.local exists with NEXTAUTH_SECRET defined')
   process.exit(1)
 }
 
@@ -45,12 +49,17 @@ io.use((socket, next) => {
     // Verify JWT token
     const decoded = jwt.verify(token, JWT_SECRET)
 
+    // Validate required fields
+    if (!decoded.role) {
+      return next(new Error('Authentication error: Token missing role'))
+    }
+
     // Attach authenticated user data to socket
     socket.user = {
       userId: decoded.sub || decoded.id, // NextAuth uses 'sub' for user ID
       email: decoded.email,
       name: decoded.name,
-      role: decoded.role || 'PATIENT', // Default to PATIENT if role not in token
+      role: decoded.role,
     }
 
     console.log(`[Socket.io] Authenticated: ${socket.user.name} (${socket.user.role})`)
