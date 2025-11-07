@@ -7,7 +7,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getSocket } from '@/lib/socket'
 import { getSocketToken } from '@/lib/socket-auth'
 import type { SocketUser } from '@/types/socket'
@@ -17,6 +17,11 @@ export default function SocketTestPage() {
   const [socketId, setSocketId] = useState<string>('')
   const [messages, setMessages] = useState<string[]>([])
   const [token, setToken] = useState<string | null>(null)
+
+  const addMessage = useCallback((message: string) => {
+    const timestamp = new Date().toLocaleTimeString()
+    setMessages((prev) => [...prev, `[${timestamp}] ${message}`])
+  }, [])
 
   useEffect(() => {
     // Get authentication token first
@@ -63,12 +68,7 @@ export default function SocketTestPage() {
         socket.off('user-joined', onUserJoined)
       }
     })
-  }, [])
-
-  const addMessage = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString()
-    setMessages((prev) => [...prev, `[${timestamp}] ${message}`])
-  }
+  }, [addMessage])
 
   const testJoinRoom = () => {
     if (!token) {

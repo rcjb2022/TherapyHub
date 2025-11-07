@@ -36,7 +36,8 @@ export async function getSocketToken(): Promise<string | null> {
     )
 
     if (sessionTokenCookie) {
-      const token = sessionTokenCookie.split('=')[1]
+      // Use substring instead of split for robustness (handles = in cookie value)
+      const token = sessionTokenCookie.substring(sessionTokenCookie.indexOf('=') + 1)
       if (process.env.NODE_ENV === 'development') {
         console.log('[Socket Auth] Token retrieved successfully')
       }

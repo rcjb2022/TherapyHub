@@ -1,43 +1,36 @@
 // Middleware for route protection
-// Ensures only authenticated therapists can access dashboard routes
+// Ensures only authenticated users can access dashboard routes
+// Compatible with Next.js 16
 
-import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token
-    const isAuth = !!token
-    const isAuthPage = req.nextUrl.pathname.startsWith('/login')
-    const isDashboard = req.nextUrl.pathname.startsWith('/dashboard')
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl
 
-    // Redirect authenticated users away from login page
-    if (isAuthPage && isAuth) {
-      return NextResponse.redirect(new URL('/dashboard', req.url))
-    }
+  // Get session token from cookies
+  const sessionToken =
+    req.cookies.get('next-auth.session-token')?.value ||
+    req.cookies.get('__Secure-next-auth.session-token')?.value
 
-    // Allow access to dashboard if authenticated
-    if (isDashboard && isAuth) {
-      return NextResponse.next()
-    }
+  const isAuth = !!sessionToken
+  const isAuthPage = pathname.startsWith('/login')
+  const isDashboard = pathname.startsWith('/dashboard')
 
-    return NextResponse.next()
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        // Require authentication for dashboard routes
-        if (req.nextUrl.pathname.startsWith('/dashboard')) {
-          return !!token
-        }
-        return true
-      },
-    },
-    pages: {
-      signIn: '/login',
-    },
+  // Redirect authenticated users away from login page
+  if (isAuthPage && isAuth) {
+    return NextResponse.redirect(new URL('/dashboard', req.url))
   }
-)
+
+  // Redirect unauthenticated users from dashboard to login
+  if (isDashboard && !isAuth) {
+    const loginUrl = new URL('/login', req.url)
+    loginUrl.searchParams.set('callbackUrl', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  return NextResponse.next()
+}
 
 export const config = {
   matcher: ['/dashboard/:path*', '/login'],
