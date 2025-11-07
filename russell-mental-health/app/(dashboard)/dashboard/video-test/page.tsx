@@ -26,28 +26,46 @@ export default function VideoTestPage() {
   useEffect(() => {
     if (!session) return
 
-    // Get authentication token and connect to Socket.io
-    getSocketToken().then((authToken) => {
-      if (!authToken) {
-        setConnectionStatus('error')
-        return
-      }
+    let socketInstance: Socket | null = null
 
-      const socketInstance = getSocket(authToken)
-
-      socketInstance.on('connect', () => {
-        setConnectionStatus('connected')
+    const onConnect = () => {
+      setConnectionStatus('connected')
+      if (socketInstance) {
         setSocket(socketInstance)
-      })
+      }
+    }
 
-      socketInstance.on('disconnect', () => {
-        setConnectionStatus('connecting')
-      })
+    const onDisconnect = () => setConnectionStatus('connecting')
+    const onConnectError = () => setConnectionStatus('error')
 
-      socketInstance.on('connect_error', () => {
+    getSocketToken()
+      .then((authToken) => {
+        if (!authToken) {
+          setConnectionStatus('error')
+          return
+        }
+
+        socketInstance = getSocket(authToken)
+        socketInstance.on('connect', onConnect)
+        socketInstance.on('disconnect', onDisconnect)
+        socketInstance.on('connect_error', onConnectError)
+
+        // If already connected, trigger the connect handler
+        if (socketInstance.connected) {
+          onConnect()
+        }
+      })
+      .catch(() => {
         setConnectionStatus('error')
       })
-    })
+
+    return () => {
+      if (socketInstance) {
+        socketInstance.off('connect', onConnect)
+        socketInstance.off('disconnect', onDisconnect)
+        socketInstance.off('connect_error', onConnectError)
+      }
+    }
   }, [session])
 
   const joinRoom = () => {

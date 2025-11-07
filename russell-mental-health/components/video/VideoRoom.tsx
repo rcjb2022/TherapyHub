@@ -37,6 +37,7 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const peersRef = useRef<Map<string, PeerConnection>>(new Map())
+  const hasJoinedRoomRef = useRef(false)
 
   // Get STUN server from environment (Google's free STUN server by default)
   const stunServer = process.env.NEXT_PUBLIC_STUN_SERVER_URL || 'stun:stun.l.google.com:19302'
@@ -168,12 +169,26 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
   useEffect(() => {
     if (!socket || !localStream) return
 
+    // Track all participants in the room (not just peers with active connections)
+    const participantsMap = new Map<string, SocketUser>()
+
     // When we successfully join a room, initiate connections to existing participants
     const handleRoomJoined = ({ participants }: { roomId: string; participants: SocketUser[] }) => {
       console.log(`[VideoRoom] Joined room with ${participants.length} other participants`)
 
+      // Store participant info
+      participants.forEach((participant) => {
+        participantsMap.set(participant.socketId, participant)
+      })
+
       // Create peer connections to all existing participants (we are the initiator)
       participants.forEach((participant) => {
+        // Skip if peer already exists
+        if (peersRef.current.has(participant.socketId)) {
+          console.log(`[VideoRoom] Peer already exists for ${participant.name}, skipping`)
+          return
+        }
+
         const peer = createPeer(participant.socketId, participant, localStream, true)
         const peerConnection: PeerConnection = {
           peer,
@@ -185,19 +200,25 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
       })
     }
 
-    // When a new user joins, they will initiate connection to us
+    // When a new user joins, store their info - they will initiate connection to us
     const handleUserJoined = (user: SocketUser) => {
       console.log(`[VideoRoom] User joined: ${user.name}`)
-      // We don't create peer here - wait for their offer
+      participantsMap.set(user.socketId, user)
     }
 
     // When we receive an offer, create peer (not initiator) and accept
-    const handleOffer = ({ fromSocketId, offer }: { fromSocketId: string; offer: any }) => {
+    const handleOffer = ({ fromSocketId, offer }: { fromSocketId: string; offer: SimplePeer.SignalData }) => {
       console.log(`[VideoRoom] Received offer from ${fromSocketId}`)
 
-      // Find user info from existing participants or create placeholder
+      // Check if peer already exists
       const existingPeer = peersRef.current.get(fromSocketId)
-      const userInfo = existingPeer?.userInfo || {
+      if (existingPeer) {
+        console.log(`[VideoRoom] Peer already exists for ${fromSocketId}, ignoring duplicate offer`)
+        return
+      }
+
+      // Get user info from participants map
+      const userInfo = participantsMap.get(fromSocketId) || {
         socketId: fromSocketId,
         userId: 'unknown',
         role: 'PATIENT' as const,
@@ -219,12 +240,18 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
     }
 
     // When we receive an answer to our offer
-    const handleAnswer = ({ fromSocketId, answer }: { fromSocketId: string; answer: any }) => {
+    const handleAnswer = ({ fromSocketId, answer }: { fromSocketId: string; answer: SimplePeer.SignalData }) => {
       console.log(`[VideoRoom] Received answer from ${fromSocketId}`)
 
       const peerConnection = peersRef.current.get(fromSocketId)
       if (peerConnection) {
-        peerConnection.peer.signal(answer)
+        try {
+          peerConnection.peer.signal(answer)
+        } catch (err) {
+          console.error(`[VideoRoom] Error signaling answer from ${fromSocketId}:`, err)
+        }
+      } else {
+        console.warn(`[VideoRoom] Received answer from unknown peer ${fromSocketId}`)
       }
     }
 
@@ -234,19 +261,25 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
       candidate,
     }: {
       fromSocketId: string
-      candidate: any
+      candidate: SimplePeer.SignalData
     }) => {
       console.log(`[VideoRoom] Received ICE candidate from ${fromSocketId}`)
 
       const peerConnection = peersRef.current.get(fromSocketId)
       if (peerConnection) {
-        peerConnection.peer.signal(candidate)
+        try {
+          peerConnection.peer.signal(candidate)
+        } catch (err) {
+          console.error(`[VideoRoom] Error signaling ICE candidate from ${fromSocketId}:`, err)
+        }
       }
     }
 
     // When a user leaves
     const handleUserLeft = (user: SocketUser) => {
       console.log(`[VideoRoom] User left: ${user.name}`)
+
+      participantsMap.delete(user.socketId)
 
       const peerConnection = peersRef.current.get(user.socketId)
       if (peerConnection) {
@@ -264,8 +297,11 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
     socket.on('ice-candidate', handleIceCandidate)
     socket.on('user-left', handleUserLeft)
 
-    // Join the room
-    socket.emit('join-room', { roomId })
+    // Join the room only once
+    if (!hasJoinedRoomRef.current) {
+      hasJoinedRoomRef.current = true
+      socket.emit('join-room', { roomId })
+    }
 
     // Cleanup
     return () => {
@@ -276,12 +312,8 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
       socket.off('ice-candidate', handleIceCandidate)
       socket.off('user-left', handleUserLeft)
 
-      // Destroy all peer connections
-      peersRef.current.forEach((peerConnection) => {
-        peerConnection.peer.destroy()
-      })
-      peersRef.current.clear()
-      setPeers(new Map())
+      // Only destroy peers and reset join flag if component is unmounting
+      // (not just re-rendering due to dependency changes)
     }
   }, [socket, roomId, localStream, createPeer])
 
@@ -289,15 +321,35 @@ export default function VideoRoom({ socket, roomId, currentUser }: VideoRoomProp
    * Initialize local stream on mount
    */
   useEffect(() => {
-    initLocalStream()
+    let stream: MediaStream | null = null
+
+    initLocalStream().then((s) => {
+      stream = s
+    })
 
     return () => {
       // Cleanup: stop all tracks when unmounting
-      if (localStream) {
-        localStream.getTracks().forEach((track) => track.stop())
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop())
       }
     }
   }, [initLocalStream])
+
+  /**
+   * Cleanup on unmount: destroy all peer connections and reset join flag
+   */
+  useEffect(() => {
+    return () => {
+      // Reset the join flag when component unmounts
+      hasJoinedRoomRef.current = false
+
+      // Destroy all peer connections
+      peersRef.current.forEach((peerConnection) => {
+        peerConnection.peer.destroy()
+      })
+      peersRef.current.clear()
+    }
+  }, [])
 
   /**
    * Toggle video on/off
