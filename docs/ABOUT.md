@@ -1,7 +1,7 @@
 # Russell Mental Health Platform
 
-**Version:** 0.7.0 (Day 7 Complete)
-**Status:** 🚀 Patient UX & Video Session Foundation Complete - Ready for Video Recording & AI Features
+**Version:** 0.8.0 (Day 8 Complete)
+**Status:** 🚀 WebRTC Video Sessions Complete - Ready for Recording & AI Features
 **Practice:** Russell Mental Health - Dr. Bethany R. Russell, Ph.D., P.A.
 
 ---
@@ -19,7 +19,43 @@ A modern, HIPAA-compliant therapy practice management platform built specificall
 
 ---
 
-## 🎯 Current Version: 0.7.0 (Day 7 Complete - Nov 6, 2025)
+## 🎯 Current Version: 0.8.0 (Day 8 Complete - Nov 7, 2025)
+
+### ✅ Completed Features (Day 8 - WebRTC Integration)
+
+**WebRTC Video Sessions** 🎥
+- ✅ Peer-to-peer video connections using SimplePeer
+- ✅ Fixed duplicate signaling issues (clean single offer/answer exchange)
+- ✅ Proper state management with React refs (participantsMapRef)
+- ✅ End Session button with confirmation modal
+- ✅ Camera/microphone properly stop after session end
+- ✅ Google Meet preserved as fallback option
+- ✅ Room ID strategy using appointment.id (enables recording linkage)
+- ✅ WebRTCSession wrapper component integrates with existing appointment system
+- ✅ Connection status indicators (connecting, connected, error)
+- ✅ Comprehensive error handling and resource cleanup
+
+**Bug Fixes & Improvements**
+- ✅ Eliminated duplicate room joins (hasJoinedRoomRef)
+- ✅ Fixed "InvalidStateError: Called in wrong state: stable"
+- ✅ Fixed "Unknown User" display after re-renders
+- ✅ Fixed camera staying on after leaving session
+- ✅ Removed React warnings (removeAllListeners before destroy)
+- ✅ Added peer existence checks before creating connections
+- ✅ TypeScript types added (@types/simple-peer)
+
+**UI/UX Enhancements**
+- ✅ Updated AppointmentDetailsModal to show WebRTC + Meet fallback
+- ✅ Recording notice: "Sessions are recorded for your records"
+- ✅ Google Meet backup link with copy button
+- ✅ Session details sidebar with appointment information
+- ✅ "Having connection issues? Switch to Google Meet" overlay
+
+---
+
+## 🎯 Previous Versions
+
+### Version 0.7.0 (Day 7 Complete - Nov 6, 2025)
 
 ### ✅ Completed Features
 
@@ -231,8 +267,17 @@ A modern, HIPAA-compliant therapy practice management platform built specificall
 - [x] 30-minute join window standardized
 - [x] 6 critical bug fixes
 
-### 📅 Planned: Version 0.8.0 (Day 8 - Nov 7)
-- [ ] Video session recording (WebRTC + MediaRecorder)
+### ✅ Completed: Version 0.8.0 (Day 8 - Nov 7, 2025)
+- [x] WebRTC peer-to-peer video sessions
+- [x] Fixed duplicate signaling and connection issues
+- [x] End Session button with proper cleanup
+- [x] Google Meet fallback preserved
+- [x] WebRTCSession wrapper component integration
+- [x] Room ID strategy (appointment.id for future recording linkage)
+- [x] Comprehensive error handling and state management
+
+### 📅 Planned: Version 0.9.0 (Day 9 - Nov 8, 2025)
+- [ ] Video session recording (MediaRecorder API)
 - [ ] Save recordings to Google Cloud Storage
 - [ ] 30-day automatic deletion (HIPAA retention)
 - [ ] Gemini AI integration
@@ -240,7 +285,7 @@ A modern, HIPAA-compliant therapy practice management platform built specificall
 - [ ] Generate SOAP notes from transcripts
 - [ ] Session Vault UI (video player, transcript viewer)
 
-### 📅 Planned: Version 0.9.0 (Week 2-3)
+### 📅 Planned: Version 1.0.0 (Week 2-3)
 - [ ] Clinical note templates (SOAP format)
 - [ ] ICD-10 diagnosis codes lookup
 - [ ] CPT code assignment
@@ -563,7 +608,7 @@ This software is proprietary and confidential. Unauthorized copying, distributio
 
 ---
 
-**Last Updated:** November 6, 2025 (End of Day 7)
-**Next Session:** November 7, 2025 (Day 8)
-**Current Phase:** Patient UX & Video Session Foundation Complete
-**Next Milestone:** Video Recording & AI Features (Gemini transcription, SOAP notes)
+**Last Updated:** November 7, 2025 (End of Day 8)
+**Next Session:** November 8, 2025 (Day 9)
+**Current Phase:** WebRTC Video Sessions Complete
+**Next Milestone:** Video Recording & AI Features (MediaRecorder, Gemini transcription, SOAP notes)
