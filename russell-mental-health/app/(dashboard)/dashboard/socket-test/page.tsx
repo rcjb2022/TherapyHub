@@ -34,13 +34,19 @@ export default function SocketTestPage() {
       addMessage('❌ Disconnected from Socket.io server')
     }
 
+    const onUserJoined = (user: { name: string; role: string }) => {
+      addMessage(`👤 User joined: ${user.name} (${user.role})`)
+    }
+
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
+    socket.on('user-joined', onUserJoined)
 
     // Clean up
     return () => {
       socket.off('connect', onConnect)
       socket.off('disconnect', onDisconnect)
+      socket.off('user-joined', onUserJoined)
     }
   }, [])
 
@@ -62,15 +68,10 @@ export default function SocketTestPage() {
       name: 'Test User',
     })
 
-    // Listen for room-joined event
-    socket.once('room-joined', ({ roomId, participants }) => {
+    // Listen for room-joined event (once per button click is OK)
+    socket.once('room-joined', ({ roomId, participants }: { roomId: string; participants: any[] }) => {
       addMessage(`✅ Successfully joined room: ${roomId}`)
       addMessage(`👥 Room has ${participants.length} other participants`)
-    })
-
-    // Listen for other users joining
-    socket.on('user-joined', (user) => {
-      addMessage(`👤 User joined: ${user.name} (${user.role})`)
     })
   }
 

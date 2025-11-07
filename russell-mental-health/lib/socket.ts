@@ -11,19 +11,21 @@
  */
 
 import { io, Socket } from 'socket.io-client'
+import type { ServerToClientEvents, ClientToServerEvents } from '@/types/socket'
 
-let socket: Socket | null = null
+let socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null
 
 /**
  * Get or create Socket.io connection
  *
  * @returns Socket.io client instance
  */
-export function getSocket(): Socket {
+export function getSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   if (!socket) {
-    // Create new connection
-    socket = io({
-      path: '/socket.io',
+    // Create new connection to standalone Socket.io server (port 3001)
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001'
+
+    socket = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -32,27 +34,39 @@ export function getSocket(): Socket {
 
     // Connection event handlers
     socket.on('connect', () => {
-      console.log('[Socket.io Client] Connected:', socket?.id)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Socket.io Client] Connected:', socket?.id)
+      }
     })
 
     socket.on('disconnect', (reason) => {
-      console.log('[Socket.io Client] Disconnected:', reason)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Socket.io Client] Disconnected:', reason)
+      }
     })
 
     socket.on('connect_error', (error) => {
-      console.error('[Socket.io Client] Connection error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Socket.io Client] Connection error:', error)
+      }
     })
 
     socket.on('reconnect', (attemptNumber) => {
-      console.log('[Socket.io Client] Reconnected after', attemptNumber, 'attempts')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Socket.io Client] Reconnected after', attemptNumber, 'attempts')
+      }
     })
 
     socket.on('reconnect_error', (error) => {
-      console.error('[Socket.io Client] Reconnection error:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Socket.io Client] Reconnection error:', error)
+      }
     })
 
     socket.on('reconnect_failed', () => {
-      console.error('[Socket.io Client] Reconnection failed after max attempts')
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Socket.io Client] Reconnection failed after max attempts')
+      }
     })
   }
 
@@ -66,7 +80,9 @@ export function disconnectSocket(): void {
   if (socket) {
     socket.disconnect()
     socket = null
-    console.log('[Socket.io Client] Socket disconnected and cleaned up')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Socket.io Client] Socket disconnected and cleaned up')
+    }
   }
 }
 

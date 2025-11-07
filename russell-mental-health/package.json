@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:socket": "node socket-server.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:socket\" --names \"Next.js,Socket.io\" --prefix-colors \"blue,magenta\"",
     "dev:webrtc": "node server.js",
     "build": "next build",
     "start": "next start",
@@ -54,6 +56,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "prisma": "^6.18.0",
