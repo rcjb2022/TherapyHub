@@ -9,8 +9,15 @@ import { getToken } from 'next-auth/jwt'
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
+  // Verify NEXTAUTH_SECRET is configured
+  const secret = process.env.NEXTAUTH_SECRET
+  if (!secret) {
+    console.error('Authentication middleware error: NEXTAUTH_SECRET is not set.')
+    return new NextResponse('Internal Server Error', { status: 500 })
+  }
+
   // Get and verify session token (validates signature and expiration)
-  const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+  const session = await getToken({ req, secret })
 
   const isAuth = !!session
   const isAuthPage = pathname.startsWith('/login')
