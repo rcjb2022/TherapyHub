@@ -36,14 +36,13 @@ export async function GET() {
     const token = jwt.sign(
       {
         sub: session.user.id,
-        id: session.user.id,
         email: session.user.email,
         name: session.user.name,
         role: session.user.role,
       },
       secret,
       {
-        expiresIn: '15m', // Match NextAuth session timeout
+        expiresIn: 15 * 60, // Match NextAuth session timeout (15 minutes in seconds)
       }
     )
 
