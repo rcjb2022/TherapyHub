@@ -148,6 +148,15 @@ export default async function VideoSessionPage({ params }: VideoSessionPageProps
   }
 
   const userRole = session.user.role
+  const userId = session.user.id
+  const userName = session.user.name
 
-  return <VideoSessionClient appointment={appointmentData} userRole={userRole} />
+  return (
+    <VideoSessionClient
+      appointment={appointmentData}
+      userRole={userRole}
+      userId={userId}
+      userName={userName}
+    />
+  )
 }

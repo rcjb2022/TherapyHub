@@ -272,62 +272,78 @@ export function AppointmentDetailsModal({
                 </div>
               </div>
 
-              {/* Google Meet Link */}
+              {/* Therapy Session */}
               {appointment.googleMeetLink && appointment.status !== 'CANCELLED' && (
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <VideoIcon className="h-5 w-5 text-blue-600" />
-                    <h3 className="font-semibold text-gray-900">Video Session</h3>
+                    <h3 className="font-semibold text-gray-900">Therapy Session</h3>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    {joinStatus?.canJoin ? (
-                      <a
-                        href={`/dashboard/video-session/${appointmentId}`}
-                        className="flex-1"
-                      >
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                          <VideoIcon className="h-4 w-4 mr-2" />
-                          Join Video Session
+                  <div className="flex flex-col gap-3">
+                    {/* Primary WebRTC Session Button */}
+                    <div>
+                      {joinStatus?.canJoin ? (
+                        <a
+                          href={`/dashboard/video-session/${appointmentId}`}
+                          className="block"
+                        >
+                          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                            <VideoIcon className="h-4 w-4 mr-2" />
+                            Join Therapy Session
+                          </Button>
+                        </a>
+                      ) : joinStatus?.reason === 'too_early' ? (
+                        <Button disabled className="w-full bg-gray-300 text-gray-600 cursor-not-allowed">
+                          <ClockIcon className="h-4 w-4 mr-2" />
+                          Opens in {joinStatus.minutesUntil} min
                         </Button>
-                      </a>
-                    ) : joinStatus?.reason === 'too_early' ? (
-                      <Button disabled className="flex-1 bg-gray-300 text-gray-600 cursor-not-allowed">
-                        <ClockIcon className="h-4 w-4 mr-2" />
-                        Opens in {joinStatus.minutesUntil} min
-                      </Button>
-                    ) : joinStatus?.reason === 'ended' ? (
-                      <Button disabled className="flex-1 bg-gray-300 text-gray-600 cursor-not-allowed">
-                        <ClockIcon className="h-4 w-4 mr-2" />
-                        Session Ended
-                      </Button>
-                    ) : (
-                      <a
-                        href={`/dashboard/video-session/${appointmentId}`}
-                        className="flex-1"
-                      >
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                          <VideoIcon className="h-4 w-4 mr-2" />
-                          Join Video Session
+                      ) : joinStatus?.reason === 'ended' ? (
+                        <Button disabled className="w-full bg-gray-300 text-gray-600 cursor-not-allowed">
+                          <ClockIcon className="h-4 w-4 mr-2" />
+                          Session Ended
                         </Button>
-                      </a>
-                    )}
-                    <Button
-                      onClick={handleCopyMeetLink}
-                      variant="outline"
-                      className="sm:w-auto"
-                    >
-                      {copied ? (
-                        <>
-                          <CheckIcon className="h-4 w-4 mr-2" />
-                          Copied!
-                        </>
                       ) : (
-                        <>
-                          <ClipboardCopyIcon className="h-4 w-4 mr-2" />
-                          Copy Link
-                        </>
+                        <a
+                          href={`/dashboard/video-session/${appointmentId}`}
+                          className="block"
+                        >
+                          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                            <VideoIcon className="h-4 w-4 mr-2" />
+                            Join Therapy Session
+                          </Button>
+                        </a>
                       )}
-                    </Button>
+                    </div>
+
+                    {/* Google Meet Fallback */}
+                    <div className="flex items-center justify-between pt-2 border-t border-blue-200">
+                      <p className="text-xs text-gray-600">
+                        Google Meet backup available
+                      </p>
+                      <Button
+                        onClick={handleCopyMeetLink}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                      >
+                        {copied ? (
+                          <>
+                            <CheckIcon className="h-3 w-3 mr-1" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <ClipboardCopyIcon className="h-3 w-3 mr-1" />
+                            Copy Link
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Recording Notice */}
+                    <p className="text-xs text-blue-700 bg-blue-100/50 rounded px-2 py-1">
+                      🎥 Sessions are recorded for your records and AI-assisted notes
+                    </p>
                   </div>
                 </div>
               )}
