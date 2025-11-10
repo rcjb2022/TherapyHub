@@ -362,11 +362,15 @@ export default function SessionVaultClient() {
                                 <PlayIcon className="h-4 w-4" />
                                 Play
                               </button>
-                              {recording.transcriptionStatus === 'PENDING' && (
+                              {(recording.transcriptionStatus === 'PENDING' || recording.transcriptionStatus === 'FAILED') && (
                                 <button
                                   onClick={() => generateTranscript(recording.id)}
                                   disabled={transcribingIds.has(recording.id)}
-                                  className="inline-flex items-center gap-1 rounded bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                  className={`inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-medium text-white disabled:cursor-not-allowed disabled:opacity-50 ${
+                                    recording.transcriptionStatus === 'FAILED'
+                                      ? 'bg-orange-600 hover:bg-orange-700'
+                                      : 'bg-purple-600 hover:bg-purple-700'
+                                  }`}
                                 >
                                   {transcribingIds.has(recording.id) ? (
                                     <>
@@ -379,9 +383,13 @@ export default function SessionVaultClient() {
                                   ) : (
                                     <>
                                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={
+                                          recording.transcriptionStatus === 'FAILED'
+                                            ? "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                            : "M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                                        } />
                                       </svg>
-                                      Transcript
+                                      {recording.transcriptionStatus === 'FAILED' ? 'Retry' : 'Transcript'}
                                     </>
                                   )}
                                 </button>
