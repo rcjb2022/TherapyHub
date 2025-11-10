@@ -61,9 +61,13 @@ export default function SessionVaultClient() {
       const data = await response.json()
       setRecordings(data.recordings)
       setFilteredRecordings(data.recordings)
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to fetch recordings:', err)
-      setError(err.message)
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('An unknown error occurred')
+      }
     } finally {
       setLoading(false)
     }
@@ -306,12 +310,14 @@ export default function SessionVaultClient() {
               <button
                 onClick={closeVideoPlayer}
                 className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                aria-label="Close video player"
               >
                 <svg
                   className="h-6 w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
