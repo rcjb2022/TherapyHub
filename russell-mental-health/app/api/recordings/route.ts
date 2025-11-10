@@ -78,12 +78,14 @@ export async function GET(request: NextRequest) {
             },
             sessionDocuments: {
               where: {
-                documentType: 'TRANSCRIPT',
+                documentType: {
+                  in: ['TRANSCRIPT', 'SOAP_NOTES', 'DAP_NOTES', 'BIRP_NOTES'],
+                },
               },
               select: {
                 id: true,
+                documentType: true,
               },
-              take: 1,
             },
           },
         },
@@ -117,6 +119,12 @@ export async function GET(request: NextRequest) {
           gcsPath,
           captionGcsPath,
         } = recording
+        // Extract document IDs by type
+        const transcriptDoc = appointment.sessionDocuments.find(doc => doc.documentType === 'TRANSCRIPT')
+        const soapDoc = appointment.sessionDocuments.find(doc => doc.documentType === 'SOAP_NOTES')
+        const dapDoc = appointment.sessionDocuments.find(doc => doc.documentType === 'DAP_NOTES')
+        const birpDoc = appointment.sessionDocuments.find(doc => doc.documentType === 'BIRP_NOTES')
+
         const baseRecordingData = {
           id,
           appointmentId,
@@ -130,7 +138,10 @@ export async function GET(request: NextRequest) {
           transcriptionStatus,
           language,
           patientName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
-          transcriptDocumentId: appointment.sessionDocuments[0]?.id || null,
+          transcriptDocumentId: transcriptDoc?.id || null,
+          soapNotesId: soapDoc?.id || null,
+          dapNotesId: dapDoc?.id || null,
+          birpNotesId: birpDoc?.id || null,
         }
 
         try {
