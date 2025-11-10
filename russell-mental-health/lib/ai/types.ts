@@ -13,6 +13,7 @@ export interface TranscriptionOptions {
   language?: string // ISO 639-1 code (en, es, pt, fr)
   speakerLabels?: string[] // ["Therapist", "Patient"]
   includeTimestamps?: boolean
+  mimeType?: string // e.g. 'audio/webm', 'audio/mp3', 'audio/wav'
 }
 
 export interface TranscriptResult {
