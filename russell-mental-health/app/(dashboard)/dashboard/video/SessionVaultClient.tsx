@@ -69,6 +69,13 @@ interface ClinicalNotesButtonProps {
 const RETRY_ICON_PATH = "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
 const GENERATE_ICON_PATH = "M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
 
+// Clinical notes format mapping (type-safe)
+const CLINICAL_NOTE_FORMATS = [
+  { format: 'SOAP' as const, key: 'soapNotesId' as const },
+  { format: 'DAP' as const, key: 'dapNotesId' as const },
+  { format: 'BIRP' as const, key: 'birpNotesId' as const },
+]
+
 function GenerateTranscriptButton({ recording, isProcessing, onGenerate }: GenerateTranscriptButtonProps) {
   if (recording.transcriptionStatus !== 'PENDING' && recording.transcriptionStatus !== 'FAILED') {
     return null
@@ -127,7 +134,7 @@ function ClinicalNotesButton({ recording, format, documentId, isGenerating, onGe
         className={`inline-flex items-center gap-1 rounded px-2.5 py-1.5 text-xs font-medium text-white ${colorMap[format]}`}
       >
         <DocumentTextIcon className="h-3.5 w-3.5" />
-        {format}
+        View {format}
       </Link>
     )
   }
@@ -575,12 +582,12 @@ export default function SessionVaultClient() {
                           {/* Clinical Notes row */}
                           {recording.transcriptionStatus === 'COMPLETED' && (
                             <div className="flex items-center gap-1.5">
-                              {(['SOAP', 'DAP', 'BIRP'] as const).map((format) => (
+                              {CLINICAL_NOTE_FORMATS.map(({ format, key }) => (
                                 <ClinicalNotesButton
                                   key={format}
                                   recording={recording}
                                   format={format}
-                                  documentId={recording[`${format.toLowerCase()}NotesId` as 'soapNotesId' | 'dapNotesId' | 'birpNotesId']}
+                                  documentId={recording[key]}
                                   isGenerating={generatingNotesIds.has(`${recording.id}-${format}`)}
                                   onGenerate={() => generateClinicalNotes(recording.id, format)}
                                 />
