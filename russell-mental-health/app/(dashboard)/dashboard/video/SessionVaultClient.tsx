@@ -20,7 +20,10 @@ interface Recording {
   fileSize: number | null
   status: string
   expiresAt: string
+  transcriptionStatus: string
+  language: string | null
   videoUrl: string | null
+  captionUrl: string | null
   error?: string
 }
 
@@ -31,6 +34,7 @@ export default function SessionVaultClient() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null)
+  const [transcribingIds, setTranscribingIds] = useState<Set<string>>(new Set())
 
   // Fetch recordings on mount
   useEffect(() => {
@@ -110,6 +114,40 @@ export default function SessionVaultClient() {
 
   const closeVideoPlayer = () => {
     setSelectedRecording(null)
+  }
+
+  const generateTranscript = async (recordingId: string) => {
+    try {
+      setTranscribingIds((prev) => new Set(prev).add(recordingId))
+
+      const response = await fetch(`/api/recordings/${recordingId}/transcribe`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Transcription failed')
+      }
+
+      const result = await response.json()
+      console.log('Transcription result:', result)
+
+      // Refresh recordings to show updated status
+      await fetchRecordings()
+    } catch (err) {
+      console.error('Failed to generate transcript:', err)
+      if (err instanceof Error) {
+        alert(`Failed to generate transcript: ${err.message}`)
+      } else {
+        alert('Failed to generate transcript: An unknown error occurred')
+      }
+    } finally {
+      setTranscribingIds((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(recordingId)
+        return newSet
+      })
+    }
   }
 
   if (loading) {
@@ -207,6 +245,9 @@ export default function SessionVaultClient() {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Transcript
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                     Expires
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -247,6 +288,27 @@ export default function SessionVaultClient() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
+                            recording.transcriptionStatus === 'COMPLETED'
+                              ? 'bg-blue-100 text-blue-800'
+                              : recording.transcriptionStatus === 'PROCESSING'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : recording.transcriptionStatus === 'FAILED'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {recording.transcriptionStatus === 'COMPLETED' && recording.language && (
+                            <span className="uppercase">{recording.language}</span>
+                          )}
+                          {recording.transcriptionStatus === 'PENDING' && 'Not Transcribed'}
+                          {recording.transcriptionStatus === 'PROCESSING' && 'Processing...'}
+                          {recording.transcriptionStatus === 'COMPLETED' && 'Available'}
+                          {recording.transcriptionStatus === 'FAILED' && 'Failed'}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
                         <div className="flex items-center gap-1 text-sm">
                           <ClockIcon
                             className={`h-4 w-4 ${isExpiringSoon ? 'text-orange-500' : 'text-gray-400'}`}
@@ -267,6 +329,30 @@ export default function SessionVaultClient() {
                                 <PlayIcon className="h-4 w-4" />
                                 Play
                               </button>
+                              {recording.transcriptionStatus === 'PENDING' && (
+                                <button
+                                  onClick={() => generateTranscript(recording.id)}
+                                  disabled={transcribingIds.has(recording.id)}
+                                  className="inline-flex items-center gap-1 rounded bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  {transcribingIds.has(recording.id) ? (
+                                    <>
+                                      <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                      </svg>
+                                      Generating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                      </svg>
+                                      Transcript
+                                    </>
+                                  )}
+                                </button>
+                              )}
                               <a
                                 href={recording.videoUrl}
                                 download
@@ -339,6 +425,15 @@ export default function SessionVaultClient() {
                   className="w-full"
                   style={{ maxHeight: '70vh' }}
                 >
+                  {selectedRecording.captionUrl && (
+                    <track
+                      kind="captions"
+                      src={selectedRecording.captionUrl}
+                      srclang={selectedRecording.language || 'en'}
+                      label={selectedRecording.language === 'es' ? 'Español' : 'English'}
+                      default
+                    />
+                  )}
                   Your browser does not support the video tag.
                 </video>
               ) : (
