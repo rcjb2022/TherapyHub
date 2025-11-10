@@ -121,6 +121,9 @@ export async function POST(
       )
     }
 
+    // Get GCS bucket (needed for both reading and writing)
+    const bucket = storage.bucket(bucketName)
+
     // Get text to translate
     let textToTranslate: string | undefined
     let sourceLanguage: string = sourceDoc.language || 'en' // Set a default
@@ -132,7 +135,6 @@ export async function POST(
       // Content is in GCS (likely a transcript)
       console.log(`[Translate] Fetching ${sourceType} from GCS: ${sourceDoc.gcsPath}`)
 
-      const bucket = storage.bucket(bucketName)
       const file = bucket.file(sourceDoc.gcsPath)
       const [fileContent] = await file.download()
       const fileString = fileContent.toString('utf-8')
