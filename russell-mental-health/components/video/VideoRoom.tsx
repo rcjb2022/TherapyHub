@@ -36,10 +36,21 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
   const [isAudioEnabled, setIsAudioEnabled] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Recording state
+  const [isRecording, setIsRecording] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+  const [recordingDuration, setRecordingDuration] = useState(0)
+
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const peersRef = useRef<Map<string, PeerConnection>>(new Map())
   const participantsMapRef = useRef<Map<string, SocketUser>>(new Map())
   const hasJoinedRoomRef = useRef(false)
+
+  // Recording refs
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recordedChunksRef = useRef<Blob[]>([])
+  const recordingStartTimeRef = useRef<number>(0)
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Get STUN server from environment (Google's free STUN server by default)
   const stunServer = process.env.NEXT_PUBLIC_STUN_SERVER_URL || 'stun:stun.l.google.com:19302'
@@ -166,10 +177,160 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
   )
 
   /**
+   * Start recording the session
+   */
+  const startRecording = useCallback(() => {
+    if (!localStream) {
+      console.error('[VideoRoom] Cannot start recording: no local stream')
+      return
+    }
+
+    try {
+      console.log('[VideoRoom] Starting recording...')
+
+      // For now, record just the local stream
+      // TODO Phase 3: Combine with remote streams
+      const options = { mimeType: 'video/webm;codecs=vp9,opus' }
+
+      // Check if the mimeType is supported, fallback if needed
+      const mimeType = MediaRecorder.isTypeSupported(options.mimeType)
+        ? options.mimeType
+        : 'video/webm'
+
+      const mediaRecorder = new MediaRecorder(localStream, { mimeType })
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunksRef.current.push(event.data)
+          console.log(`[VideoRoom] Recorded chunk: ${event.data.size} bytes`)
+        }
+      }
+
+      mediaRecorder.onstart = () => {
+        console.log('[VideoRoom] Recording started')
+        setIsRecording(true)
+        setIsPaused(false)
+        recordingStartTimeRef.current = Date.now()
+
+        // Start recording duration timer
+        recordingTimerRef.current = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000)
+          setRecordingDuration(elapsed)
+        }, 1000)
+
+        // Notify all participants that recording has started
+        socket.emit('recording-started', { roomId })
+      }
+
+      mediaRecorder.onstop = () => {
+        console.log('[VideoRoom] Recording stopped')
+        setIsRecording(false)
+        setIsPaused(false)
+
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current)
+          recordingTimerRef.current = null
+        }
+
+        // Notify all participants that recording has stopped
+        socket.emit('recording-stopped', { roomId })
+      }
+
+      mediaRecorder.onerror = (event) => {
+        console.error('[VideoRoom] MediaRecorder error:', event)
+        setError('Recording failed. Please try again.')
+      }
+
+      mediaRecorderRef.current = mediaRecorder
+      mediaRecorder.start(1000) // Capture in 1-second chunks
+    } catch (err) {
+      console.error('[VideoRoom] Failed to start recording:', err)
+      setError('Failed to start recording. Your browser may not support this feature.')
+    }
+  }, [localStream, socket, roomId])
+
+  /**
+   * Pause the recording
+   */
+  const pauseRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.pause()
+      setIsPaused(true)
+      console.log('[VideoRoom] Recording paused')
+
+      // Stop the duration timer
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current)
+        recordingTimerRef.current = null
+      }
+
+      socket.emit('recording-paused', { roomId })
+    }
+  }, [socket, roomId])
+
+  /**
+   * Resume the recording
+   */
+  const resumeRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'paused') {
+      mediaRecorderRef.current.resume()
+      setIsPaused(false)
+      console.log('[VideoRoom] Recording resumed')
+
+      // Restart the duration timer
+      recordingTimerRef.current = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000)
+        setRecordingDuration(elapsed)
+      }, 1000)
+
+      socket.emit('recording-resumed', { roomId })
+    }
+  }, [socket, roomId])
+
+  /**
+   * Stop recording and prepare the blob for upload
+   */
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+
+      // Create a blob from recorded chunks
+      setTimeout(() => {
+        if (recordedChunksRef.current.length > 0) {
+          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' })
+          console.log(`[VideoRoom] Recording complete: ${blob.size} bytes`)
+
+          // For testing: download the recording
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `session-${roomId}-${Date.now()}.webm`
+          a.click()
+          URL.revokeObjectURL(url)
+
+          // Clear chunks for next recording
+          recordedChunksRef.current = []
+        }
+      }, 100)
+    }
+  }, [roomId])
+
+  /**
    * End the video session and clean up all resources
    */
   const endSession = useCallback(() => {
     console.log('[VideoRoom] Ending session...')
+
+    // Stop recording if active
+    if (isRecording) {
+      stopRecording()
+    }
+
+    // Clear recording timer
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
 
     // Stop all media tracks
     if (localStream) {
@@ -205,7 +366,7 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
     if (onEndSession) {
       onEndSession()
     }
-  }, [localStream, socket, roomId, onEndSession])
+  }, [isRecording, stopRecording, localStream, socket, roomId, onEndSession])
 
   /**
    * Setup Socket.io event listeners for WebRTC signaling
@@ -440,8 +601,39 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
     )
   }
 
+  /**
+   * Format recording duration as MM:SS
+   */
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // Auto-start recording when session begins (automatic recording)
+  useEffect(() => {
+    if (localStream && currentUser.role === 'THERAPIST' && !isRecording && !hasJoinedRoomRef.current) {
+      // Wait a moment for peer connections to establish
+      const timer = setTimeout(() => {
+        startRecording()
+      }, 2000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [localStream, currentUser.role, isRecording, startRecording])
+
   return (
     <div className="flex h-full flex-col bg-gray-900">
+      {/* Recording Indicator (visible to ALL participants) */}
+      {isRecording && (
+        <div className="absolute top-4 left-4 z-50 flex items-center gap-2 rounded-lg bg-red-600/90 backdrop-blur-sm px-4 py-2 shadow-lg">
+          <div className={`h-3 w-3 rounded-full bg-white ${isPaused ? '' : 'animate-pulse'}`} />
+          <span className="text-sm font-semibold text-white">
+            {isPaused ? 'Recording Paused' : 'Recording'} {formatDuration(recordingDuration)}
+          </span>
+        </div>
+      )}
+
       {/* Video Grid */}
       <div className="flex-1 grid gap-4 p-4" style={{
         gridTemplateColumns: peers.size === 0 ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))'
@@ -486,7 +678,67 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-center gap-4 bg-gray-800 p-4">
+      <div className="flex items-center justify-between bg-gray-800 p-4">
+        {/* Left: Recording Controls (Therapist Only) */}
+        <div className="flex items-center gap-3">
+          {currentUser.role === 'THERAPIST' && (
+            <>
+              {!isRecording ? (
+                <button
+                  onClick={startRecording}
+                  className="flex items-center gap-2 rounded-full bg-red-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+                  title="Start Recording"
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <circle cx="10" cy="10" r="8" />
+                  </svg>
+                  Start Recording
+                </button>
+              ) : (
+                <>
+                  {isPaused ? (
+                    <button
+                      onClick={resumeRecording}
+                      className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                      title="Resume Recording"
+                    >
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Resume
+                    </button>
+                  ) : (
+                    <button
+                      onClick={pauseRecording}
+                      className="flex items-center gap-2 rounded-full bg-yellow-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-yellow-700"
+                      title="Pause Recording"
+                    >
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Pause
+                    </button>
+                  )}
+                  <button
+                    onClick={stopRecording}
+                    className="flex items-center gap-2 rounded-full bg-gray-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-gray-700"
+                    title="Stop Recording"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                    </svg>
+                    Stop
+                  </button>
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Center: Video/Audio Controls */}
+        <div className="flex items-center gap-4">
         <button
           onClick={toggleAudio}
           className={`rounded-full p-4 transition-colors ${
@@ -538,6 +790,10 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+        </div>
+
+        {/* Right: Empty spacer for balance */}
+        <div className="w-32" />
       </div>
     </div>
   )
