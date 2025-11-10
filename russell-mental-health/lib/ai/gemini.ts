@@ -29,6 +29,14 @@ export class GeminiProvider implements AIProvider {
     this.model = model
   }
 
+  // Centralized error handling to avoid duplication
+  private handleError(error: any, operation: string): never {
+    if (error.message?.includes('rate limit') || error.message?.includes('429')) {
+      throw new RateLimitError('gemini')
+    }
+    throw new AIProviderError(`${operation} failed`, 'gemini', error)
+  }
+
   async transcribe(audioBuffer: Buffer, options?: TranscriptionOptions): Promise<TranscriptResult> {
     try {
       const model = this.client.getGenerativeModel({ model: this.model })
@@ -62,7 +70,7 @@ Return a JSON object with this structure:
         { text: prompt },
         {
           inlineData: {
-            mimeType: 'audio/webm',
+            mimeType: options?.mimeType || 'audio/webm',
             data: audioBuffer.toString('base64'),
           },
         },
@@ -78,10 +86,7 @@ Return a JSON object with this structure:
         speakerCount: 2,
       }
     } catch (error: any) {
-      if (error.message?.includes('rate limit') || error.message?.includes('429')) {
-        throw new RateLimitError('gemini')
-      }
-      throw new AIProviderError('Transcription failed', 'gemini', error)
+      this.handleError(error, 'Transcription')
     }
   }
 
@@ -132,10 +137,7 @@ Return a JSON object with this structure:
         generatedBy: 'gemini',
       }
     } catch (error: any) {
-      if (error.message?.includes('rate limit') || error.message?.includes('429')) {
-        throw new RateLimitError('gemini')
-      }
-      throw new AIProviderError('Note generation failed', 'gemini', error)
+      this.handleError(error, 'Note generation')
     }
   }
 
@@ -175,10 +177,7 @@ Return a JSON object:
 
       return parsed
     } catch (error: any) {
-      if (error.message?.includes('rate limit') || error.message?.includes('429')) {
-        throw new RateLimitError('gemini')
-      }
-      throw new AIProviderError('Translation failed', 'gemini', error)
+      this.handleError(error, 'Translation')
     }
   }
 
@@ -208,10 +207,7 @@ Provide ONLY the summary text, no JSON, no additional formatting.
       const result = await model.generateContent(prompt)
       return result.response.text().trim()
     } catch (error: any) {
-      if (error.message?.includes('rate limit') || error.message?.includes('429')) {
-        throw new RateLimitError('gemini')
-      }
-      throw new AIProviderError('Summarization failed', 'gemini', error)
+      this.handleError(error, 'Summarization')
     }
   }
 }

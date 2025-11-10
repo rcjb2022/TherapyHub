@@ -20,7 +20,6 @@ import type {
 export class AIService implements AIProvider {
   name = 'multi-provider'
   private providers: AIProvider[]
-  private currentProviderIndex: number = 0
 
   constructor() {
     // Initialize providers in priority order
