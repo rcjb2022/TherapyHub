@@ -71,6 +71,12 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // Validate document has GCS path
+    if (!document.gcsPath) {
+      console.error(`[Session Document API] Document ${document.id} has no gcsPath`)
+      return NextResponse.json({ error: 'Document file not found in storage' }, { status: 404 })
+    }
+
     // Get the document from GCS
     const bucket = storage.bucket(bucketName)
     const file = bucket.file(document.gcsPath)
@@ -99,7 +105,7 @@ export async function GET(
   } catch (error: any) {
     console.error('[Session Document API] Error:', error)
     return NextResponse.json(
-      { error: 'Failed to retrieve document', details: error.message },
+      { error: 'Failed to retrieve document' },
       { status: 500 }
     )
   }

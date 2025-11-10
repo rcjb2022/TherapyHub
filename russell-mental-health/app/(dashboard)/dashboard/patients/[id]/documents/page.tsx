@@ -8,6 +8,17 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeftIcon, DocumentIcon } from '@heroicons/react/24/outline'
 
+// Type for session documents (transcripts, clinical notes, etc.)
+type SessionDoc = {
+  id: string
+  type: string
+  title: string
+  language: string | null
+  aiGenerated: boolean
+  aiProvider: string | null
+  createdAt: Date
+}
+
 export default async function PatientDocumentsPage({
   params,
 }: {
@@ -61,17 +72,6 @@ export default async function PatientDocumentsPage({
     uploadedAt: Date
   }
 
-  type SessionDoc = {
-    id: string
-    type: string
-    title: string
-    language: string | null
-    aiGenerated: boolean
-    aiProvider: string | null
-    createdAt: Date
-    gcsPath: string
-  }
-
   const documents: {
     insuranceCards: Document[]
     identification: Document[]
@@ -91,7 +91,6 @@ export default async function PatientDocumentsPage({
     aiGenerated: doc.aiGenerated,
     aiProvider: doc.aiProvider,
     createdAt: doc.createdAt,
-    gcsPath: doc.gcsPath,
   }))
 
   patient.forms.forEach((form) => {
@@ -192,7 +191,7 @@ export default async function PatientDocumentsPage({
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {sessionDocs.map((doc) => (
-                  <SessionDocumentCard key={doc.id} doc={doc} patientId={id} />
+                  <SessionDocumentCard key={doc.id} doc={doc} />
                 ))}
               </div>
             </div>
@@ -293,22 +292,7 @@ function DocumentCard({ doc }: { doc: { label: string; url: string; formType: st
 }
 
 // Session Document Card Component (for transcripts, clinical notes, etc.)
-function SessionDocumentCard({
-  doc,
-  patientId,
-}: {
-  doc: {
-    id: string
-    type: string
-    title: string
-    language: string | null
-    aiGenerated: boolean
-    aiProvider: string | null
-    createdAt: Date
-    gcsPath: string
-  }
-  patientId: string
-}) {
+function SessionDocumentCard({ doc }: { doc: SessionDoc }) {
   // Icon for document type
   const getDocumentIcon = () => {
     switch (doc.type) {
@@ -357,14 +341,12 @@ function SessionDocumentCard({
       )}
       <p className="text-xs text-gray-500 mb-3">Created: {doc.createdAt.toLocaleDateString()}</p>
 
-      <a
-        href={`/api/session-documents/${doc.id}`}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href={`/dashboard/session-documents/${doc.id}`}
         className="block w-full rounded bg-blue-600 px-3 py-2 text-center text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
       >
         View Document
-      </a>
+      </Link>
     </div>
   )
 }

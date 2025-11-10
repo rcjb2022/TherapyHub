@@ -76,6 +76,15 @@ export async function GET(request: NextRequest) {
                 lastName: true,
               },
             },
+            sessionDocuments: {
+              where: {
+                documentType: 'TRANSCRIPT',
+              },
+              select: {
+                id: true,
+              },
+              take: 1,
+            },
           },
         },
       },
@@ -121,6 +130,7 @@ export async function GET(request: NextRequest) {
           transcriptionStatus,
           language,
           patientName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
+          transcriptDocumentId: appointment.sessionDocuments[0]?.id || null,
         }
 
         try {
@@ -170,7 +180,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('[Recordings API] Error:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch recordings', details: error.message },
+      { error: 'Failed to fetch recordings' },
       { status: 500 }
     )
   }

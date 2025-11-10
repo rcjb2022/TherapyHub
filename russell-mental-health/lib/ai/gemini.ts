@@ -248,13 +248,9 @@ Return a JSON object with this structure:
       // Delete uploaded file from Gemini to free up quota
       // Note: Files auto-expire after 48 hours, so deletion is optional
       if (uploadResult) {
-        try {
-          // The new SDK may have a different delete method - skip for now
-          // Files auto-expire, so this is not critical
-          console.log(`[Gemini] Skipping file deletion (files auto-expire in 48h): ${uploadResult.name}`)
-        } catch (deleteError) {
-          console.warn(`[Gemini] Failed to delete file:`, deleteError)
-        }
+        // The new SDK may have a different delete method - skip for now
+        // Files auto-expire, so this is not critical
+        console.log(`[Gemini] Skipping file deletion (files auto-expire in 48h): ${uploadResult.name}`)
       }
     }
   }
