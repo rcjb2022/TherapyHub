@@ -1,7 +1,8 @@
 // Gemini 2.5 Flash AI Provider
 // Google's multimodal AI for transcription, notes, and translation
 
-import { GoogleGenerativeAI, GoogleAIFileManager } from '@google/generative-ai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleAIFileManager } from '@google/generative-ai/server'
 import type {
   AIProvider,
   TranscriptionOptions,
