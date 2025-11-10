@@ -36,10 +36,19 @@ export class GeminiProvider implements AIProvider {
 
   // Centralized error handling to avoid duplication
   private handleError(error: any, operation: string): never {
+    // Log the actual error for debugging
+    console.error(`[Gemini] ${operation} error details:`, {
+      message: error.message,
+      status: error.status,
+      statusText: error.statusText,
+      response: error.response,
+      stack: error.stack,
+    })
+
     if (error.message?.includes('rate limit') || error.message?.includes('429')) {
       throw new RateLimitError('gemini')
     }
-    throw new AIProviderError(`${operation} failed`, 'gemini', error)
+    throw new AIProviderError(`${operation} failed: ${error.message || 'Unknown error'}`, 'gemini', error)
   }
 
   async transcribe(audioBuffer: Buffer, options?: TranscriptionOptions): Promise<TranscriptResult> {
