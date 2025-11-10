@@ -1,8 +1,7 @@
-// Gemini 2.5 Flash AI Provider
+// Gemini 2.5 Flash AI Provider (New @google/genai SDK)
 // Google's multimodal AI for transcription, notes, and translation
 
-import { GoogleGenerativeAI, type UploadFileResponse } from '@google/generative-ai'
-import { GoogleAIFileManager } from '@google/generative-ai/server'
+import { GoogleGenAI } from '@google/genai'
 import {
   type AIProvider,
   type TranscriptionOptions,
@@ -18,8 +17,7 @@ import {
 
 export class GeminiProvider implements AIProvider {
   name = 'gemini'
-  private client: GoogleGenerativeAI
-  private fileManager: GoogleAIFileManager
+  private client: GoogleGenAI
   private model: string
   private apiKey: string
 
@@ -33,8 +31,7 @@ export class GeminiProvider implements AIProvider {
       throw new Error('GEMINI_API_KEY is required')
     }
     this.apiKey = key
-    this.client = new GoogleGenerativeAI(key)
-    this.fileManager = new GoogleAIFileManager(key)
+    this.client = new GoogleGenAI({ apiKey: key })
     this.model = model
   }
 
@@ -67,7 +64,7 @@ export class GeminiProvider implements AIProvider {
     let checkCount = 0
 
     while (Date.now() - startTime < maxWaitSeconds * 1000) {
-      const file = await this.fileManager.getFile(fileName)
+      const file = await this.client.files.get({ name: fileName })
       checkCount++
 
       // Log only first check and every 5th check to reduce noise
@@ -93,8 +90,6 @@ export class GeminiProvider implements AIProvider {
 
   async transcribe(audioBuffer: Buffer, options?: TranscriptionOptions): Promise<TranscriptResult> {
     try {
-      const model = this.client.getGenerativeModel({ model: this.model })
-
       const prompt = `
 You are a professional medical transcriptionist specializing in psychotherapy sessions.
 
@@ -120,17 +115,20 @@ Return a JSON object with this structure:
 }
 `
 
-      const result = await model.generateContent([
-        { text: prompt },
-        {
-          inlineData: {
-            mimeType: options?.mimeType || 'audio/webm',
-            data: audioBuffer.toString('base64'),
+      const result = await this.client.models.generateContent({
+        model: this.model,
+        contents: [
+          { text: prompt },
+          {
+            inlineData: {
+              mimeType: options?.mimeType || 'audio/webm',
+              data: audioBuffer.toString('base64'),
+            },
           },
-        },
-      ])
+        ],
+      })
 
-      const response = result.response.text()
+      const response = result.text
       const parsed = JSON.parse(response)
 
       // Normalize segment keys (API returns startTime/endTime)
@@ -159,23 +157,24 @@ Return a JSON object with this structure:
    * Uses Gemini File API to avoid loading entire file into memory
    */
   async transcribeFromFile(filePath: string, options?: TranscriptionOptions): Promise<TranscriptResult> {
-    let uploadResult: UploadFileResponse | undefined
+    let uploadResult: any | undefined
     try {
       // Upload file to Gemini File API
       console.log(`[Gemini] Uploading file to Gemini File API: ${filePath}`)
-      uploadResult = await this.fileManager.uploadFile(filePath, {
-        mimeType: options?.mimeType || 'video/webm',
-        displayName: `therapy-session-${Date.now()}`,
+      uploadResult = await this.client.files.upload({
+        file: filePath,
+        config: {
+          mimeType: options?.mimeType || 'video/webm',
+          displayName: `therapy-session-${Date.now()}`,
+        },
       })
 
-      console.log(`[Gemini] File uploaded: ${uploadResult.file.uri}`)
+      console.log(`[Gemini] File uploaded: ${uploadResult.uri}`)
 
       // Wait for file to be processed and become ACTIVE
       console.log(`[Gemini] Waiting for file to become ACTIVE...`)
-      await this.waitForFileActive(uploadResult.file.name)
+      await this.waitForFileActive(uploadResult.name)
       console.log(`[Gemini] File is ready for transcription`)
-
-      const model = this.client.getGenerativeModel({ model: this.model })
 
       const prompt = `
 You are a professional medical transcriptionist specializing in psychotherapy sessions.
@@ -202,17 +201,20 @@ Return a JSON object with this structure:
 }
 `
 
-      const result = await model.generateContent([
-        { text: prompt },
-        {
-          fileData: {
-            mimeType: uploadResult.file.mimeType,
-            fileUri: uploadResult.file.uri,
+      const result = await this.client.models.generateContent({
+        model: this.model,
+        contents: [
+          { text: prompt },
+          {
+            fileData: {
+              mimeType: uploadResult.mimeType,
+              fileUri: uploadResult.uri,
+            },
           },
-        },
-      ])
+        ],
+      })
 
-      const response = result.response.text()
+      const response = result.text
 
       // Extract JSON from response (may be wrapped in markdown)
       let jsonText = response.trim()
@@ -246,8 +248,8 @@ Return a JSON object with this structure:
       // Delete uploaded file from Gemini to free up quota
       if (uploadResult) {
         try {
-          await this.fileManager.deleteFile(uploadResult.file.name)
-          console.log(`[Gemini] Deleted temporary file: ${uploadResult.file.name}`)
+          await this.client.files.delete({ name: uploadResult.name })
+          console.log(`[Gemini] Deleted temporary file: ${uploadResult.name}`)
         } catch (deleteError) {
           console.warn(`[Gemini] Failed to delete file:`, deleteError)
         }
@@ -257,8 +259,6 @@ Return a JSON object with this structure:
 
   async generateNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
     try {
-      const model = this.client.getGenerativeModel({ model: this.model })
-
       const prompt = `
 You are an experienced licensed clinical psychologist reviewing a therapy session transcript.
 
@@ -292,8 +292,11 @@ Return a JSON object with this structure:
 }
 `
 
-      const result = await model.generateContent(prompt)
-      const response = result.response.text()
+      const result = await this.client.models.generateContent({
+        model: this.model,
+        contents: prompt,
+      })
+      const response = result.text
       const parsed = JSON.parse(response)
 
       return {
@@ -312,8 +315,6 @@ Return a JSON object with this structure:
     options?: TranslationOptions
   ): Promise<TranslationResult> {
     try {
-      const model = this.client.getGenerativeModel({ model: this.model })
-
       const sourceHint = options?.sourceLanguage ? `Source language: ${options.sourceLanguage}` : 'Detect source language automatically'
 
       const prompt = `
@@ -336,8 +337,11 @@ Return a JSON object:
 }
 `
 
-      const result = await model.generateContent(prompt)
-      const response = result.response.text()
+      const result = await this.client.models.generateContent({
+        model: this.model,
+        contents: prompt,
+      })
+      const response = result.text
       const parsed = JSON.parse(response)
 
       return parsed
@@ -348,8 +352,6 @@ Return a JSON object:
 
   async summarize(transcript: TranscriptResult, options?: SummaryOptions): Promise<string> {
     try {
-      const model = this.client.getGenerativeModel({ model: this.model })
-
       const styleGuidance = {
         brief: 'Provide a concise 2-3 sentence summary',
         detailed: 'Provide a comprehensive paragraph summarizing all major points',
@@ -369,8 +371,11 @@ ${transcript.fullText}
 Provide ONLY the summary text, no JSON, no additional formatting.
 `
 
-      const result = await model.generateContent(prompt)
-      return result.response.text().trim()
+      const result = await this.client.models.generateContent({
+        model: this.model,
+        contents: prompt,
+      })
+      return result.text.trim()
     } catch (error: any) {
       this.handleError(error, 'Summarization')
     }
