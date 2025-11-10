@@ -172,17 +172,17 @@ export async function POST(
     console.log(`[Generate Notes] Generating ${format} notes using Gemini...`)
 
     // Use a map of generator functions for better extensibility
+    // Pass sessionDate from appointment (not generation date)
     const noteGenerators = {
-      SOAP: () => gemini.generateSOAPNotes(transcript),
-      DAP: () => gemini.generateDAPNotes(transcript),
-      BIRP: () => gemini.generateBIRPNotes(transcript),
+      SOAP: () => gemini.generateSOAPNotes(transcript, { sessionDate: recording.appointment.startTime }),
+      DAP: () => gemini.generateDAPNotes(transcript, { sessionDate: recording.appointment.startTime }),
+      BIRP: () => gemini.generateBIRPNotes(transcript, { sessionDate: recording.appointment.startTime }),
     }
     const notes = await noteGenerators[format]()
 
     console.log(`[Generate Notes] ${format} notes generated successfully`)
 
     // Upload notes to GCS
-    const patientName = `${recording.appointment.patient.firstName}-${recording.appointment.patient.lastName}`
     const timestamp = Date.now()
     const gcsPath = `clinical-notes/${recording.appointment.patientId}/${recording.appointmentId}-${format.toLowerCase()}-${timestamp}.json`
 
@@ -199,6 +199,10 @@ export async function POST(
       },
     })
 
+    // Format session date to match transcript naming convention
+    const sessionDate = new Date(recording.appointment.startTime)
+    const formattedDate = `${sessionDate.getMonth() + 1}/${sessionDate.getDate()}/${sessionDate.getFullYear()}`
+
     // Save to database
     const sessionDocument = await prisma.sessionDocument.create({
       data: {
@@ -206,7 +210,7 @@ export async function POST(
         appointmentId: recording.appointmentId,
         patientId: recording.appointment.patientId,
         documentType,
-        title: `${format} Clinical Notes - ${patientName}`,
+        title: `${format} Clinical Notes - ${formattedDate} Session`,
         gcsPath,
         aiGenerated: true,
         aiProvider: 'gemini',
