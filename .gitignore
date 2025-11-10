@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Environment variables
 .env
@@ -25,3 +24,7 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Testing
+coverage/
+.nyc_output/
