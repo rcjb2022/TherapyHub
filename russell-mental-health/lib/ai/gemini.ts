@@ -36,19 +36,46 @@ export class GeminiProvider implements AIProvider {
 
   // Centralized error handling to avoid duplication
   private handleError(error: any, operation: string): never {
-    // Log the actual error for debugging
+    // Log the actual error for debugging (excluding response which may contain PHI)
     console.error(`[Gemini] ${operation} error details:`, {
       message: error.message,
       status: error.status,
       statusText: error.statusText,
-      response: error.response,
       stack: error.stack,
     })
 
-    if (error.message?.includes('rate limit') || error.message?.includes('429')) {
+    // Check status code first (more reliable than string matching)
+    if (error.status === 429 || error.message?.includes('rate limit')) {
       throw new RateLimitError('gemini')
     }
     throw new AIProviderError(`${operation} failed: ${error.message || 'Unknown error'}`, 'gemini', error)
+  }
+
+  /**
+   * Wait for uploaded file to become ACTIVE (ready for use)
+   * Gemini files go through: PROCESSING → ACTIVE or FAILED
+   */
+  private async waitForFileActive(fileName: string, maxWaitSeconds: number = 60): Promise<void> {
+    const startTime = Date.now()
+    const pollIntervalMs = 2000 // Check every 2 seconds
+
+    while (Date.now() - startTime < maxWaitSeconds * 1000) {
+      const file = await this.fileManager.getFile(fileName)
+      console.log(`[Gemini] File state: ${file.state}`)
+
+      if (file.state === 'ACTIVE') {
+        return // File is ready!
+      }
+
+      if (file.state === 'FAILED') {
+        throw new AIProviderError(`File processing failed: ${file.error?.message || 'Unknown error'}`, 'gemini')
+      }
+
+      // Still PROCESSING, wait and check again
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs))
+    }
+
+    throw new AIProviderError(`File did not become ACTIVE within ${maxWaitSeconds} seconds`, 'gemini')
   }
 
   async transcribe(audioBuffer: Buffer, options?: TranscriptionOptions): Promise<TranscriptResult> {
@@ -129,6 +156,11 @@ Return a JSON object with this structure:
       })
 
       console.log(`[Gemini] File uploaded: ${uploadResult.file.uri}`)
+
+      // Wait for file to be processed and become ACTIVE
+      console.log(`[Gemini] Waiting for file to become ACTIVE...`)
+      await this.waitForFileActive(uploadResult.file.name)
+      console.log(`[Gemini] File is ready for transcription`)
 
       const model = this.client.getGenerativeModel({ model: this.model })
 
