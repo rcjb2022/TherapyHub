@@ -28,11 +28,12 @@ const storage = new Storage({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { recordingId: string } }
+  context: { params: Promise<{ recordingId: string }> }
 ) {
-  try {
-    const { recordingId } = params
+  // Await params in Next.js 15+
+  const { recordingId } = await context.params
 
+  try {
     // Validate GCS configuration
     const bucketName = process.env.GCS_BUCKET_NAME
     if (!bucketName) {
@@ -230,7 +231,7 @@ export async function POST(
     // Update recording status to FAILED
     try {
       await prisma.recording.update({
-        where: { id: params.recordingId },
+        where: { id: recordingId },
         data: { transcriptionStatus: 'FAILED' },
       })
     } catch (updateError) {
