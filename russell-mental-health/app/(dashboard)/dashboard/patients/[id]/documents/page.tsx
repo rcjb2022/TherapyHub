@@ -41,6 +41,11 @@ export default async function PatientDocumentsPage({
           createdAt: 'desc',
         },
       },
+      sessionDocuments: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+      },
     },
   })
 
@@ -56,6 +61,17 @@ export default async function PatientDocumentsPage({
     uploadedAt: Date
   }
 
+  type SessionDoc = {
+    id: string
+    type: string
+    title: string
+    language: string | null
+    aiGenerated: boolean
+    aiProvider: string | null
+    createdAt: Date
+    gcsPath: string
+  }
+
   const documents: {
     insuranceCards: Document[]
     identification: Document[]
@@ -65,6 +81,18 @@ export default async function PatientDocumentsPage({
     identification: [],
     legalDocuments: [],
   }
+
+  // Session documents (transcripts, clinical notes, etc.)
+  const sessionDocs: SessionDoc[] = patient.sessionDocuments.map((doc) => ({
+    id: doc.id,
+    type: doc.documentType,
+    title: doc.title,
+    language: doc.language,
+    aiGenerated: doc.aiGenerated,
+    aiProvider: doc.aiProvider,
+    createdAt: doc.createdAt,
+    gcsPath: doc.gcsPath,
+  }))
 
   patient.forms.forEach((form) => {
     const formData = form.formData as Record<string, any>
@@ -118,7 +146,10 @@ export default async function PatientDocumentsPage({
   })
 
   const totalDocuments =
-    documents.insuranceCards.length + documents.identification.length + documents.legalDocuments.length
+    documents.insuranceCards.length +
+    documents.identification.length +
+    documents.legalDocuments.length +
+    sessionDocs.length
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -153,6 +184,20 @@ export default async function PatientDocumentsPage({
         </div>
       ) : (
         <div className="space-y-8">
+          {/* Session Documents (Transcripts, Clinical Notes, etc.) */}
+          {sessionDocs.length > 0 && (
+            <div>
+              <h2 className="mb-4 text-xl font-semibold text-gray-900">
+                Session Documents ({sessionDocs.length})
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sessionDocs.map((doc) => (
+                  <SessionDocumentCard key={doc.id} doc={doc} patientId={id} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Insurance Cards */}
           {documents.insuranceCards.length > 0 && (
             <div>
@@ -242,6 +287,83 @@ function DocumentCard({ doc }: { doc: { label: string; url: string; formType: st
         className="block w-full rounded bg-blue-600 px-3 py-2 text-center text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
       >
         {isPDF ? 'Open PDF' : 'View Full Size'}
+      </a>
+    </div>
+  )
+}
+
+// Session Document Card Component (for transcripts, clinical notes, etc.)
+function SessionDocumentCard({
+  doc,
+  patientId,
+}: {
+  doc: {
+    id: string
+    type: string
+    title: string
+    language: string | null
+    aiGenerated: boolean
+    aiProvider: string | null
+    createdAt: Date
+    gcsPath: string
+  }
+  patientId: string
+}) {
+  // Icon for document type
+  const getDocumentIcon = () => {
+    switch (doc.type) {
+      case 'TRANSCRIPT':
+        return (
+          <svg className="h-16 w-16 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+            />
+          </svg>
+        )
+      case 'CLINICAL_NOTES':
+        return (
+          <svg className="h-16 w-16 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        )
+      default:
+        return <DocumentIcon className="h-16 w-16 text-gray-600" />
+    }
+  }
+
+  const typeLabel = doc.type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="mb-3">
+        <div className="aspect-video rounded border border-gray-300 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+          {getDocumentIcon()}
+        </div>
+      </div>
+
+      <h3 className="font-semibold text-gray-900 text-sm mb-1">{doc.title}</h3>
+      <p className="text-xs text-gray-500 mb-1">Type: {typeLabel}</p>
+      {doc.language && <p className="text-xs text-gray-500 mb-1">Language: {doc.language.toUpperCase()}</p>}
+      {doc.aiGenerated && doc.aiProvider && (
+        <p className="text-xs text-purple-600 mb-1">🤖 AI Generated ({doc.aiProvider})</p>
+      )}
+      <p className="text-xs text-gray-500 mb-3">Created: {doc.createdAt.toLocaleDateString()}</p>
+
+      <a
+        href={`/api/session-documents/${doc.id}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full rounded bg-blue-600 px-3 py-2 text-center text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
+      >
+        View Document
       </a>
     </div>
   )
