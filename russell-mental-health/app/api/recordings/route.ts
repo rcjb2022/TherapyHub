@@ -19,10 +19,18 @@ const storage = new Storage({
     : {}),
 })
 
-const bucketName = process.env.GCS_BUCKET_NAME || ''
-
 export async function GET(request: NextRequest) {
   try {
+    // Validate GCS configuration
+    const bucketName = process.env.GCS_BUCKET_NAME
+    if (!bucketName) {
+      console.error('[Recordings API] GCS_BUCKET_NAME environment variable not set.')
+      return NextResponse.json(
+        { error: 'Server configuration error: Storage bucket not configured.' },
+        { status: 500 }
+      )
+    }
+
     // Authenticate and authorize
     const session = await getServerSession(authOptions)
 
@@ -35,14 +43,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    console.log('[Recordings API] Fetching recordings for therapist:', session.user.id)
+    console.log('[Recordings API] Fetching recordings for user:', session.user.id)
+
+    // Get the therapist record for this user
+    const therapist = await prisma.therapist.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    })
+
+    if (!therapist) {
+      console.error('[Recordings API] Therapist record not found for user:', session.user.id)
+      return NextResponse.json({ error: 'Therapist record not found' }, { status: 404 })
+    }
+
+    console.log('[Recordings API] Fetching recordings for therapist:', therapist.id)
 
     // Fetch recordings with related data
     const recordings = await prisma.recording.findMany({
       where: {
         // Only show recordings for this therapist's patients
         appointment: {
-          therapistId: session.user.id,
+          therapistId: therapist.id,
         },
       },
       include: {
@@ -69,6 +90,20 @@ export async function GET(request: NextRequest) {
     const bucket = storage.bucket(bucketName)
     const recordingsWithUrls = await Promise.all(
       recordings.map(async (recording) => {
+        // Base recording data (common to success and error cases)
+        const baseRecordingData = {
+          id: recording.id,
+          appointmentId: recording.appointmentId,
+          patientId: recording.patientId,
+          patientName: `${recording.appointment.patient.firstName} ${recording.appointment.patient.lastName}`,
+          startedAt: recording.startedAt,
+          endedAt: recording.endedAt,
+          duration: recording.duration,
+          fileSize: recording.fileSize,
+          status: recording.status,
+          expiresAt: recording.expiresAt,
+        }
+
         try {
           const blob = bucket.file(recording.gcsPath)
 
@@ -80,31 +115,13 @@ export async function GET(request: NextRequest) {
           })
 
           return {
-            id: recording.id,
-            appointmentId: recording.appointmentId,
-            patientId: recording.patientId,
-            patientName: `${recording.appointment.patient.firstName} ${recording.appointment.patient.lastName}`,
-            startedAt: recording.startedAt,
-            endedAt: recording.endedAt,
-            duration: recording.duration,
-            fileSize: recording.fileSize,
-            status: recording.status,
-            expiresAt: recording.expiresAt,
+            ...baseRecordingData,
             videoUrl: signedUrl,
           }
         } catch (error) {
           console.error(`[Recordings API] Failed to generate URL for ${recording.id}:`, error)
           return {
-            id: recording.id,
-            appointmentId: recording.appointmentId,
-            patientId: recording.patientId,
-            patientName: `${recording.appointment.patient.firstName} ${recording.appointment.patient.lastName}`,
-            startedAt: recording.startedAt,
-            endedAt: recording.endedAt,
-            duration: recording.duration,
-            fileSize: recording.fileSize,
-            status: recording.status,
-            expiresAt: recording.expiresAt,
+            ...baseRecordingData,
             videoUrl: null,
             error: 'Failed to generate video URL',
           }
