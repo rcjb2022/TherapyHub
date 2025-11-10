@@ -315,6 +315,12 @@ model Recording {
   fileSize        Int?     // bytes
   duration        Int?     // seconds
 
+  // Transcription & Captions (Phase 5)
+  transcriptGcsPath String?  // Path to transcript JSON in GCS
+  captionGcsPath    String?  // Path to caption VTT file in GCS
+  transcriptionStatus TranscriptionStatus @default(PENDING)
+  language          String?  // Detected language (en, es, pt, fr)
+
   // Status
   status          RecordingStatus @default(RECORDING)
 
@@ -340,6 +346,13 @@ enum RecordingStatus {
   COMPLETED     // Available for viewing
   FAILED        // Recording failed
   EXPIRED       // Auto-deleted after 30 days
+}
+
+enum TranscriptionStatus {
+  PENDING       // Not yet transcribed
+  PROCESSING    // AI is generating transcript
+  COMPLETED     // Transcript and captions available
+  FAILED        // Transcription failed
 }
 
 model SessionDocument {
