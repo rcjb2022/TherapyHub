@@ -35,6 +35,48 @@ export class GeminiProvider implements AIProvider {
     this.model = model
   }
 
+  /**
+   * Get the current model name
+   */
+  public getModel(): string {
+    return this.model
+  }
+
+  /**
+   * Extract JSON from response that may be wrapped in markdown code blocks
+   */
+  private parseJsonResponse(responseText: string): any {
+    let jsonText = responseText.trim()
+    if (jsonText.startsWith('```json')) {
+      jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '').trim()
+    } else if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/```\n?/g, '').trim()
+    }
+    return JSON.parse(jsonText)
+  }
+
+  /**
+   * Common helper for generating clinical notes
+   */
+  private async generateNotesHelper(prompt: string, operationName: string): Promise<ClinicalNotes> {
+    try {
+      const result = await this.client.models.generateContent({
+        model: this.model,
+        contents: prompt,
+      })
+      const response = result.text
+      const parsed = this.parseJsonResponse(response)
+
+      return {
+        ...parsed,
+        sessionDate: new Date(),
+        generatedBy: 'gemini',
+      }
+    } catch (error: any) {
+      this.handleError(error, operationName)
+    }
+  }
+
   // Centralized error handling to avoid duplication
   private handleError(error: any, operation: string): never {
     // Log the actual error for debugging (excluding response which may contain PHI)
@@ -215,16 +257,7 @@ Return a JSON object with this structure:
       })
 
       const response = result.text
-
-      // Extract JSON from response (may be wrapped in markdown)
-      let jsonText = response.trim()
-      if (jsonText.startsWith('```json')) {
-        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '').trim()
-      } else if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/```\n?/g, '').trim()
-      }
-
-      const parsed = JSON.parse(jsonText)
+      const parsed = this.parseJsonResponse(response)
 
       // Normalize segment keys (API might return start/end or startTime/endTime)
       const segments = parsed.segments.map((seg: any) => ({
@@ -257,8 +290,7 @@ Return a JSON object with this structure:
 
   // SOAP Notes: Subjective, Objective, Assessment, Plan
   async generateSOAPNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
-    try {
-      const prompt = `
+    const prompt = `
 You are an experienced licensed clinical psychologist reviewing a therapy session transcript.
 
 Generate professional clinical notes in SOAP format (Subjective, Objective, Assessment, Plan).
@@ -292,36 +324,12 @@ Return a JSON object with this structure:
 }
 `
 
-      const result = await this.client.models.generateContent({
-        model: this.model,
-        contents: prompt,
-      })
-      const response = result.text
-
-      // Extract JSON from response (may be wrapped in markdown)
-      let jsonText = response.trim()
-      if (jsonText.startsWith('```json')) {
-        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '').trim()
-      } else if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/```\n?/g, '').trim()
-      }
-
-      const parsed = JSON.parse(jsonText)
-
-      return {
-        ...parsed,
-        sessionDate: new Date(),
-        generatedBy: 'gemini',
-      }
-    } catch (error: any) {
-      this.handleError(error, 'SOAP note generation')
-    }
+    return this.generateNotesHelper(prompt, 'SOAP note generation')
   }
 
   // DAP Notes: Data, Assessment, Plan
   async generateDAPNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
-    try {
-      const prompt = `
+    const prompt = `
 You are an experienced licensed clinical psychologist reviewing a therapy session transcript.
 
 Generate professional clinical notes in DAP format (Data, Assessment, Plan).
@@ -352,36 +360,12 @@ Return a JSON object with this structure:
 }
 `
 
-      const result = await this.client.models.generateContent({
-        model: this.model,
-        contents: prompt,
-      })
-      const response = result.text
-
-      // Extract JSON from response (may be wrapped in markdown)
-      let jsonText = response.trim()
-      if (jsonText.startsWith('```json')) {
-        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '').trim()
-      } else if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/```\n?/g, '').trim()
-      }
-
-      const parsed = JSON.parse(jsonText)
-
-      return {
-        ...parsed,
-        sessionDate: new Date(),
-        generatedBy: 'gemini',
-      }
-    } catch (error: any) {
-      this.handleError(error, 'DAP note generation')
-    }
+    return this.generateNotesHelper(prompt, 'DAP note generation')
   }
 
   // BIRP Notes: Behavior, Intervention, Response, Plan
   async generateBIRPNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
-    try {
-      const prompt = `
+    const prompt = `
 You are an experienced licensed clinical psychologist reviewing a therapy session transcript.
 
 Generate professional clinical notes in BIRP format (Behavior, Intervention, Response, Plan).
@@ -414,30 +398,7 @@ Return a JSON object with this structure:
 }
 `
 
-      const result = await this.client.models.generateContent({
-        model: this.model,
-        contents: prompt,
-      })
-      const response = result.text
-
-      // Extract JSON from response (may be wrapped in markdown)
-      let jsonText = response.trim()
-      if (jsonText.startsWith('```json')) {
-        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '').trim()
-      } else if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/```\n?/g, '').trim()
-      }
-
-      const parsed = JSON.parse(jsonText)
-
-      return {
-        ...parsed,
-        sessionDate: new Date(),
-        generatedBy: 'gemini',
-      }
-    } catch (error: any) {
-      this.handleError(error, 'BIRP note generation')
-    }
+    return this.generateNotesHelper(prompt, 'BIRP note generation')
   }
 
   // Legacy method - defaults to SOAP
