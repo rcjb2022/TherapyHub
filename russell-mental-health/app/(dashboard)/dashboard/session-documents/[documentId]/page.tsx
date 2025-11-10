@@ -40,20 +40,27 @@ function formatDuration(seconds: number): string {
   return `${mins} min ${secs} sec`
 }
 
+const SPEAKER_STYLES = {
+  THERAPIST: { label: 'Therapist', color: 'text-blue-700 bg-blue-100' },
+  PATIENT: { label: 'Patient', color: 'text-green-700 bg-green-100' },
+  UNKNOWN: { label: 'Unknown Speaker', color: 'text-gray-600 bg-gray-100' },
+  UNCLEAR: { label: 'Speaker Unclear', color: 'text-gray-600 bg-gray-100' },
+} as const
+
 function getSpeakerInfo(speaker?: string): { label: string; color: string } {
   if (!speaker) {
-    return { label: 'Unknown Speaker', color: 'text-gray-600 bg-gray-100' }
+    return SPEAKER_STYLES.UNKNOWN
   }
 
   const normalized = speaker.toLowerCase()
   if (normalized.includes('therapist')) {
-    return { label: 'Therapist', color: 'text-blue-700 bg-blue-100' }
+    return SPEAKER_STYLES.THERAPIST
   }
   if (normalized.includes('patient')) {
-    return { label: 'Patient', color: 'text-green-700 bg-green-100' }
+    return SPEAKER_STYLES.PATIENT
   }
 
-  return { label: 'Speaker Unclear', color: 'text-gray-600 bg-gray-100' }
+  return SPEAKER_STYLES.UNCLEAR
 }
 
 export default async function SessionDocumentPage({
@@ -238,10 +245,10 @@ export default async function SessionDocumentPage({
             </div>
 
             <div className="divide-y divide-gray-100 px-6 py-4">
-              {transcriptData.segments.map((segment, index) => {
+              {transcriptData.segments.map((segment) => {
                 const speakerInfo = getSpeakerInfo(segment.speaker)
                 return (
-                  <div key={index} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+                  <div key={segment.start} className="flex gap-4 py-4 first:pt-0 last:pb-0">
                     {/* Timestamp */}
                     <div className="flex-shrink-0 pt-1">
                       <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
