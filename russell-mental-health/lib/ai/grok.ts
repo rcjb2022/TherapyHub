@@ -1,15 +1,15 @@
 // GROK (xAI) Provider - Fallback AI Service
 // Uses grok-4-fast model for transcription, notes, and translation
 
-import type {
-  AIProvider,
-  TranscriptionOptions,
-  TranscriptResult,
-  NotesOptions,
-  ClinicalNotes,
-  TranslationOptions,
-  TranslationResult,
-  SummaryOptions,
+import {
+  type AIProvider,
+  type TranscriptionOptions,
+  type TranscriptResult,
+  type NotesOptions,
+  type ClinicalNotes,
+  type TranslationOptions,
+  type TranslationResult,
+  type SummaryOptions,
   AIProviderError,
   RateLimitError,
 } from './types'
