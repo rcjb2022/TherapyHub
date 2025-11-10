@@ -109,6 +109,9 @@ export async function POST(
     // Create temporary file for streaming
     const tempFilePath = path.join(os.tmpdir(), `recording-${recordingId}-${Date.now()}.webm`)
 
+    // Declare transcript outside try block so it's accessible after
+    let transcript
+
     try {
       // Stream download to temp file instead of loading into memory
       await new Promise<void>((resolve, reject) => {
@@ -125,7 +128,7 @@ export async function POST(
       console.log('[Transcribe API] Sending to AI for transcription...')
       const aiService = new AIService()
 
-      const transcript = await aiService.transcribeFromFile(tempFilePath, {
+      transcript = await aiService.transcribeFromFile(tempFilePath, {
         language: recording.language || undefined,
         includeTimestamps: true,
         speakerLabels: ['Therapist', 'Patient'],

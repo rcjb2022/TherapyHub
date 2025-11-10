@@ -50,6 +50,10 @@ interface GenerateTranscriptButtonProps {
   onGenerate: () => void
 }
 
+// SVG icon paths for better maintainability
+const RETRY_ICON_PATH = "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+const GENERATE_ICON_PATH = "M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+
 function GenerateTranscriptButton({ recording, isProcessing, onGenerate }: GenerateTranscriptButtonProps) {
   if (recording.transcriptionStatus !== 'PENDING' && recording.transcriptionStatus !== 'FAILED') {
     return null
@@ -59,9 +63,7 @@ function GenerateTranscriptButton({ recording, isProcessing, onGenerate }: Gener
   const buttonColorClasses = isFailed
     ? 'bg-orange-600 hover:bg-orange-700'
     : 'bg-purple-600 hover:bg-purple-700'
-  const iconPath = isFailed
-    ? "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-    : "M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+  const iconPath = isFailed ? RETRY_ICON_PATH : GENERATE_ICON_PATH
   const buttonText = isFailed ? 'Retry Transcript Generation' : 'Generate Transcript'
 
   return (

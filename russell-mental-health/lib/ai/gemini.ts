@@ -23,6 +23,10 @@ export class GeminiProvider implements AIProvider {
   private model: string
   private apiKey: string
 
+  // File polling configuration
+  private static readonly DEFAULT_MAX_WAIT_SECONDS = 60
+  private static readonly POLL_INTERVAL_MS = 2000
+
   constructor(apiKey?: string, model: string = 'gemini-2.0-flash-exp') {
     const key = apiKey || process.env.GEMINI_API_KEY
     if (!key) {
@@ -55,15 +59,24 @@ export class GeminiProvider implements AIProvider {
    * Wait for uploaded file to become ACTIVE (ready for use)
    * Gemini files go through: PROCESSING → ACTIVE or FAILED
    */
-  private async waitForFileActive(fileName: string, maxWaitSeconds: number = 60): Promise<void> {
+  private async waitForFileActive(
+    fileName: string,
+    maxWaitSeconds: number = GeminiProvider.DEFAULT_MAX_WAIT_SECONDS
+  ): Promise<void> {
     const startTime = Date.now()
-    const pollIntervalMs = 2000 // Check every 2 seconds
+    let checkCount = 0
 
     while (Date.now() - startTime < maxWaitSeconds * 1000) {
       const file = await this.fileManager.getFile(fileName)
-      console.log(`[Gemini] File state: ${file.state}`)
+      checkCount++
+
+      // Log only first check and every 5th check to reduce noise
+      if (checkCount === 1 || checkCount % 5 === 0) {
+        console.log(`[Gemini] File state: ${file.state} (check ${checkCount})`)
+      }
 
       if (file.state === 'ACTIVE') {
+        console.log(`[Gemini] File is ready for transcription after ${checkCount} checks`)
         return // File is ready!
       }
 
@@ -72,7 +85,7 @@ export class GeminiProvider implements AIProvider {
       }
 
       // Still PROCESSING, wait and check again
-      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs))
+      await new Promise((resolve) => setTimeout(resolve, GeminiProvider.POLL_INTERVAL_MS))
     }
 
     throw new AIProviderError(`File did not become ACTIVE within ${maxWaitSeconds} seconds`, 'gemini')
