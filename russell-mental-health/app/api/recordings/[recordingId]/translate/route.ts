@@ -69,11 +69,11 @@ export async function POST(
     }
 
     // Parse request body
-    const body = await request.json()
+    const body = await request.json().catch(() => ({}))
     const targetLanguage: string = body.targetLanguage || 'es'
     const sourceType: 'transcript' | 'summary' = body.sourceType || 'summary'
 
-    if (!['en', 'es', 'pt', 'fr', 'de', 'it', 'ja', 'zh'].includes(targetLanguage)) {
+    if (!Object.keys(LANGUAGE_NAMES).includes(targetLanguage)) {
       return NextResponse.json(
         { error: 'Invalid target language' },
         { status: 400 }
@@ -122,27 +122,38 @@ export async function POST(
     }
 
     // Get text to translate
-    let textToTranslate: string
-    let sourceLanguage: string
+    let textToTranslate: string | undefined
+    let sourceLanguage: string = sourceDoc.language || 'en' // Set a default
 
-    if (sourceDoc.content) {
-      // Summary has content field
+    if (typeof sourceDoc.content === 'string' && sourceDoc.content) {
+      // Content is directly in the DB (likely a summary)
       textToTranslate = sourceDoc.content
-      sourceLanguage = sourceDoc.language || 'en'
     } else if (sourceDoc.gcsPath) {
-      // Transcript is in GCS
+      // Content is in GCS (likely a transcript)
       console.log(`[Translate] Fetching ${sourceType} from GCS: ${sourceDoc.gcsPath}`)
 
       const bucket = storage.bucket(bucketName)
       const file = bucket.file(sourceDoc.gcsPath)
       const [fileContent] = await file.download()
       const parsed = JSON.parse(fileContent.toString('utf-8'))
-      textToTranslate = parsed.fullText || parsed.text
-      sourceLanguage = parsed.language || sourceDoc.language || 'en'
-    } else {
+
+      // Explicitly check for known text properties
+      if (typeof parsed.fullText === 'string' && parsed.fullText) {
+        textToTranslate = parsed.fullText
+      } else if (typeof parsed.text === 'string' && parsed.text) {
+        textToTranslate = parsed.text
+      }
+
+      // Override source language if detected in transcript
+      if (parsed.language) {
+        sourceLanguage = parsed.language
+      }
+    }
+
+    if (!textToTranslate) {
       return NextResponse.json(
-        { error: 'Source document has no content' },
-        { status: 500 }
+        { error: 'Source document has no translatable content or content is empty.' },
+        { status: 404 }
       )
     }
 
