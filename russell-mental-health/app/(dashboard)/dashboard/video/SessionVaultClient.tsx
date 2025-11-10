@@ -85,6 +85,12 @@ interface SummaryButtonProps {
   onGenerate: () => void
 }
 
+interface TranslationButtonProps {
+  recording: Recording
+  isGenerating: boolean
+  onTranslate: (targetLanguage: string, sourceType: 'transcript' | 'summary') => void
+}
+
 function GenerateTranscriptButton({ recording, isProcessing, onGenerate }: GenerateTranscriptButtonProps) {
   if (recording.transcriptionStatus !== 'PENDING' && recording.transcriptionStatus !== 'FAILED') {
     return null
@@ -223,6 +229,113 @@ function SummaryButton({ recording, isGenerating, onGenerate }: SummaryButtonPro
   )
 }
 
+function TranslationButton({ recording, isGenerating, onTranslate }: TranslationButtonProps) {
+  const [showMenu, setShowMenu] = useState(false)
+
+  // Can't translate without transcript or summary
+  if (recording.transcriptionStatus !== 'COMPLETED') {
+    return null
+  }
+
+  if (recording.translationId) {
+    // Translation exists - show view button
+    return (
+      <Link
+        href={`/dashboard/session-documents/${recording.translationId}`}
+        className="inline-flex items-center gap-1 rounded bg-amber-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
+      >
+        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+        </svg>
+        View Translation
+      </Link>
+    )
+  }
+
+  const availableSources = []
+  if (recording.transcriptDocumentId) availableSources.push({ label: 'Transcript', value: 'transcript' })
+  if (recording.summaryId) availableSources.push({ label: 'Summary', value: 'summary' })
+
+  if (availableSources.length === 0) {
+    return null
+  }
+
+  const languages = [
+    { code: 'es', name: 'Spanish' },
+    { code: 'pt', name: 'Portuguese' },
+    { code: 'fr', name: 'French' },
+    { code: 'de', name: 'German' },
+    { code: 'it', name: 'Italian' },
+    { code: 'ja', name: 'Japanese' },
+    { code: 'zh', name: 'Chinese' },
+  ]
+
+  return (
+    <div className="relative inline-block">
+      <button
+        onClick={() => setShowMenu(!showMenu)}
+        disabled={isGenerating}
+        className="inline-flex items-center gap-1 rounded bg-amber-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+        title="Translate document"
+      >
+        {isGenerating ? (
+          <>
+            <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Translating...
+          </>
+        ) : (
+          <>
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+            </svg>
+            Translate
+          </>
+        )}
+      </button>
+
+      {showMenu && !isGenerating && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-10"
+            onClick={() => setShowMenu(false)}
+          />
+
+          {/* Menu */}
+          <div className="absolute right-0 top-full z-20 mt-1 w-64 rounded-lg border border-gray-200 bg-white shadow-lg">
+            <div className="p-3">
+              <p className="mb-2 text-xs font-semibold text-gray-700">Select source and language:</p>
+
+              {availableSources.map(source => (
+                <div key={source.value} className="mb-3">
+                  <p className="mb-1 text-xs font-medium text-gray-600">{source.label}</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {languages.map(lang => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          onTranslate(lang.code, source.value as 'transcript' | 'summary')
+                          setShowMenu(false)
+                        }}
+                        className="rounded bg-gray-100 px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-amber-100 hover:text-amber-800"
+                      >
+                        {lang.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function SessionVaultClient() {
   const [recordings, setRecordings] = useState<Recording[]>([])
   const [filteredRecordings, setFilteredRecordings] = useState<Recording[]>([])
@@ -236,6 +349,8 @@ export default function SessionVaultClient() {
   const [notesError, setNotesError] = useState<string | null>(null)
   const [generatingSummaryIds, setGeneratingSummaryIds] = useState<Set<string>>(new Set())
   const [summaryError, setSummaryError] = useState<string | null>(null)
+  const [generatingTranslationIds, setGeneratingTranslationIds] = useState<Set<string>>(new Set())
+  const [translationError, setTranslationError] = useState<string | null>(null)
 
   // Fetch recordings on mount
   useEffect(() => {
@@ -422,6 +537,42 @@ export default function SessionVaultClient() {
     }
   }
 
+  const translateDocument = async (recordingId: string, targetLanguage: string, sourceType: 'transcript' | 'summary') => {
+    try {
+      setTranslationError(null)
+      setGeneratingTranslationIds((prev) => new Set(prev).add(recordingId))
+
+      const response = await fetch(`/api/recordings/${recordingId}/translate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ targetLanguage, sourceType }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to translate document')
+      }
+
+      const result = await response.json()
+      console.log('Translation generated:', result)
+
+      // Refresh recordings to show updated translation
+      await fetchRecordings()
+    } catch (err) {
+      console.error('Failed to translate document:', err)
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+      setTranslationError(`Failed to translate: ${errorMessage}`)
+    } finally {
+      setGeneratingTranslationIds((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(recordingId)
+        return newSet
+      })
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -522,6 +673,27 @@ export default function SessionVaultClient() {
             </div>
             <button
               onClick={() => setSummaryError(null)}
+              className="text-red-600 hover:text-red-800"
+              aria-label="Dismiss error"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Translation Error Banner */}
+        {translationError && (
+          <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4">
+            <div className="flex items-center gap-3">
+              <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm font-medium text-red-800">{translationError}</p>
+            </div>
+            <button
+              onClick={() => setTranslationError(null)}
               className="text-red-600 hover:text-red-800"
               aria-label="Dismiss error"
             >
@@ -717,6 +889,17 @@ export default function SessionVaultClient() {
                                 recording={recording}
                                 isGenerating={generatingSummaryIds.has(recording.id)}
                                 onGenerate={() => generateSummary(recording.id)}
+                              />
+                            </div>
+                          )}
+
+                          {/* Translation row */}
+                          {recording.transcriptionStatus === 'COMPLETED' && (
+                            <div className="flex items-center gap-1.5">
+                              <TranslationButton
+                                recording={recording}
+                                isGenerating={generatingTranslationIds.has(recording.id)}
+                                onTranslate={(targetLang, sourceType) => translateDocument(recording.id, targetLang, sourceType)}
                               />
                             </div>
                           )}
