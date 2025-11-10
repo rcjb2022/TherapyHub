@@ -137,6 +137,8 @@ model Patient {
   videoSessions VideoSession[]
   clinicalNotes ClinicalNote[]
   forms         FormSubmission[]
+  recordings    Recording[]
+  sessionDocuments SessionDocument[]
 
   @@index([therapistId])
   @@index([email])
@@ -227,6 +229,8 @@ model Appointment {
   clinicalNote  ClinicalNote?
   claim         Claim?
   payment       Payment?
+  recordings    Recording[]
+  sessionDocuments SessionDocument[]
 
   @@index([patientId])
   @@index([therapistId])
@@ -295,6 +299,99 @@ model VideoSession {
 
   @@index([roomId])
   @@index([patientId])
+}
+
+// ============================================================================
+// SESSION RECORDINGS & AI-GENERATED DOCUMENTS
+// ============================================================================
+
+model Recording {
+  id              String   @id @default(cuid())
+  appointmentId   String
+  patientId       String
+
+  // Storage (organized by patient)
+  gcsPath         String   // Path in GCS: recordings/{patientId}/{appointmentId}-{timestamp}.webm
+  fileSize        Int?     // bytes
+  duration        Int?     // seconds
+
+  // Status
+  status          RecordingStatus @default(RECORDING)
+
+  // Timestamps
+  startedAt       DateTime @default(now())
+  endedAt         DateTime?
+  expiresAt       DateTime  // 30 days from startedAt (auto-delete)
+
+  // Relationships
+  appointment     Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient         Patient     @relation(fields: [patientId], references: [id])
+  documents       SessionDocument[] // AI-generated artifacts (retained 7 years)
+
+  @@index([appointmentId])
+  @@index([patientId])
+  @@index([expiresAt]) // For cleanup cron job
+  @@index([status])
+}
+
+enum RecordingStatus {
+  RECORDING     // Currently recording
+  PROCESSING    // Uploading to cloud
+  COMPLETED     // Available for viewing
+  FAILED        // Recording failed
+  EXPIRED       // Auto-deleted after 30 days
+}
+
+model SessionDocument {
+  id              String   @id @default(cuid())
+  recordingId     String?  // Optional - can have notes without recording
+  appointmentId   String
+  patientId       String
+
+  // Document details
+  documentType    SessionDocumentType
+  title           String
+  content         Json?    // Structured content (transcript, notes, summary)
+  gcsPath         String?  // For PDFs or files (7-year retention)
+
+  // AI metadata (on-demand generation)
+  aiGenerated     Boolean  @default(false)
+  aiProvider      String?  // "gemini", "grok", "gemma"
+  aiModel         String?  // "gemini-2.5-flash", "grok-4-fast", etc.
+
+  // Language support (English/Spanish, future: Portuguese, French)
+  language        String   @default("en") // ISO 639-1 code
+  translatedFrom  String?  // Original language if this is a translation
+
+  // Therapist review (on-demand features)
+  reviewed        Boolean  @default(false)
+  reviewedAt      DateTime?
+  reviewedBy      String?  // UserId of therapist who reviewed
+
+  // Audit trail
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  recording       Recording? @relation(fields: [recordingId], references: [id], onDelete: SetNull)
+  appointment     Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patient         Patient @relation(fields: [patientId], references: [id])
+
+  @@index([recordingId])
+  @@index([appointmentId])
+  @@index([patientId])
+  @@index([documentType])
+  @@index([language])
+}
+
+enum SessionDocumentType {
+  TRANSCRIPT          // Full session transcript with speaker labels
+  CLINICAL_NOTES      // Therapist clinical observations
+  SOAP_NOTES          // Subjective, Objective, Assessment, Plan
+  SUMMARY             // Brief session summary
+  TRANSLATION         // Translated version of transcript/summary
+  TREATMENT_PLAN      // AI-suggested treatment plan
+  ANALYSIS            // Session analysis (themes, sentiment, etc.)
 }
 
 // ============================================================================
