@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { ArrowLeftIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { Storage } from '@google-cloud/storage'
+import { CopyButton } from './CopyButton'
 
 const storage = new Storage({
   projectId: process.env.GCP_PROJECT_ID,
@@ -291,36 +292,48 @@ export default async function SessionDocumentPage({
   // Fetch document content from GCS
   let transcriptData: TranscriptData | null = null
   let clinicalNotesData: ClinicalNotesData | null = null
+  let plainTextContent: string | null = null
   let error: string | null = null
 
   const isTranscript = document.documentType === 'TRANSCRIPT'
   const isClinicalNotes = ['SOAP_NOTES', 'DAP_NOTES', 'BIRP_NOTES'].includes(document.documentType)
+  const isPlainText = ['SUMMARY', 'TRANSLATION'].includes(document.documentType)
 
   try {
-    const bucketName = process.env.GCS_BUCKET_NAME
-    if (!bucketName) {
-      throw new Error('Storage not configured')
-    }
+    // For plain text documents stored in content field, use it directly
+    if (isPlainText && document.content && typeof document.content === 'string') {
+      plainTextContent = document.content
+    } else if (document.gcsPath) {
+      // Fetch from GCS for other document types
+      const bucketName = process.env.GCS_BUCKET_NAME
+      if (!bucketName) {
+        throw new Error('Storage not configured')
+      }
 
-    if (!document.gcsPath) {
-      throw new Error('Document record is missing the file path to storage.')
-    }
+      const bucket = storage.bucket(bucketName)
+      const file = bucket.file(document.gcsPath)
 
-    const bucket = storage.bucket(bucketName)
-    const file = bucket.file(document.gcsPath)
+      const [exists] = await file.exists()
+      if (!exists) {
+        throw new Error('Document file not found in storage')
+      }
 
-    const [exists] = await file.exists()
-    if (!exists) {
-      throw new Error('Document file not found in storage')
-    }
+      const [fileContent] = await file.download()
+      const fileString = fileContent.toString('utf-8')
 
-    const [fileContent] = await file.download()
-    const parsedContent = JSON.parse(fileContent.toString('utf-8'))
-
-    if (isTranscript) {
-      transcriptData = parsedContent
-    } else if (isClinicalNotes) {
-      clinicalNotesData = parsedContent
+      // Parse JSON for transcripts and clinical notes, keep as plain text for summaries/translations
+      if (isPlainText) {
+        plainTextContent = fileString
+      } else {
+        const parsedContent = JSON.parse(fileString)
+        if (isTranscript) {
+          transcriptData = parsedContent
+        } else if (isClinicalNotes) {
+          clinicalNotesData = parsedContent
+        }
+      }
+    } else {
+      throw new Error('Document has no content or file path')
     }
   } catch (err) {
     console.error('[Session Document Page] Error fetching document:', err)
@@ -447,6 +460,35 @@ export default async function SessionDocumentPage({
         {/* Clinical Notes Content */}
         {isClinicalNotes && clinicalNotesData && (
           <ClinicalNotesViewer notes={clinicalNotesData} />
+        )}
+
+        {/* Plain Text Content (Summary/Translation) */}
+        {isPlainText && plainTextContent && (
+          <div className="rounded-lg bg-white shadow">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {document.documentType === 'SUMMARY' ? 'Session Summary' : 'Translation'}
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {document.documentType === 'SUMMARY'
+                      ? 'AI-generated summary of the therapy session'
+                      : `Translated to ${document.language?.toUpperCase() || 'target language'}`}
+                  </p>
+                </div>
+                <CopyButton content={plainTextContent} />
+              </div>
+            </div>
+
+            <div className="px-6 py-6">
+              <div className="prose prose-gray max-w-none">
+                <pre className="whitespace-pre-wrap font-sans text-gray-800 leading-relaxed">
+                  {plainTextContent}
+                </pre>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Empty State */}
