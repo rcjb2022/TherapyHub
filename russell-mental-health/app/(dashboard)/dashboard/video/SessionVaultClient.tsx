@@ -230,24 +230,27 @@ function SummaryButton({ recording, isGenerating, onGenerate }: SummaryButtonPro
 }
 
 function TranslationButton({ recording, isGenerating, onTranslate }: TranslationButtonProps) {
-  const [showMenu, setShowMenu] = useState(false)
+  const [showModal, setShowModal] = useState(false)
 
-  // Handle Escape key to close menu
+  // Handle Escape key to close modal
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showMenu) {
-        setShowMenu(false)
+      if (e.key === 'Escape' && showModal) {
+        setShowModal(false)
       }
     }
 
-    if (showMenu) {
+    if (showModal) {
       document.addEventListener('keydown', handleEscape)
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden'
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape)
+      document.body.style.overflow = 'unset'
     }
-  }, [showMenu])
+  }, [showModal])
 
   // Can't translate without transcript or summary
   if (recording.transcriptionStatus !== 'COMPLETED') {
@@ -288,19 +291,9 @@ function TranslationButton({ recording, isGenerating, onTranslate }: Translation
   ]
 
   return (
-    <div className="relative inline-block">
+    <>
       <button
-        id={`translate-btn-${recording.id}`}
-        onClick={() => {
-          setShowMenu(!showMenu)
-          // Scroll button into view when opening menu
-          if (!showMenu) {
-            setTimeout(() => {
-              const button = document.getElementById(`translate-btn-${recording.id}`)
-              button?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            }, 100)
-          }
-        }}
+        onClick={() => setShowModal(true)}
         disabled={isGenerating}
         className="inline-flex items-center gap-1 rounded bg-amber-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
         title="Translate document"
@@ -323,37 +316,56 @@ function TranslationButton({ recording, isGenerating, onTranslate }: Translation
         )}
       </button>
 
-      {showMenu && !isGenerating && (
-        <>
+      {/* Translation Modal */}
+      {showModal && !isGenerating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="translation-modal-title">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-10"
-            onClick={() => setShowMenu(false)}
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowModal(false)}
           />
 
-          {/* Menu - positioned with better visibility */}
-          <div
-            className="absolute bottom-full right-0 z-20 mb-2 w-64 rounded-lg border border-gray-200 bg-white shadow-lg"
-            role="menu"
-            aria-label="Translation options"
-          >
-            <div className="max-h-[400px] overflow-y-auto p-3">
-              <p className="mb-2 text-xs font-semibold text-gray-700">Select source and language:</p>
+          {/* Modal Content */}
+          <div className="relative z-10 w-full max-w-md rounded-lg bg-white shadow-xl">
+            {/* Modal Header */}
+            <div className="border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h3 id="translation-modal-title" className="text-lg font-semibold text-gray-900">
+                  Translate Document
+                </h3>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  aria-label="Close dialog"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="mt-1 text-sm text-gray-600">Select a source and target language</p>
+            </div>
 
-              {availableSources.map(source => (
-                <div key={source.value} className="mb-3 last:mb-0">
-                  <p className="mb-1 text-xs font-medium text-gray-600">{source.label}</p>
-                  <div className="grid grid-cols-2 gap-1.5">
+            {/* Modal Body */}
+            <div className="max-h-[60vh] overflow-y-auto px-6 py-4">
+              {availableSources.map((source, idx) => (
+                <div key={source.value} className={idx > 0 ? 'mt-6' : ''}>
+                  <h4 className="mb-3 text-sm font-semibold text-gray-900">
+                    Translate from {source.label}
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
                     {languages.map(lang => (
                       <button
                         key={lang.code}
-                        role="menuitem"
                         onClick={() => {
                           onTranslate(lang.code, source.value as 'transcript' | 'summary')
-                          setShowMenu(false)
+                          setShowModal(false)
                         }}
-                        className="rounded bg-gray-100 px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-amber-100 hover:text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                        </svg>
                         {lang.name}
                       </button>
                     ))}
@@ -361,10 +373,20 @@ function TranslationButton({ recording, isGenerating, onTranslate }: Translation
                 </div>
               ))}
             </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-gray-200 px-6 py-4">
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-full rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        </>
+        </div>
       )}
-    </div>
+    </>
   )
 }
 
