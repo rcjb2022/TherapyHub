@@ -135,7 +135,19 @@ export async function POST(
       const bucket = storage.bucket(bucketName)
       const file = bucket.file(sourceDoc.gcsPath)
       const [fileContent] = await file.download()
-      const parsed = JSON.parse(fileContent.toString('utf-8'))
+      const fileString = fileContent.toString('utf-8')
+
+      // Parse JSON with specific error handling
+      let parsed: any
+      try {
+        parsed = JSON.parse(fileString)
+      } catch (jsonError) {
+        console.error(`[Translate] Failed to parse JSON from GCS file ${sourceDoc.gcsPath}:`, jsonError)
+        return NextResponse.json(
+          { error: 'Source document in storage is malformed or corrupted.' },
+          { status: 500 }
+        )
+      }
 
       // Explicitly check for known text properties
       if (typeof parsed.fullText === 'string' && parsed.fullText) {

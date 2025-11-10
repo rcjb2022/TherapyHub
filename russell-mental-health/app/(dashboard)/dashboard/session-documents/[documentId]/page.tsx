@@ -122,8 +122,48 @@ function ClinicalNotesViewer({ notes }: { notes: ClinicalNotesData }) {
     }
   }
 
+  // Format notes for copying
+  const formatNotesForCopy = () => {
+    const sections = getMainSections()
+    let text = `${notes.format} Clinical Notes\n${'='.repeat(50)}\n\n`
+
+    sections.forEach(section => {
+      text += `${section.title.toUpperCase()}\n${'-'.repeat(30)}\n${section.content}\n\n`
+    })
+
+    if (notes.chiefComplaints?.length) {
+      text += `CHIEF COMPLAINTS\n${'-'.repeat(30)}\n${notes.chiefComplaints.map(c => `• ${c}`).join('\n')}\n\n`
+    }
+
+    if (notes.keyTopics?.length) {
+      text += `KEY TOPICS\n${'-'.repeat(30)}\n${notes.keyTopics.join(', ')}\n\n`
+    }
+
+    if (notes.interventionsUsed?.length) {
+      text += `INTERVENTIONS USED\n${'-'.repeat(30)}\n${notes.interventionsUsed.map(i => `• ${i}`).join('\n')}\n\n`
+    }
+
+    if (notes.actionItems?.length) {
+      text += `ACTION ITEMS\n${'-'.repeat(30)}\n${notes.actionItems.map(a => `• ${a}`).join('\n')}\n\n`
+    }
+
+    if (notes.riskAssessment) {
+      text += `RISK ASSESSMENT\n${'-'.repeat(30)}\n${notes.riskAssessment}\n\n`
+    }
+
+    if (notes.progressNotes) {
+      text += `PROGRESS NOTES\n${'-'.repeat(30)}\n${notes.progressNotes}\n`
+    }
+
+    return text
+  }
+
   return (
     <div className="space-y-6">
+      {/* Copy Button Header */}
+      <div className="flex justify-end">
+        <CopyButton content={formatNotesForCopy()} label="Copy Clinical Notes" />
+      </div>
       {/* Main Sections */}
       {getMainSections().map((section) => (
         <div key={section.title} className="rounded-lg bg-white shadow">
@@ -421,10 +461,18 @@ export default async function SessionDocumentPage({
         {isTranscript && transcriptData && transcriptData.segments && transcriptData.segments.length > 0 && (
           <div className="rounded-lg bg-white shadow">
             <div className="border-b border-gray-200 px-6 py-4">
-              <h2 className="text-lg font-semibold text-gray-900">Transcript</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                AI-generated transcript of the therapy session
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Transcript</h2>
+                  <p className="mt-1 text-sm text-gray-600">
+                    AI-generated transcript of the therapy session
+                  </p>
+                </div>
+                <CopyButton
+                  content={transcriptData.segments.map(s => `[${s.speaker || 'UNKNOWN'}] ${s.text}`).join('\n\n')}
+                  label="Copy Transcript"
+                />
+              </div>
             </div>
 
             <div className="divide-y divide-gray-100 px-6 py-4">
@@ -516,7 +564,7 @@ export default async function SessionDocumentPage({
         {/* Footer Actions */}
         <div className="mt-6 flex justify-end gap-3">
           <Link
-            href={`/dashboard/patients/${patientId}/sessions`}
+            href="/dashboard/video"
             className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-300"
           >
             View Session Vault

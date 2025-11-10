@@ -299,13 +299,20 @@ You are an experienced licensed clinical psychologist reviewing a therapy sessio
 
 Generate professional clinical notes in SOAP format (Subjective, Objective, Assessment, Plan).
 
+CRITICAL INSTRUCTIONS:
+1. Base ALL content on what was ACTUALLY discussed in the transcript
+2. Do NOT use placeholder text, brackets, or generic statements
+3. Do NOT make up interventions, topics, or complaints that weren't mentioned
+4. If the transcript lacks sufficient content (under 1 minute or no therapeutic discussion), set ALL fields to: "Insufficient session content for clinical documentation."
+5. Only include specific examples and quotes from the actual transcript
+
 Requirements:
 - Be objective, professional, and clinically accurate
 - Use appropriate clinical terminology
 - Include specific examples from the transcript
-- Identify chief complaints and key topics
-- Note therapeutic interventions used
-- Suggest action items and homework
+- Identify chief complaints and key topics that were ACTUALLY discussed
+- Note therapeutic interventions that were ACTUALLY used
+- Suggest action items based on what was ACTUALLY discussed
 - ${options?.includeRiskAssessment ? 'Include risk assessment (suicide, homicide, self-harm)' : ''}
 - ${options?.includeTreatmentPlan ? 'Include detailed treatment plan recommendations' : ''}
 
@@ -337,6 +344,13 @@ Return a JSON object with this structure:
 You are an experienced licensed clinical psychologist reviewing a therapy session transcript.
 
 Generate professional clinical notes in DAP format (Data, Assessment, Plan).
+
+CRITICAL INSTRUCTIONS:
+1. Base ALL content on what was ACTUALLY discussed in the transcript
+2. Do NOT use placeholder text, brackets, or generic statements
+3. Do NOT make up interventions, topics, or complaints that weren't mentioned
+4. If the transcript lacks sufficient content (under 1 minute or no therapeutic discussion), set ALL fields to: "Insufficient session content for clinical documentation."
+5. Only include specific examples and quotes from the actual transcript
 
 Requirements:
 - Be objective, professional, and clinically accurate
@@ -374,12 +388,19 @@ You are an experienced licensed clinical psychologist reviewing a therapy sessio
 
 Generate professional clinical notes in BIRP format (Behavior, Intervention, Response, Plan).
 
+CRITICAL INSTRUCTIONS:
+1. Base ALL content on what was ACTUALLY discussed in the transcript
+2. Do NOT use placeholder text, brackets, or generic statements
+3. Do NOT make up interventions, topics, or complaints that weren't mentioned
+4. If the transcript lacks sufficient content (under 1 minute or no therapeutic discussion), set ALL fields to: "Insufficient session content for clinical documentation."
+5. Only include specific examples and quotes from the actual transcript
+
 Requirements:
 - Be objective, professional, and clinically accurate
 - Use appropriate clinical terminology
 - Include specific examples from the transcript
-- Focus on observable behaviors and specific interventions
-- Document client's response to interventions
+- Focus on observable behaviors and specific interventions that ACTUALLY occurred
+- Document client's response to interventions that were ACTUALLY used
 - ${options?.includeRiskAssessment ? 'Include risk assessment considerations' : ''}
 - ${options?.includeTreatmentPlan ? 'Include detailed treatment plan recommendations in Plan' : ''}
 
@@ -454,13 +475,21 @@ Return a JSON object:
   async summarize(transcript: TranscriptResult, options?: SummaryOptions): Promise<string> {
     try {
       const styleGuidance = {
-        brief: 'Provide a concise 2-3 sentence summary',
-        detailed: 'Provide a comprehensive paragraph summarizing all major points',
-        clinical: 'Provide a clinical summary suitable for medical records',
+        brief: 'Provide a concise 2-3 sentence summary of what actually occurred',
+        detailed: 'Provide a comprehensive paragraph summarizing all major points that were actually discussed',
+        clinical: 'Provide a clinical summary based on what was actually discussed in this specific session',
       }[options?.style || 'brief']
 
       const prompt = `
-You are a clinical psychologist summarizing a therapy session.
+You are a clinical psychologist summarizing a therapy session transcript.
+
+CRITICAL INSTRUCTIONS:
+1. Read the transcript carefully and summarize ONLY what was actually discussed
+2. Do NOT use placeholder text like "[Specify topic]" or "[Describe affect]"
+3. Do NOT generate template language or generic statements
+4. If the transcript is too brief (under 1 minute) or lacks substantive therapeutic content, return ONLY this exact text: "Insufficient session content for clinical summary. Session duration too brief for meaningful documentation."
+5. Base your summary ONLY on actual statements made in the transcript
+6. If a topic was not discussed, do not mention it
 
 ${styleGuidance}
 ${options?.maxLength ? `Maximum length: ${options.maxLength} words` : ''}
@@ -469,7 +498,7 @@ ${options?.language ? `Language: ${options.language}` : 'Language: English'}
 Transcript:
 ${transcript.fullText}
 
-Provide ONLY the summary text, no JSON, no additional formatting.
+Provide ONLY the summary text based on actual content, no JSON, no additional formatting, no placeholders.
 `
 
       const result = await this.client.models.generateContent({
