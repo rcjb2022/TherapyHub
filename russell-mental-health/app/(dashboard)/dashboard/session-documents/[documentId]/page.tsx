@@ -17,8 +17,8 @@ const storage = new Storage({
 
 interface TranscriptSegment {
   text: string
-  startTime: number
-  endTime: number
+  start: number
+  end: number
 }
 
 interface TranscriptData {
@@ -56,27 +56,28 @@ export default async function SessionDocumentPage({
     redirect('/dashboard')
   }
 
-  // Fetch document with related data
-  const document = await prisma.sessionDocument.findUnique({
-    where: { id: documentId },
+  // Fetch document and verify ownership in a single query
+  // This ensures we only fetch documents the current user is authorized to view
+  const document = await prisma.sessionDocument.findFirst({
+    where: {
+      id: documentId,
+      appointment: {
+        therapist: {
+          userId: session.user.id,
+        },
+      },
+    },
     include: {
       appointment: {
         include: {
           patient: {
             select: {
               id: true,
-              userId: true,
               user: {
                 select: {
                   name: true,
                 },
               },
-            },
-          },
-          therapist: {
-            select: {
-              id: true,
-              userId: true,
             },
           },
         },
@@ -89,7 +90,9 @@ export default async function SessionDocumentPage({
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6">
           <h3 className="mb-2 text-lg font-semibold text-red-800">Document Not Found</h3>
-          <p className="text-sm text-red-600">The requested document could not be found.</p>
+          <p className="text-sm text-red-600">
+            The requested document could not be found or you do not have permission to view it.
+          </p>
           <Link
             href="/dashboard"
             className="mt-4 inline-block rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
@@ -101,16 +104,6 @@ export default async function SessionDocumentPage({
     )
   }
 
-  // Verify therapist owns this document
-  const therapist = await prisma.therapist.findUnique({
-    where: { userId: session.user.id },
-    select: { id: true },
-  })
-
-  if (!therapist || document.appointment.therapistId !== therapist.id) {
-    redirect('/dashboard')
-  }
-
   // Fetch transcript content from GCS
   let transcriptData: TranscriptData | null = null
   let error: string | null = null
@@ -119,6 +112,10 @@ export default async function SessionDocumentPage({
     const bucketName = process.env.GCS_BUCKET_NAME
     if (!bucketName) {
       throw new Error('Storage not configured')
+    }
+
+    if (!document.gcsPath) {
+      throw new Error('Document file path is not available in storage')
     }
 
     const bucket = storage.bucket(bucketName)
@@ -229,7 +226,7 @@ export default async function SessionDocumentPage({
                   {/* Timestamp */}
                   <div className="flex-shrink-0 pt-1">
                     <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                      {formatTimestamp(segment.startTime)}
+                      {formatTimestamp(segment.start)}
                     </span>
                   </div>
 
