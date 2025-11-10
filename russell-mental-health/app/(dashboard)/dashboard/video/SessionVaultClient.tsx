@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import {
   VideoCameraIcon,
   MagnifyingGlassIcon,
   ClockIcon,
   ArrowDownTrayIcon,
   PlayIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline'
 
 interface Recording {
@@ -24,6 +26,7 @@ interface Recording {
   language: string | null
   videoUrl: string | null
   captionUrl: string | null
+  transcriptDocumentId: string | null
   error?: string
 }
 
@@ -411,11 +414,21 @@ export default function SessionVaultClient() {
                                 <PlayIcon className="h-4 w-4" />
                                 Play
                               </button>
-                              <GenerateTranscriptButton
-                                recording={recording}
-                                isProcessing={transcribingIds.has(recording.id)}
-                                onGenerate={() => generateTranscript(recording.id)}
-                              />
+                              {recording.transcriptionStatus === 'COMPLETED' && recording.transcriptDocumentId ? (
+                                <Link
+                                  href={`/dashboard/session-documents/${recording.transcriptDocumentId}`}
+                                  className="inline-flex items-center gap-1 rounded bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700"
+                                >
+                                  <DocumentTextIcon className="h-4 w-4" />
+                                  View Transcript
+                                </Link>
+                              ) : (
+                                <GenerateTranscriptButton
+                                  recording={recording}
+                                  isProcessing={transcribingIds.has(recording.id)}
+                                  onGenerate={() => generateTranscript(recording.id)}
+                                />
+                              )}
                               <a
                                 href={recording.videoUrl}
                                 download
@@ -492,7 +505,7 @@ export default function SessionVaultClient() {
                     <track
                       kind="captions"
                       src={selectedRecording.captionUrl}
-                      srclang={selectedRecording.language || 'en'}
+                      srcLang={selectedRecording.language || 'en'}
                       label={LANGUAGE_LABELS[selectedRecording.language || 'en'] || 'English'}
                       default
                     />
