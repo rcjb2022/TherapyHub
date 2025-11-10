@@ -1,7 +1,7 @@
 // Gemini 2.5 Flash AI Provider (New @google/genai SDK)
 // Google's multimodal AI for transcription, notes, and translation
 
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenAI, type File } from '@google/genai'
 import {
   type AIProvider,
   type TranscriptionOptions,
@@ -157,7 +157,7 @@ Return a JSON object with this structure:
    * Uses Gemini File API to avoid loading entire file into memory
    */
   async transcribeFromFile(filePath: string, options?: TranscriptionOptions): Promise<TranscriptResult> {
-    let uploadResult: any | undefined
+    let uploadResult: File | undefined
     try {
       // Upload file to Gemini File API
       console.log(`[Gemini] Uploading file to Gemini File API: ${filePath}`)
