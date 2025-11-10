@@ -3,15 +3,15 @@
 
 import { GoogleGenerativeAI, type UploadFileResponse } from '@google/generative-ai'
 import { GoogleAIFileManager } from '@google/generative-ai/server'
-import type {
-  AIProvider,
-  TranscriptionOptions,
-  TranscriptResult,
-  NotesOptions,
-  ClinicalNotes,
-  TranslationOptions,
-  TranslationResult,
-  SummaryOptions,
+import {
+  type AIProvider,
+  type TranscriptionOptions,
+  type TranscriptResult,
+  type NotesOptions,
+  type ClinicalNotes,
+  type TranslationOptions,
+  type TranslationResult,
+  type SummaryOptions,
   AIProviderError,
   RateLimitError,
 } from './types'

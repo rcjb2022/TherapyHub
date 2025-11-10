@@ -3,15 +3,15 @@
 
 import { GeminiProvider } from './gemini'
 import { GrokProvider } from './grok'
-import type {
-  AIProvider,
-  TranscriptionOptions,
-  TranscriptResult,
-  NotesOptions,
-  ClinicalNotes,
-  TranslationOptions,
-  TranslationResult,
-  SummaryOptions,
+import {
+  type AIProvider,
+  type TranscriptionOptions,
+  type TranscriptResult,
+  type NotesOptions,
+  type ClinicalNotes,
+  type TranslationOptions,
+  type TranslationResult,
+  type SummaryOptions,
   AIProviderError,
   RateLimitError,
   QuotaExceededError,
