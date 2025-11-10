@@ -25,16 +25,32 @@ export async function POST(request: NextRequest) {
   try {
     console.log('[Upload API] Receiving recording upload request...')
 
-    // Parse multipart form data
-    const formData = await request.formData()
-    const videoBlob = formData.get('video') as Blob
-    const appointmentId = formData.get('appointmentId') as string
-    const duration = parseInt(formData.get('duration') as string, 10)
-
-    if (!videoBlob || !appointmentId) {
-      console.error('[Upload API] Missing required fields')
+    // Validate GCS configuration
+    if (!bucketName) {
+      console.error('[Upload API] GCS_BUCKET_NAME not configured')
       return NextResponse.json(
-        { error: 'Missing video or appointmentId' },
+        { error: 'Storage not configured. Please contact support.' },
+        { status: 500 }
+      )
+    }
+
+    // Parse multipart form data with robust validation
+    const formData = await request.formData()
+    const videoBlob = formData.get('video')
+    const appointmentId = formData.get('appointmentId')
+    const durationStr = formData.get('duration')
+    const duration = typeof durationStr === 'string' ? parseInt(durationStr, 10) : NaN
+
+    // Validate all required fields with proper type checking
+    if (
+      !(videoBlob instanceof Blob) ||
+      typeof appointmentId !== 'string' ||
+      !appointmentId ||
+      isNaN(duration)
+    ) {
+      console.error('[Upload API] Missing or invalid required fields')
+      return NextResponse.json(
+        { error: 'Missing or invalid fields: video, appointmentId, duration' },
         { status: 400 }
       )
     }
