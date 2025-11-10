@@ -16,6 +16,7 @@ const storage = new Storage({
 })
 
 interface TranscriptSegment {
+  speaker?: string
   text: string
   start: number
   end: number
@@ -37,6 +38,22 @@ function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60)
   const secs = Math.floor(seconds % 60)
   return `${mins} min ${secs} sec`
+}
+
+function getSpeakerInfo(speaker?: string): { label: string; color: string } {
+  if (!speaker) {
+    return { label: 'Unknown Speaker', color: 'text-gray-600 bg-gray-100' }
+  }
+
+  const normalized = speaker.toLowerCase()
+  if (normalized.includes('therapist')) {
+    return { label: 'Therapist', color: 'text-blue-700 bg-blue-100' }
+  }
+  if (normalized.includes('patient')) {
+    return { label: 'Patient', color: 'text-green-700 bg-green-100' }
+  }
+
+  return { label: 'Speaker Unclear', color: 'text-gray-600 bg-gray-100' }
 }
 
 export default async function SessionDocumentPage({
@@ -115,7 +132,7 @@ export default async function SessionDocumentPage({
     }
 
     if (!document.gcsPath) {
-      throw new Error('Document file path is not available in storage')
+      throw new Error('Document record is missing the file path to storage.')
     }
 
     const bucket = storage.bucket(bucketName)
@@ -221,21 +238,31 @@ export default async function SessionDocumentPage({
             </div>
 
             <div className="divide-y divide-gray-100 px-6 py-4">
-              {transcriptData.segments.map((segment, index) => (
-                <div key={index} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                  {/* Timestamp */}
-                  <div className="flex-shrink-0 pt-1">
-                    <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                      {formatTimestamp(segment.start)}
-                    </span>
-                  </div>
+              {transcriptData.segments.map((segment, index) => {
+                const speakerInfo = getSpeakerInfo(segment.speaker)
+                return (
+                  <div key={index} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+                    {/* Timestamp */}
+                    <div className="flex-shrink-0 pt-1">
+                      <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                        {formatTimestamp(segment.start)}
+                      </span>
+                    </div>
 
-                  {/* Transcript Text */}
-                  <div className="flex-1">
-                    <p className="text-gray-800 leading-relaxed">{segment.text}</p>
+                    {/* Content */}
+                    <div className="flex-1">
+                      {/* Speaker Label */}
+                      <div className="mb-2">
+                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ${speakerInfo.color}`}>
+                          {speakerInfo.label}
+                        </span>
+                      </div>
+                      {/* Transcript Text */}
+                      <p className="text-gray-800 leading-relaxed">{segment.text}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
