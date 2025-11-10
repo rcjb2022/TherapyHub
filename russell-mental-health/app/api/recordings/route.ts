@@ -90,22 +90,36 @@ export async function GET(request: NextRequest) {
     const bucket = storage.bucket(bucketName)
     const recordingsWithUrls = await Promise.all(
       recordings.map(async (recording) => {
-        // Base recording data (common to success and error cases)
+        // Explicit allow-list for API response (more secure than deny-list)
+        // This prevents accidental exposure of sensitive fields if model changes
+        const {
+          id,
+          appointmentId,
+          patientId,
+          startedAt,
+          endedAt,
+          duration,
+          fileSize,
+          status,
+          expiresAt,
+          appointment,
+          gcsPath,
+        } = recording
         const baseRecordingData = {
-          id: recording.id,
-          appointmentId: recording.appointmentId,
-          patientId: recording.patientId,
-          patientName: `${recording.appointment.patient.firstName} ${recording.appointment.patient.lastName}`,
-          startedAt: recording.startedAt,
-          endedAt: recording.endedAt,
-          duration: recording.duration,
-          fileSize: recording.fileSize,
-          status: recording.status,
-          expiresAt: recording.expiresAt,
+          id,
+          appointmentId,
+          patientId,
+          startedAt,
+          endedAt,
+          duration,
+          fileSize,
+          status,
+          expiresAt,
+          patientName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
         }
 
         try {
-          const blob = bucket.file(recording.gcsPath)
+          const blob = bucket.file(gcsPath)
 
           // Generate signed URL with 1-hour expiration
           const [signedUrl] = await blob.getSignedUrl({
