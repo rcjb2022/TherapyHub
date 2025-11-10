@@ -232,6 +232,23 @@ function SummaryButton({ recording, isGenerating, onGenerate }: SummaryButtonPro
 function TranslationButton({ recording, isGenerating, onTranslate }: TranslationButtonProps) {
   const [showMenu, setShowMenu] = useState(false)
 
+  // Handle Escape key to close menu
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showMenu) {
+        setShowMenu(false)
+      }
+    }
+
+    if (showMenu) {
+      document.addEventListener('keydown', handleEscape)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [showMenu])
+
   // Can't translate without transcript or summary
   if (recording.transcriptionStatus !== 'COMPLETED') {
     return null
@@ -273,7 +290,17 @@ function TranslationButton({ recording, isGenerating, onTranslate }: Translation
   return (
     <div className="relative inline-block">
       <button
-        onClick={() => setShowMenu(!showMenu)}
+        id={`translate-btn-${recording.id}`}
+        onClick={() => {
+          setShowMenu(!showMenu)
+          // Scroll button into view when opening menu
+          if (!showMenu) {
+            setTimeout(() => {
+              const button = document.getElementById(`translate-btn-${recording.id}`)
+              button?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }, 100)
+          }
+        }}
         disabled={isGenerating}
         className="inline-flex items-center gap-1 rounded bg-amber-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
         title="Translate document"
@@ -304,23 +331,28 @@ function TranslationButton({ recording, isGenerating, onTranslate }: Translation
             onClick={() => setShowMenu(false)}
           />
 
-          {/* Menu */}
-          <div className="absolute right-0 top-full z-20 mt-1 w-64 rounded-lg border border-gray-200 bg-white shadow-lg">
-            <div className="p-3">
+          {/* Menu - positioned with better visibility */}
+          <div
+            className="absolute bottom-full right-0 z-20 mb-2 w-64 rounded-lg border border-gray-200 bg-white shadow-lg"
+            role="menu"
+            aria-label="Translation options"
+          >
+            <div className="max-h-[400px] overflow-y-auto p-3">
               <p className="mb-2 text-xs font-semibold text-gray-700">Select source and language:</p>
 
               {availableSources.map(source => (
-                <div key={source.value} className="mb-3">
+                <div key={source.value} className="mb-3 last:mb-0">
                   <p className="mb-1 text-xs font-medium text-gray-600">{source.label}</p>
                   <div className="grid grid-cols-2 gap-1.5">
                     {languages.map(lang => (
                       <button
                         key={lang.code}
+                        role="menuitem"
                         onClick={() => {
                           onTranslate(lang.code, source.value as 'transcript' | 'summary')
                           setShowMenu(false)
                         }}
-                        className="rounded bg-gray-100 px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-amber-100 hover:text-amber-800"
+                        className="rounded bg-gray-100 px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-amber-100 hover:text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
                         {lang.name}
                       </button>
