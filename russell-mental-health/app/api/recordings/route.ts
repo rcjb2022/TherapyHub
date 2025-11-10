@@ -91,21 +91,15 @@ export async function GET(request: NextRequest) {
     const recordingsWithUrls = await Promise.all(
       recordings.map(async (recording) => {
         // Base recording data (common to success and error cases)
+        // Use destructuring to automatically include all fields except appointment and gcsPath
+        const { appointment, gcsPath, ...rest } = recording
         const baseRecordingData = {
-          id: recording.id,
-          appointmentId: recording.appointmentId,
-          patientId: recording.patientId,
-          patientName: `${recording.appointment.patient.firstName} ${recording.appointment.patient.lastName}`,
-          startedAt: recording.startedAt,
-          endedAt: recording.endedAt,
-          duration: recording.duration,
-          fileSize: recording.fileSize,
-          status: recording.status,
-          expiresAt: recording.expiresAt,
+          ...rest,
+          patientName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
         }
 
         try {
-          const blob = bucket.file(recording.gcsPath)
+          const blob = bucket.file(gcsPath)
 
           // Generate signed URL with 1-hour expiration
           const [signedUrl] = await blob.getSignedUrl({
