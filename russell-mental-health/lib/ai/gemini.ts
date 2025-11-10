@@ -464,7 +464,9 @@ Return a JSON object:
         contents: prompt,
       })
       const response = result.text
-      const parsed = JSON.parse(response)
+
+      // Use parseJsonResponse to strip markdown code blocks if present
+      const parsed = this.parseJsonResponse(response)
 
       return parsed
     } catch (error: any) {
