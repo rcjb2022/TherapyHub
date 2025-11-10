@@ -12,6 +12,7 @@ import { Storage } from '@google-cloud/storage'
 import { AIService } from '@/lib/ai/provider'
 import { transcriptToWebVTT, getCaptionFilename, detectLanguage } from '@/lib/captions'
 import fs from 'fs/promises'
+import { createWriteStream } from 'fs'
 import path from 'path'
 import os from 'os'
 
@@ -110,7 +111,7 @@ export async function POST(
     try {
       // Stream download to temp file instead of loading into memory
       await new Promise<void>((resolve, reject) => {
-        const writeStream = require('fs').createWriteStream(tempFilePath)
+        const writeStream = createWriteStream(tempFilePath)
         videoFile.createReadStream()
           .pipe(writeStream)
           .on('finish', resolve)

@@ -110,10 +110,11 @@ Return a JSON object with this structure:
    * Uses Gemini File API to avoid loading entire file into memory
    */
   async transcribeFromFile(filePath: string, options?: TranscriptionOptions): Promise<TranscriptResult> {
+    let uploadResult: any
     try {
       // Upload file to Gemini File API
       console.log(`[Gemini] Uploading file to Gemini File API: ${filePath}`)
-      const uploadResult = await this.fileManager.uploadFile(filePath, {
+      uploadResult = await this.fileManager.uploadFile(filePath, {
         mimeType: options?.mimeType || 'video/webm',
         displayName: `therapy-session-${Date.now()}`,
       })
@@ -177,14 +178,6 @@ Return a JSON object with this structure:
         end: seg.end || seg.endTime || 0,
       }))
 
-      // Delete uploaded file from Gemini to free up quota
-      try {
-        await this.fileManager.deleteFile(uploadResult.file.name)
-        console.log(`[Gemini] Deleted temporary file: ${uploadResult.file.name}`)
-      } catch (deleteError) {
-        console.warn(`[Gemini] Failed to delete file:`, deleteError)
-      }
-
       return {
         fullText: parsed.fullText,
         segments,
@@ -195,6 +188,16 @@ Return a JSON object with this structure:
       }
     } catch (error: any) {
       this.handleError(error, 'File transcription')
+    } finally {
+      // Delete uploaded file from Gemini to free up quota
+      if (uploadResult) {
+        try {
+          await this.fileManager.deleteFile(uploadResult.file.name)
+          console.log(`[Gemini] Deleted temporary file: ${uploadResult.file.name}`)
+        } catch (deleteError) {
+          console.warn(`[Gemini] Failed to delete file:`, deleteError)
+        }
+      }
     }
   }
 
