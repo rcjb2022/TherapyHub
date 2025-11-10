@@ -40,6 +40,8 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
   const [isRecording, setIsRecording] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const peersRef = useRef<Map<string, PeerConnection>>(new Map())
@@ -288,32 +290,57 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
   }, [socket, roomId])
 
   /**
-   * Stop recording and prepare the blob for upload
+   * Stop recording and upload to cloud storage
    */
-  const stopRecording = useCallback(() => {
+  const stopRecording = useCallback(async () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop()
 
-      // Create a blob from recorded chunks
-      setTimeout(() => {
+      // Create a blob from recorded chunks and upload to GCS
+      setTimeout(async () => {
         if (recordedChunksRef.current.length > 0) {
           const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' })
           console.log(`[VideoRoom] Recording complete: ${blob.size} bytes`)
 
-          // For testing: download the recording
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `session-${roomId}-${Date.now()}.webm`
-          a.click()
-          URL.revokeObjectURL(url)
+          setIsUploading(true)
+          setUploadSuccess(false)
 
-          // Clear chunks for next recording
-          recordedChunksRef.current = []
+          try {
+            // Upload to GCS via API
+            const formData = new FormData()
+            formData.append('video', blob, `session-${roomId}-${Date.now()}.webm`)
+            formData.append('appointmentId', roomId) // roomId is appointmentId
+            formData.append('duration', recordingDuration.toString())
+
+            console.log('[VideoRoom] Uploading recording to cloud storage...')
+
+            const response = await fetch('/api/recordings/upload', {
+              method: 'POST',
+              body: formData,
+            })
+
+            if (!response.ok) {
+              const errorData = await response.json()
+              throw new Error(errorData.error || 'Upload failed')
+            }
+
+            const result = await response.json()
+            console.log('[VideoRoom] ✅ Upload successful:', result)
+
+            setUploadSuccess(true)
+            setTimeout(() => setUploadSuccess(false), 5000) // Hide success message after 5 seconds
+          } catch (err: any) {
+            console.error('[VideoRoom] ❌ Upload failed:', err)
+            setError(`Failed to upload recording: ${err.message}`)
+          } finally {
+            setIsUploading(false)
+            // Clear chunks for next recording
+            recordedChunksRef.current = []
+          }
         }
       }, 100)
     }
-  }, [roomId])
+  }, [roomId, recordingDuration])
 
   /**
    * End the video session and clean up all resources
@@ -631,6 +658,27 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
           <span className="text-sm font-semibold text-white">
             {isPaused ? 'Recording Paused' : 'Recording'} {formatDuration(recordingDuration)}
           </span>
+        </div>
+      )}
+
+      {/* Upload Status Indicator */}
+      {isUploading && (
+        <div className="absolute top-4 right-4 z-50 flex items-center gap-2 rounded-lg bg-blue-600/90 backdrop-blur-sm px-4 py-2 shadow-lg">
+          <svg className="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span className="text-sm font-semibold text-white">Uploading recording...</span>
+        </div>
+      )}
+
+      {/* Upload Success Indicator */}
+      {uploadSuccess && (
+        <div className="absolute top-4 right-4 z-50 flex items-center gap-2 rounded-lg bg-green-600/90 backdrop-blur-sm px-4 py-2 shadow-lg">
+          <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-sm font-semibold text-white">Recording saved to cloud</span>
         </div>
       )}
 
