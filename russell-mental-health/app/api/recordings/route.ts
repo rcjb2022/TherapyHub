@@ -102,8 +102,11 @@ export async function GET(request: NextRequest) {
           fileSize,
           status,
           expiresAt,
+          transcriptionStatus,
+          language,
           appointment,
           gcsPath,
+          captionGcsPath,
         } = recording
         const baseRecordingData = {
           id,
@@ -115,6 +118,8 @@ export async function GET(request: NextRequest) {
           fileSize,
           status,
           expiresAt,
+          transcriptionStatus,
+          language,
           patientName: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
         }
 
@@ -128,15 +133,33 @@ export async function GET(request: NextRequest) {
             expires: Date.now() + 60 * 60 * 1000, // 1 hour
           })
 
+          // Generate caption URL if available
+          let captionUrl: string | null = null
+          if (captionGcsPath) {
+            try {
+              const captionBlob = bucket.file(captionGcsPath)
+              const [captionSignedUrl] = await captionBlob.getSignedUrl({
+                version: 'v4',
+                action: 'read',
+                expires: Date.now() + 60 * 60 * 1000, // 1 hour
+              })
+              captionUrl = captionSignedUrl
+            } catch (captionError) {
+              console.error(`[Recordings API] Failed to generate caption URL:`, captionError)
+            }
+          }
+
           return {
             ...baseRecordingData,
             videoUrl: signedUrl,
+            captionUrl,
           }
         } catch (error) {
           console.error(`[Recordings API] Failed to generate URL for ${recording.id}:`, error)
           return {
             ...baseRecordingData,
             videoUrl: null,
+            captionUrl: null,
             error: 'Failed to generate video URL',
           }
         }
