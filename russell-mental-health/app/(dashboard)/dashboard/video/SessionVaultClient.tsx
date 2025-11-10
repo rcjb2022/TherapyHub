@@ -30,6 +30,8 @@ interface Recording {
   soapNotesId: string | null
   dapNotesId: string | null
   birpNotesId: string | null
+  summaryId: string | null
+  translationId: string | null
   error?: string
 }
 
@@ -75,6 +77,13 @@ const CLINICAL_NOTE_FORMATS = [
   { format: 'DAP' as const, key: 'dapNotesId' as const },
   { format: 'BIRP' as const, key: 'birpNotesId' as const },
 ]
+
+// Summary Button Component
+interface SummaryButtonProps {
+  recording: Recording
+  isGenerating: boolean
+  onGenerate: () => void
+}
 
 function GenerateTranscriptButton({ recording, isProcessing, onGenerate }: GenerateTranscriptButtonProps) {
   if (recording.transcriptionStatus !== 'PENDING' && recording.transcriptionStatus !== 'FAILED') {
@@ -167,6 +176,53 @@ function ClinicalNotesButton({ recording, format, documentId, isGenerating, onGe
   )
 }
 
+function SummaryButton({ recording, isGenerating, onGenerate }: SummaryButtonProps) {
+  // Can't generate summary without a transcript
+  if (recording.transcriptionStatus !== 'COMPLETED') {
+    return null
+  }
+
+  if (recording.summaryId) {
+    // Summary exists - show view button
+    return (
+      <Link
+        href={`/dashboard/session-documents/${recording.summaryId}`}
+        className="inline-flex items-center gap-1 rounded bg-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
+      >
+        <DocumentTextIcon className="h-3.5 w-3.5" />
+        View Summary
+      </Link>
+    )
+  }
+
+  // Summary doesn't exist - show generate button
+  return (
+    <button
+      onClick={onGenerate}
+      disabled={isGenerating}
+      className="inline-flex items-center gap-1 rounded bg-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+      title="Generate clinical summary"
+    >
+      {isGenerating ? (
+        <>
+          <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          Generating...
+        </>
+      ) : (
+        <>
+          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={GENERATE_ICON_PATH} />
+          </svg>
+          Summary
+        </>
+      )}
+    </button>
+  )
+}
+
 export default function SessionVaultClient() {
   const [recordings, setRecordings] = useState<Recording[]>([])
   const [filteredRecordings, setFilteredRecordings] = useState<Recording[]>([])
@@ -178,6 +234,8 @@ export default function SessionVaultClient() {
   const [transcribeError, setTranscribeError] = useState<string | null>(null)
   const [generatingNotesIds, setGeneratingNotesIds] = useState<Set<string>>(new Set())
   const [notesError, setNotesError] = useState<string | null>(null)
+  const [generatingSummaryIds, setGeneratingSummaryIds] = useState<Set<string>>(new Set())
+  const [summaryError, setSummaryError] = useState<string | null>(null)
 
   // Fetch recordings on mount
   useEffect(() => {
@@ -328,6 +386,42 @@ export default function SessionVaultClient() {
     }
   }
 
+  const generateSummary = async (recordingId: string) => {
+    try {
+      setSummaryError(null)
+      setGeneratingSummaryIds((prev) => new Set(prev).add(recordingId))
+
+      const response = await fetch(`/api/recordings/${recordingId}/generate-summary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ style: 'clinical' }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to generate summary')
+      }
+
+      const result = await response.json()
+      console.log('Summary generated:', result)
+
+      // Refresh recordings to show updated summary
+      await fetchRecordings()
+    } catch (err) {
+      console.error('Failed to generate summary:', err)
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+      setSummaryError(`Failed to generate summary: ${errorMessage}`)
+    } finally {
+      setGeneratingSummaryIds((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(recordingId)
+        return newSet
+      })
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -407,6 +501,27 @@ export default function SessionVaultClient() {
             </div>
             <button
               onClick={() => setNotesError(null)}
+              className="text-red-600 hover:text-red-800"
+              aria-label="Dismiss error"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Summary Error Banner */}
+        {summaryError && (
+          <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4">
+            <div className="flex items-center gap-3">
+              <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm font-medium text-red-800">{summaryError}</p>
+            </div>
+            <button
+              onClick={() => setSummaryError(null)}
               className="text-red-600 hover:text-red-800"
               aria-label="Dismiss error"
             >
@@ -592,6 +707,17 @@ export default function SessionVaultClient() {
                                   onGenerate={() => generateClinicalNotes(recording.id, format)}
                                 />
                               ))}
+                            </div>
+                          )}
+
+                          {/* Summary row */}
+                          {recording.transcriptionStatus === 'COMPLETED' && (
+                            <div className="flex items-center gap-1.5">
+                              <SummaryButton
+                                recording={recording}
+                                isGenerating={generatingSummaryIds.has(recording.id)}
+                                onGenerate={() => generateSummary(recording.id)}
+                              />
                             </div>
                           )}
                         </div>

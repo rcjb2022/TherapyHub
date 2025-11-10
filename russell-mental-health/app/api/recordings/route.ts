@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
             sessionDocuments: {
               where: {
                 documentType: {
-                  in: ['TRANSCRIPT', 'SOAP_NOTES', 'DAP_NOTES', 'BIRP_NOTES'],
+                  in: ['TRANSCRIPT', 'SOAP_NOTES', 'DAP_NOTES', 'BIRP_NOTES', 'SUMMARY', 'TRANSLATION'],
                 },
               },
               select: {
@@ -124,6 +124,8 @@ export async function GET(request: NextRequest) {
         const soapDoc = appointment.sessionDocuments.find(doc => doc.documentType === 'SOAP_NOTES')
         const dapDoc = appointment.sessionDocuments.find(doc => doc.documentType === 'DAP_NOTES')
         const birpDoc = appointment.sessionDocuments.find(doc => doc.documentType === 'BIRP_NOTES')
+        const summaryDoc = appointment.sessionDocuments.find(doc => doc.documentType === 'SUMMARY')
+        const translationDoc = appointment.sessionDocuments.find(doc => doc.documentType === 'TRANSLATION')
 
         const baseRecordingData = {
           id,
@@ -142,6 +144,8 @@ export async function GET(request: NextRequest) {
           soapNotesId: soapDoc?.id || null,
           dapNotesId: dapDoc?.id || null,
           birpNotesId: birpDoc?.id || null,
+          summaryId: summaryDoc?.id || null,
+          translationId: translationDoc?.id || null,
         }
 
         try {
