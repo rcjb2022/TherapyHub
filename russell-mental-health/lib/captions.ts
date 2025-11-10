@@ -17,7 +17,7 @@ export function transcriptToWebVTT(transcript: TranscriptResult): string {
   lines.push('')
 
   // Add each segment as a caption cue
-  transcript.segments.forEach((segment, index) => {
+  transcript.segments.forEach((segment) => {
     // Format timestamps in WebVTT format: HH:MM:SS.mmm
     const start = formatTimestamp(segment.start)
     const end = formatTimestamp(segment.end)

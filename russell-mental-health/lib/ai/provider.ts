@@ -95,6 +95,13 @@ export class AIService implements AIProvider {
     )
   }
 
+  async transcribeFromFile(filePath: string, options?: TranscriptionOptions): Promise<TranscriptResult> {
+    return this.executeWithFallback(
+      (provider) => provider.transcribeFromFile(filePath, options),
+      'file transcription'
+    )
+  }
+
   async generateNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
     return this.executeWithFallback(
       (provider) => provider.generateNotes(transcript, options),
@@ -133,7 +140,7 @@ export class AIService implements AIProvider {
     try {
       const mockTranscript: TranscriptResult = {
         fullText: 'Test session',
-        segments: [{ speaker: 'Therapist', text: 'Hello', startTime: 0, endTime: 1 }],
+        segments: [{ speaker: 'Therapist', text: 'Hello', start: 0, end: 1 }],
         language: 'en',
       }
 

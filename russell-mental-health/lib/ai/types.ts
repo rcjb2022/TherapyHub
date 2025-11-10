@@ -4,6 +4,7 @@
 export interface AIProvider {
   name: string
   transcribe(audioBuffer: Buffer, options?: TranscriptionOptions): Promise<TranscriptResult>
+  transcribeFromFile(filePath: string, options?: TranscriptionOptions): Promise<TranscriptResult>
   generateNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes>
   translate(text: string, targetLanguage: string, options?: TranslationOptions): Promise<TranslationResult>
   summarize(transcript: TranscriptResult, options?: SummaryOptions): Promise<string>
@@ -22,13 +23,14 @@ export interface TranscriptResult {
   language: string
   duration?: number
   speakerCount?: number
+  generatedBy?: string
 }
 
 export interface TranscriptSegment {
   speaker: string // "Therapist" or "Patient"
   text: string
-  startTime: number // seconds
-  endTime: number // seconds
+  start: number // seconds
+  end: number // seconds
   confidence?: number // 0-1
 }
 

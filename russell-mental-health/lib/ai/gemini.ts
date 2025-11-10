@@ -1,7 +1,7 @@
 // Gemini 2.5 Flash AI Provider
 // Google's multimodal AI for transcription, notes, and translation
 
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI, GoogleAIFileManager } from '@google/generative-ai'
 import type {
   AIProvider,
   TranscriptionOptions,
@@ -18,14 +18,18 @@ import type {
 export class GeminiProvider implements AIProvider {
   name = 'gemini'
   private client: GoogleGenerativeAI
+  private fileManager: GoogleAIFileManager
   private model: string
+  private apiKey: string
 
   constructor(apiKey?: string, model: string = 'gemini-2.0-flash-exp') {
     const key = apiKey || process.env.GEMINI_API_KEY
     if (!key) {
       throw new Error('GEMINI_API_KEY is required')
     }
+    this.apiKey = key
     this.client = new GoogleGenerativeAI(key)
+    this.fileManager = new GoogleAIFileManager(key)
     this.model = model
   }
 
@@ -79,14 +83,117 @@ Return a JSON object with this structure:
       const response = result.response.text()
       const parsed = JSON.parse(response)
 
+      // Normalize segment keys (API returns startTime/endTime)
+      const segments = parsed.segments.map((seg: any) => ({
+        speaker: seg.speaker,
+        text: seg.text,
+        start: seg.start || seg.startTime || 0,
+        end: seg.end || seg.endTime || 0,
+      }))
+
       return {
         fullText: parsed.fullText,
-        segments: parsed.segments,
+        segments,
         language: parsed.language || options?.language || 'en',
         speakerCount: 2,
+        generatedBy: 'gemini',
+        duration: segments[segments.length - 1]?.end || 0,
       }
     } catch (error: any) {
       this.handleError(error, 'Transcription')
+    }
+  }
+
+  /**
+   * Transcribe from file path (memory-efficient for large files)
+   * Uses Gemini File API to avoid loading entire file into memory
+   */
+  async transcribeFromFile(filePath: string, options?: TranscriptionOptions): Promise<TranscriptResult> {
+    try {
+      // Upload file to Gemini File API
+      console.log(`[Gemini] Uploading file to Gemini File API: ${filePath}`)
+      const uploadResult = await this.fileManager.uploadFile(filePath, {
+        mimeType: options?.mimeType || 'video/webm',
+        displayName: `therapy-session-${Date.now()}`,
+      })
+
+      console.log(`[Gemini] File uploaded: ${uploadResult.file.uri}`)
+
+      const model = this.client.getGenerativeModel({ model: this.model })
+
+      const prompt = `
+You are a professional medical transcriptionist specializing in psychotherapy sessions.
+
+Transcribe this therapy session video with the following requirements:
+1. Identify two speakers: "Therapist" and "Patient"
+2. Include accurate timestamps for each segment
+3. Preserve all verbal content verbatim
+4. Mark unclear audio as [inaudible]
+5. Language: ${options?.language || 'auto-detect'}
+
+Return a JSON object with this structure:
+{
+  "fullText": "complete transcript",
+  "segments": [
+    {
+      "speaker": "Therapist" or "Patient",
+      "text": "exact words spoken",
+      "start": 0.0,
+      "end": 5.2
+    }
+  ],
+  "language": "detected language code (en, es, pt, fr)"
+}
+`
+
+      const result = await model.generateContent([
+        { text: prompt },
+        {
+          fileData: {
+            mimeType: uploadResult.file.mimeType,
+            fileUri: uploadResult.file.uri,
+          },
+        },
+      ])
+
+      const response = result.response.text()
+
+      // Extract JSON from response (may be wrapped in markdown)
+      let jsonText = response.trim()
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '').trim()
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/```\n?/g, '').trim()
+      }
+
+      const parsed = JSON.parse(jsonText)
+
+      // Normalize segment keys (API might return start/end or startTime/endTime)
+      const segments = parsed.segments.map((seg: any) => ({
+        speaker: seg.speaker,
+        text: seg.text,
+        start: seg.start || seg.startTime || 0,
+        end: seg.end || seg.endTime || 0,
+      }))
+
+      // Delete uploaded file from Gemini to free up quota
+      try {
+        await this.fileManager.deleteFile(uploadResult.file.name)
+        console.log(`[Gemini] Deleted temporary file: ${uploadResult.file.name}`)
+      } catch (deleteError) {
+        console.warn(`[Gemini] Failed to delete file:`, deleteError)
+      }
+
+      return {
+        fullText: parsed.fullText,
+        segments,
+        language: parsed.language || options?.language || 'en',
+        speakerCount: 2,
+        generatedBy: 'gemini',
+        duration: segments[segments.length - 1]?.end || 0,
+      }
+    } catch (error: any) {
+      this.handleError(error, 'File transcription')
     }
   }
 
