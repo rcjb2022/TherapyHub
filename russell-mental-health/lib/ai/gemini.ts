@@ -58,7 +58,11 @@ export class GeminiProvider implements AIProvider {
   /**
    * Common helper for generating clinical notes
    */
-  private async generateNotesHelper(prompt: string, operationName: string): Promise<ClinicalNotes> {
+  private async generateNotesHelper(
+    prompt: string,
+    operationName: string,
+    options?: NotesOptions
+  ): Promise<ClinicalNotes> {
     try {
       const result = await this.client.models.generateContent({
         model: this.model,
@@ -69,7 +73,7 @@ export class GeminiProvider implements AIProvider {
 
       return {
         ...parsed,
-        sessionDate: new Date(),
+        sessionDate: options?.sessionDate || new Date(), // Use passed date or generation date
         generatedBy: 'gemini',
       }
     } catch (error: any) {
@@ -324,7 +328,7 @@ Return a JSON object with this structure:
 }
 `
 
-    return this.generateNotesHelper(prompt, 'SOAP note generation')
+    return this.generateNotesHelper(prompt, 'SOAP note generation', options)
   }
 
   // DAP Notes: Data, Assessment, Plan
@@ -360,7 +364,7 @@ Return a JSON object with this structure:
 }
 `
 
-    return this.generateNotesHelper(prompt, 'DAP note generation')
+    return this.generateNotesHelper(prompt, 'DAP note generation', options)
   }
 
   // BIRP Notes: Behavior, Intervention, Response, Plan
@@ -398,7 +402,7 @@ Return a JSON object with this structure:
 }
 `
 
-    return this.generateNotesHelper(prompt, 'BIRP note generation')
+    return this.generateNotesHelper(prompt, 'BIRP note generation', options)
   }
 
   // Legacy method - defaults to SOAP
