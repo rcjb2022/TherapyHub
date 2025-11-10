@@ -255,7 +255,8 @@ Return a JSON object with this structure:
     }
   }
 
-  async generateNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
+  // SOAP Notes: Subjective, Objective, Assessment, Plan
+  async generateSOAPNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
     try {
       const prompt = `
 You are an experienced licensed clinical psychologist reviewing a therapy session transcript.
@@ -277,6 +278,7 @@ ${transcript.fullText}
 
 Return a JSON object with this structure:
 {
+  "format": "SOAP",
   "subjective": "What the patient reported (symptoms, feelings, experiences)",
   "objective": "Therapist's clinical observations (affect, behavior, appearance)",
   "assessment": "Clinical assessment and diagnostic impressions",
@@ -295,7 +297,16 @@ Return a JSON object with this structure:
         contents: prompt,
       })
       const response = result.text
-      const parsed = JSON.parse(response)
+
+      // Extract JSON from response (may be wrapped in markdown)
+      let jsonText = response.trim()
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '').trim()
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/```\n?/g, '').trim()
+      }
+
+      const parsed = JSON.parse(jsonText)
 
       return {
         ...parsed,
@@ -303,8 +314,135 @@ Return a JSON object with this structure:
         generatedBy: 'gemini',
       }
     } catch (error: any) {
-      this.handleError(error, 'Note generation')
+      this.handleError(error, 'SOAP note generation')
     }
+  }
+
+  // DAP Notes: Data, Assessment, Plan
+  async generateDAPNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
+    try {
+      const prompt = `
+You are an experienced licensed clinical psychologist reviewing a therapy session transcript.
+
+Generate professional clinical notes in DAP format (Data, Assessment, Plan).
+
+Requirements:
+- Be objective, professional, and clinically accurate
+- Use appropriate clinical terminology
+- Include specific examples from the transcript
+- Combine subjective and objective information in the Data section
+- ${options?.includeRiskAssessment ? 'Include risk assessment in Assessment section' : ''}
+- ${options?.includeTreatmentPlan ? 'Include detailed treatment plan recommendations in Plan' : ''}
+
+Transcript:
+${transcript.fullText}
+
+Return a JSON object with this structure:
+{
+  "format": "DAP",
+  "data": "Observable client behaviors, statements, and significant events during the session. Combine both subjective (what client reported) and objective (therapist observations) information.",
+  "assessment": "Clinical analysis of the client's progress, mental status, and interpretation of the data. Include diagnostic impressions and risk assessment if applicable.",
+  "plan": "Treatment plan, interventions to be used, homework assignments, and next steps.",
+  "chiefComplaints": ["complaint1", "complaint2"],
+  "keyTopics": ["topic1", "topic2", "topic3"],
+  "interventionsUsed": ["intervention1", "intervention2"],
+  "actionItems": ["action1", "action2"],
+  ${options?.includeRiskAssessment ? '"riskAssessment": "Risk assessment findings",' : ''}
+  "progressNotes": "Overall session progress and observations"
+}
+`
+
+      const result = await this.client.models.generateContent({
+        model: this.model,
+        contents: prompt,
+      })
+      const response = result.text
+
+      // Extract JSON from response (may be wrapped in markdown)
+      let jsonText = response.trim()
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '').trim()
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/```\n?/g, '').trim()
+      }
+
+      const parsed = JSON.parse(jsonText)
+
+      return {
+        ...parsed,
+        sessionDate: new Date(),
+        generatedBy: 'gemini',
+      }
+    } catch (error: any) {
+      this.handleError(error, 'DAP note generation')
+    }
+  }
+
+  // BIRP Notes: Behavior, Intervention, Response, Plan
+  async generateBIRPNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
+    try {
+      const prompt = `
+You are an experienced licensed clinical psychologist reviewing a therapy session transcript.
+
+Generate professional clinical notes in BIRP format (Behavior, Intervention, Response, Plan).
+
+Requirements:
+- Be objective, professional, and clinically accurate
+- Use appropriate clinical terminology
+- Include specific examples from the transcript
+- Focus on observable behaviors and specific interventions
+- Document client's response to interventions
+- ${options?.includeRiskAssessment ? 'Include risk assessment considerations' : ''}
+- ${options?.includeTreatmentPlan ? 'Include detailed treatment plan recommendations in Plan' : ''}
+
+Transcript:
+${transcript.fullText}
+
+Return a JSON object with this structure:
+{
+  "format": "BIRP",
+  "behavior": "Observable client behaviors, presentation, and demeanor during the session. Include both verbal and non-verbal behaviors.",
+  "intervention": "Specific therapeutic interventions, techniques, and approaches used by the therapist during the session.",
+  "response": "How the client responded to the interventions. Include both immediate reactions and demonstrated understanding or progress.",
+  "plan": "Treatment plan moving forward, including homework, goals for next session, and any modifications to treatment approach.",
+  "chiefComplaints": ["complaint1", "complaint2"],
+  "keyTopics": ["topic1", "topic2", "topic3"],
+  "interventionsUsed": ["intervention1", "intervention2"],
+  "actionItems": ["action1", "action2"],
+  ${options?.includeRiskAssessment ? '"riskAssessment": "Risk assessment findings",' : ''}
+  "progressNotes": "Overall session progress and observations"
+}
+`
+
+      const result = await this.client.models.generateContent({
+        model: this.model,
+        contents: prompt,
+      })
+      const response = result.text
+
+      // Extract JSON from response (may be wrapped in markdown)
+      let jsonText = response.trim()
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?$/g, '').trim()
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/```\n?/g, '').trim()
+      }
+
+      const parsed = JSON.parse(jsonText)
+
+      return {
+        ...parsed,
+        sessionDate: new Date(),
+        generatedBy: 'gemini',
+      }
+    } catch (error: any) {
+      this.handleError(error, 'BIRP note generation')
+    }
+  }
+
+  // Legacy method - defaults to SOAP
+  async generateNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
+    return this.generateSOAPNotes(transcript, options)
   }
 
   async translate(
