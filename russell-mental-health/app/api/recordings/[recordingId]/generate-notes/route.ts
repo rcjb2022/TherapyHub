@@ -9,6 +9,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { GeminiProvider } from '@/lib/ai/gemini'
 import { Storage } from '@google-cloud/storage'
+import { SessionDocumentType } from '@prisma/client'
 
 const storage = new Storage({
   projectId: process.env.GCP_PROJECT_ID,
@@ -21,11 +22,24 @@ const storage = new Storage({
 
 type NoteFormat = 'SOAP' | 'DAP' | 'BIRP'
 
+/**
+ * Type-safe helper to map note format to SessionDocumentType enum
+ */
+function getNoteDocumentType(format: NoteFormat): SessionDocumentType {
+  const typeMap: Record<NoteFormat, SessionDocumentType> = {
+    SOAP: 'SOAP_NOTES',
+    DAP: 'DAP_NOTES',
+    BIRP: 'BIRP_NOTES',
+  }
+  return typeMap[format]
+}
+
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ recordingId: string }> }
 ) {
-  const { id: recordingId } = await context.params
+  // Await params in Next.js 15+
+  const { recordingId } = await params
 
   try {
     // Validate GCS configuration
@@ -103,10 +117,11 @@ export async function POST(
     }
 
     // Check if notes already exist for this format
+    const documentType = getNoteDocumentType(format)
     const existingNotes = await prisma.sessionDocument.findFirst({
       where: {
         appointmentId: recording.appointmentId,
-        documentType: `${format}_NOTES` as any,
+        documentType,
       },
     })
 
@@ -156,18 +171,13 @@ export async function POST(
 
     console.log(`[Generate Notes] Generating ${format} notes using Gemini...`)
 
-    let notes
-    switch (format) {
-      case 'SOAP':
-        notes = await gemini.generateSOAPNotes(transcript)
-        break
-      case 'DAP':
-        notes = await gemini.generateDAPNotes(transcript)
-        break
-      case 'BIRP':
-        notes = await gemini.generateBIRPNotes(transcript)
-        break
+    // Use a map of generator functions for better extensibility
+    const noteGenerators = {
+      SOAP: () => gemini.generateSOAPNotes(transcript),
+      DAP: () => gemini.generateDAPNotes(transcript),
+      BIRP: () => gemini.generateBIRPNotes(transcript),
     }
+    const notes = await noteGenerators[format]()
 
     console.log(`[Generate Notes] ${format} notes generated successfully`)
 
@@ -195,12 +205,12 @@ export async function POST(
         recordingId: recording.id,
         appointmentId: recording.appointmentId,
         patientId: recording.appointment.patientId,
-        documentType: `${format}_NOTES` as any,
+        documentType,
         title: `${format} Clinical Notes - ${patientName}`,
         gcsPath,
         aiGenerated: true,
         aiProvider: 'gemini',
-        aiModel: 'gemini-2.0-flash-exp',
+        aiModel: gemini.getModel(),
         language: transcript.language || 'en',
       },
     })
