@@ -53,6 +53,7 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
   const recordedChunksRef = useRef<Blob[]>([])
   const recordingStartTimeRef = useRef<number>(0)
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const uploadSuccessTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Get STUN server from environment (Google's free STUN server by default)
   const stunServer = process.env.NEXT_PUBLIC_STUN_SERVER_URL || 'stun:stun.l.google.com:19302'
@@ -224,20 +225,7 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
         socket.emit('recording-started', { roomId })
       }
 
-      mediaRecorder.onstop = () => {
-        console.log('[VideoRoom] Recording stopped')
-        setIsRecording(false)
-        setIsPaused(false)
-
-        if (recordingTimerRef.current) {
-          clearInterval(recordingTimerRef.current)
-          recordingTimerRef.current = null
-        }
-
-        // Notify all participants that recording has stopped
-        socket.emit('recording-stopped', { roomId })
-      }
-
+      // Note: onstop will be defined in stopRecording to capture latest state
       mediaRecorder.onerror = (event) => {
         console.error('[VideoRoom] MediaRecorder error:', event)
         setError('Recording failed. Please try again.')
@@ -292,12 +280,24 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
   /**
    * Stop recording and upload to cloud storage
    */
-  const stopRecording = useCallback(async () => {
+  const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop()
+      // Define onstop handler here to capture latest state (fixes race condition)
+      mediaRecorderRef.current.onstop = async () => {
+        console.log('[VideoRoom] Recording stopped')
+        setIsRecording(false)
+        setIsPaused(false)
 
-      // Create a blob from recorded chunks and upload to GCS
-      setTimeout(async () => {
+        // Clear recording timer
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current)
+          recordingTimerRef.current = null
+        }
+
+        // Notify all participants that recording has stopped
+        socket.emit('recording-stopped', { roomId })
+
+        // Upload logic - now guaranteed to run after all chunks are collected
         if (recordedChunksRef.current.length > 0) {
           const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' })
           console.log(`[VideoRoom] Recording complete: ${blob.size} bytes`)
@@ -328,7 +328,15 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
             console.log('[VideoRoom] ✅ Upload successful:', result)
 
             setUploadSuccess(true)
-            setTimeout(() => setUploadSuccess(false), 5000) // Hide success message after 5 seconds
+            // Clear any existing success timer
+            if (uploadSuccessTimerRef.current) {
+              clearTimeout(uploadSuccessTimerRef.current)
+            }
+            // Hide success message after 5 seconds
+            uploadSuccessTimerRef.current = setTimeout(() => {
+              setUploadSuccess(false)
+              uploadSuccessTimerRef.current = null
+            }, 5000)
           } catch (err: any) {
             console.error('[VideoRoom] ❌ Upload failed:', err)
             setError(`Failed to upload recording: ${err.message}`)
@@ -338,9 +346,11 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
             recordedChunksRef.current = []
           }
         }
-      }, 100)
+      }
+
+      mediaRecorderRef.current.stop()
     }
-  }, [roomId, recordingDuration])
+  }, [roomId, recordingDuration, socket])
 
   /**
    * End the video session and clean up all resources
@@ -357,6 +367,12 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current)
       recordingTimerRef.current = null
+    }
+
+    // Clear upload success timer
+    if (uploadSuccessTimerRef.current) {
+      clearTimeout(uploadSuccessTimerRef.current)
+      uploadSuccessTimerRef.current = null
     }
 
     // Stop all media tracks
@@ -572,6 +588,14 @@ export default function VideoRoom({ socket, roomId, currentUser, onEndSession }:
     return () => {
       // Reset the join flag when component unmounts
       hasJoinedRoomRef.current = false
+
+      // Clear all timers to prevent memory leaks
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current)
+      }
+      if (uploadSuccessTimerRef.current) {
+        clearTimeout(uploadSuccessTimerRef.current)
+      }
 
       // Destroy all peer connections (remove listeners first to prevent state updates on unmount)
       peersRef.current.forEach((peerConnection) => {
