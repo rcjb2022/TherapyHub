@@ -38,6 +38,7 @@ export interface NotesOptions {
   format?: 'SOAP' | 'narrative' | 'structured'
   includeRiskAssessment?: boolean
   includeTreatmentPlan?: boolean
+  sessionDate?: Date  // Actual session date (not generation date)
 }
 
 export interface ClinicalNotes {
