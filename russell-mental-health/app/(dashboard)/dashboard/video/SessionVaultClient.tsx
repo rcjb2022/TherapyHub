@@ -27,6 +27,22 @@ interface Recording {
   error?: string
 }
 
+// Language code to label mapping
+const LANGUAGE_LABELS: Record<string, string> = {
+  en: 'English',
+  es: 'Español',
+  pt: 'Português',
+  fr: 'Français',
+}
+
+// Transcription status to text mapping
+const TRANSCRIPTION_STATUS_TEXT: Record<string, string> = {
+  PENDING: 'Not Transcribed',
+  PROCESSING: 'Processing...',
+  COMPLETED: 'Available',
+  FAILED: 'Failed',
+}
+
 export default function SessionVaultClient() {
   const [recordings, setRecordings] = useState<Recording[]>([])
   const [filteredRecordings, setFilteredRecordings] = useState<Recording[]>([])
@@ -35,6 +51,7 @@ export default function SessionVaultClient() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRecording, setSelectedRecording] = useState<Recording | null>(null)
   const [transcribingIds, setTranscribingIds] = useState<Set<string>>(new Set())
+  const [transcribeError, setTranscribeError] = useState<string | null>(null)
 
   // Fetch recordings on mount
   useEffect(() => {
@@ -118,6 +135,7 @@ export default function SessionVaultClient() {
 
   const generateTranscript = async (recordingId: string) => {
     try {
+      setTranscribeError(null)
       setTranscribingIds((prev) => new Set(prev).add(recordingId))
 
       const response = await fetch(`/api/recordings/${recordingId}/transcribe`, {
@@ -136,11 +154,8 @@ export default function SessionVaultClient() {
       await fetchRecordings()
     } catch (err) {
       console.error('Failed to generate transcript:', err)
-      if (err instanceof Error) {
-        alert(`Failed to generate transcript: ${err.message}`)
-      } else {
-        alert('Failed to generate transcript: An unknown error occurred')
-      }
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+      setTranscribeError(`Failed to generate transcript: ${errorMessage}`)
     } finally {
       setTranscribingIds((prev) => {
         const newSet = new Set(prev)
@@ -196,6 +211,27 @@ export default function SessionVaultClient() {
             </span>
           </div>
         </div>
+
+        {/* Transcription Error Banner */}
+        {transcribeError && (
+          <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4">
+            <div className="flex items-center gap-3">
+              <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm font-medium text-red-800">{transcribeError}</p>
+            </div>
+            <button
+              onClick={() => setTranscribeError(null)}
+              className="text-red-600 hover:text-red-800"
+              aria-label="Dismiss error"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="mb-6">
@@ -302,10 +338,7 @@ export default function SessionVaultClient() {
                           {recording.transcriptionStatus === 'COMPLETED' && recording.language && (
                             <span className="uppercase">{recording.language}</span>
                           )}
-                          {recording.transcriptionStatus === 'PENDING' && 'Not Transcribed'}
-                          {recording.transcriptionStatus === 'PROCESSING' && 'Processing...'}
-                          {recording.transcriptionStatus === 'COMPLETED' && 'Available'}
-                          {recording.transcriptionStatus === 'FAILED' && 'Failed'}
+                          {TRANSCRIPTION_STATUS_TEXT[recording.transcriptionStatus]}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
@@ -430,7 +463,7 @@ export default function SessionVaultClient() {
                       kind="captions"
                       src={selectedRecording.captionUrl}
                       srclang={selectedRecording.language || 'en'}
-                      label={selectedRecording.language === 'es' ? 'Español' : 'English'}
+                      label={LANGUAGE_LABELS[selectedRecording.language || 'en'] || 'English'}
                       default
                     />
                   )}

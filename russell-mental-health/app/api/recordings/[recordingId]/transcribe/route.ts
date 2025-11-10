@@ -11,6 +11,9 @@ import { prisma } from '@/lib/prisma'
 import { Storage } from '@google-cloud/storage'
 import { AIService } from '@/lib/ai/provider'
 import { transcriptToWebVTT, getCaptionFilename, detectLanguage } from '@/lib/captions'
+import fs from 'fs/promises'
+import path from 'path'
+import os from 'os'
 
 // Initialize Google Cloud Storage
 const storage = new Storage({
@@ -96,26 +99,47 @@ export async function POST(
       data: { transcriptionStatus: 'PROCESSING' },
     })
 
-    // Download video from GCS
-    console.log(`[Transcribe API] Downloading video from GCS: ${recording.gcsPath}`)
+    // Stream video from GCS to temporary file (avoids loading entire file into memory)
+    console.log(`[Transcribe API] Streaming video from GCS: ${recording.gcsPath}`)
     const bucket = storage.bucket(bucketName)
     const videoFile = bucket.file(recording.gcsPath)
 
-    const [videoBuffer] = await videoFile.download()
-    console.log(`[Transcribe API] Downloaded ${videoBuffer.length} bytes`)
+    // Create temporary file for streaming
+    const tempFilePath = path.join(os.tmpdir(), `recording-${recordingId}-${Date.now()}.webm`)
 
-    // Transcribe using AI Service (Gemini with GROK fallback)
-    console.log('[Transcribe API] Sending to AI for transcription...')
-    const aiService = new AIService()
+    try {
+      // Stream download to temp file instead of loading into memory
+      await new Promise<void>((resolve, reject) => {
+        const writeStream = require('fs').createWriteStream(tempFilePath)
+        videoFile.createReadStream()
+          .pipe(writeStream)
+          .on('finish', resolve)
+          .on('error', reject)
+      })
 
-    const transcript = await aiService.transcribe(videoBuffer, {
-      language: recording.language || undefined,
-      includeTimestamps: true,
-      speakerLabels: ['Therapist', 'Patient'],
-      mimeType: 'video/webm',
-    })
+      console.log(`[Transcribe API] Video streamed to temp file: ${tempFilePath}`)
 
-    console.log(`[Transcribe API] Transcription complete: ${transcript.segments.length} segments`)
+      // Transcribe using AI Service (Gemini with GROK fallback)
+      console.log('[Transcribe API] Sending to AI for transcription...')
+      const aiService = new AIService()
+
+      const transcript = await aiService.transcribeFromFile(tempFilePath, {
+        language: recording.language || undefined,
+        includeTimestamps: true,
+        speakerLabels: ['Therapist', 'Patient'],
+        mimeType: 'video/webm',
+      })
+
+      console.log(`[Transcribe API] Transcription complete: ${transcript.segments.length} segments`)
+    } finally {
+      // Always clean up temp file
+      try {
+        await fs.unlink(tempFilePath)
+        console.log(`[Transcribe API] Cleaned up temp file`)
+      } catch (cleanupError) {
+        console.warn(`[Transcribe API] Failed to delete temp file:`, cleanupError)
+      }
+    }
 
     // Detect language if not already set
     const detectedLanguage = recording.language || detectLanguage(transcript.fullText)
@@ -203,16 +227,13 @@ export async function POST(
     console.error('[Transcribe API] Error:', error)
 
     // Update recording status to FAILED
-    const { recordingId } = params
-    if (recordingId) {
-      try {
-        await prisma.recording.update({
-          where: { id: recordingId },
-          data: { transcriptionStatus: 'FAILED' },
-        })
-      } catch (updateError) {
-        console.error('[Transcribe API] Failed to update recording status:', updateError)
-      }
+    try {
+      await prisma.recording.update({
+        where: { id: params.recordingId },
+        data: { transcriptionStatus: 'FAILED' },
+      })
+    } catch (updateError) {
+      console.error('[Transcribe API] Failed to update recording status:', updateError)
     }
 
     return NextResponse.json(

@@ -73,6 +73,14 @@ export class GrokProvider implements AIProvider {
     )
   }
 
+  async transcribeFromFile(filePath: string, options?: TranscriptionOptions): Promise<TranscriptResult> {
+    // GROK doesn't support audio/video transcription
+    throw new AIProviderError(
+      'GROK does not support audio transcription. Please use Gemini provider for transcription.',
+      'grok'
+    )
+  }
+
   async generateNotes(transcript: TranscriptResult, options?: NotesOptions): Promise<ClinicalNotes> {
     try {
       const prompt = `
