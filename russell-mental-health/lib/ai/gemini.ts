@@ -451,7 +451,7 @@ Requirements:
 Text to translate:
 ${text}
 
-IMPORTANT: Return ONLY a valid JSON object with this exact structure. Do NOT wrap it in markdown code blocks or backticks:
+Return a JSON object:
 {
   "translatedText": "translated content",
   "sourceLanguage": "detected or provided source language code",
@@ -464,27 +464,7 @@ IMPORTANT: Return ONLY a valid JSON object with this exact structure. Do NOT wra
         contents: prompt,
       })
       const response = result.text
-
-      // Strip markdown code blocks if Gemini wraps the JSON
-      let cleanedResponse = response.trim()
-      if (cleanedResponse.includes('```json')) {
-        cleanedResponse = cleanedResponse
-          .replace(/```json\s*/g, '')
-          .replace(/```\s*/g, '')
-          .trim()
-      } else if (cleanedResponse.includes('```')) {
-        cleanedResponse = cleanedResponse
-          .replace(/```\s*/g, '')
-          .trim()
-      }
-
-      let parsed
-      try {
-        parsed = JSON.parse(cleanedResponse)
-      } catch (parseError) {
-        console.error('[Gemini] Failed to parse translation response:', cleanedResponse)
-        throw new Error(`Invalid JSON response from Gemini: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`)
-      }
+      const parsed = JSON.parse(response)
 
       return parsed
     } catch (error: any) {
