@@ -232,6 +232,23 @@ function SummaryButton({ recording, isGenerating, onGenerate }: SummaryButtonPro
 function TranslationButton({ recording, isGenerating, onTranslate }: TranslationButtonProps) {
   const [showMenu, setShowMenu] = useState(false)
 
+  // Add Escape key handler
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showMenu) {
+        setShowMenu(false)
+      }
+    }
+
+    if (showMenu) {
+      document.addEventListener('keydown', handleEscape)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [showMenu])
+
   // Can't translate without transcript or summary
   if (recording.transcriptionStatus !== 'COMPLETED') {
     return null
@@ -271,12 +288,14 @@ function TranslationButton({ recording, isGenerating, onTranslate }: Translation
   ]
 
   return (
-    <div className="relative inline-block">
+    <>
       <button
         onClick={() => setShowMenu(!showMenu)}
         disabled={isGenerating}
         className="inline-flex items-center gap-1 rounded bg-amber-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
         title="Translate document"
+        aria-haspopup="dialog"
+        aria-expanded={showMenu}
       >
         {isGenerating ? (
           <>
@@ -296,31 +315,53 @@ function TranslationButton({ recording, isGenerating, onTranslate }: Translation
         )}
       </button>
 
+      {/* Translation Modal */}
       {showMenu && !isGenerating && (
-        <>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="translation-modal-title">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-10"
+            className="absolute inset-0 bg-black/50"
             onClick={() => setShowMenu(false)}
+            aria-hidden="true"
           />
 
-          {/* Menu */}
-          <div className="absolute right-0 top-full z-20 mt-1 w-64 rounded-lg border border-gray-200 bg-white shadow-lg">
-            <div className="p-3">
-              <p className="mb-2 text-xs font-semibold text-gray-700">Select source and language:</p>
+          {/* Modal Content */}
+          <div className="relative z-10 w-full max-w-md rounded-lg border border-gray-200 bg-white shadow-2xl">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h3 id="translation-modal-title" className="text-lg font-semibold text-gray-900">
+                  Translate Document
+                </h3>
+                <button
+                  onClick={() => setShowMenu(false)}
+                  className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  aria-label="Close dialog"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-[500px] overflow-y-auto p-6">
+              <p className="mb-4 text-sm text-gray-600">
+                Select a source document and target language:
+              </p>
 
               {availableSources.map(source => (
-                <div key={source.value} className="mb-3">
-                  <p className="mb-1 text-xs font-medium text-gray-600">{source.label}</p>
-                  <div className="grid grid-cols-2 gap-1.5">
+                <div key={source.value} className="mb-6">
+                  <h4 className="mb-3 text-sm font-semibold text-gray-700">{source.label}</h4>
+                  <div className="grid grid-cols-2 gap-2">
                     {languages.map(lang => (
                       <button
                         key={lang.code}
+                        role="menuitem"
                         onClick={() => {
                           onTranslate(lang.code, source.value as 'transcript' | 'summary')
                           setShowMenu(false)
                         }}
-                        className="rounded bg-gray-100 px-2 py-1.5 text-xs font-medium text-gray-700 hover:bg-amber-100 hover:text-amber-800"
+                        className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-amber-100 hover:text-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
                         {lang.name}
                       </button>
@@ -330,9 +371,9 @@ function TranslationButton({ recording, isGenerating, onTranslate }: Translation
               ))}
             </div>
           </div>
-        </>
+        </div>
       )}
-    </div>
+    </>
   )
 }
 

@@ -128,7 +128,7 @@ function ClinicalNotesViewer({ notes }: { notes: ClinicalNotesData }) {
     let text = `${notes.format} Clinical Notes\n${'='.repeat(50)}\n\n`
 
     sections.forEach(section => {
-      text += `${section.title.toUpperCase()}\n${'-'.repeat(30)}\n${section.content}\n\n`
+      text += `${section.title.toUpperCase()}\n${'-'.repeat(30)}\n${section.content || 'No content available'}\n\n`
     })
 
     if (notes.chiefComplaints?.length) {
