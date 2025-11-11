@@ -9,6 +9,7 @@ import {
   ArrowDownTrayIcon,
   PlayIcon,
   DocumentTextIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline'
 
 interface Recording {
@@ -405,6 +406,8 @@ export default function SessionVaultClient() {
   const [summaryError, setSummaryError] = useState<string | null>(null)
   const [generatingTranslationIds, setGeneratingTranslationIds] = useState<Set<string>>(new Set())
   const [translationError, setTranslationError] = useState<string | null>(null)
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // Fetch recordings on mount
   useEffect(() => {
@@ -627,6 +630,43 @@ export default function SessionVaultClient() {
     }
   }
 
+  const deleteRecording = async (recordingId: string) => {
+    // Confirm before deleting
+    if (!confirm('Are you sure you want to delete this recording? This action cannot be undone. Clinical documents will be preserved.')) {
+      return
+    }
+
+    try {
+      setDeleteError(null)
+      setDeletingIds((prev) => new Set(prev).add(recordingId))
+
+      const response = await fetch(`/api/recordings/${recordingId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete recording')
+      }
+
+      const result = await response.json()
+      console.log('Recording deleted:', result)
+
+      // Refresh recordings to show updated status
+      await fetchRecordings()
+    } catch (err) {
+      console.error('Failed to delete recording:', err)
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred'
+      setDeleteError(`Failed to delete recording: ${errorMessage}`)
+    } finally {
+      setDeletingIds((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(recordingId)
+        return newSet
+      })
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -748,6 +788,27 @@ export default function SessionVaultClient() {
             </div>
             <button
               onClick={() => setTranslationError(null)}
+              className="text-red-600 hover:text-red-800"
+              aria-label="Dismiss error"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Delete Error Banner */}
+        {deleteError && (
+          <div className="mb-6 flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-4">
+            <div className="flex items-center gap-3">
+              <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm font-medium text-red-800">{deleteError}</p>
+            </div>
+            <button
+              onClick={() => setDeleteError(null)}
               className="text-red-600 hover:text-red-800"
               aria-label="Dismiss error"
             >
@@ -912,6 +973,27 @@ export default function SessionVaultClient() {
                                   <ArrowDownTrayIcon className="h-4 w-4" />
                                   Download
                                 </a>
+                                <button
+                                  onClick={() => deleteRecording(recording.id)}
+                                  disabled={deletingIds.has(recording.id)}
+                                  className="inline-flex items-center gap-1 rounded bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                  title="Delete recording (preserves clinical documents)"
+                                >
+                                  {deletingIds.has(recording.id) ? (
+                                    <>
+                                      <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                      </svg>
+                                      Deleting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <TrashIcon className="h-4 w-4" />
+                                      Delete
+                                    </>
+                                  )}
+                                </button>
                               </>
                             ) : (
                               <span className="text-xs text-red-600">
