@@ -8,6 +8,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { Storage } from '@google-cloud/storage'
+import { getExpirationTime } from '@/lib/gcs'
 
 // Initialize Google Cloud Storage
 const storage = new Storage({
@@ -151,11 +152,12 @@ export async function GET(request: NextRequest) {
         try {
           const blob = bucket.file(gcsPath)
 
-          // Generate signed URL with 1-hour expiration
+          // Generate signed URL with tiered expiration (1 hour for recordings - PHI CRITICAL)
+          const expirationSeconds = getExpirationTime('RECORDING')
           const [signedUrl] = await blob.getSignedUrl({
             version: 'v4',
             action: 'read',
-            expires: Date.now() + 60 * 60 * 1000, // 1 hour
+            expires: Date.now() + expirationSeconds * 1000,
           })
 
           // Generate caption URL if available
@@ -166,7 +168,7 @@ export async function GET(request: NextRequest) {
               const [captionSignedUrl] = await captionBlob.getSignedUrl({
                 version: 'v4',
                 action: 'read',
-                expires: Date.now() + 60 * 60 * 1000, // 1 hour
+                expires: Date.now() + expirationSeconds * 1000,
               })
               captionUrl = captionSignedUrl
             } catch (captionError) {

@@ -1,20 +1,11 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { use, useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
-import { Storage } from '@google-cloud/storage'
 import { CopyButton } from './CopyButton'
-
-const storage = new Storage({
-  projectId: process.env.GCP_PROJECT_ID,
-  ...(process.env.GOOGLE_SERVICE_ACCOUNT_KEY
-    ? process.env.GOOGLE_SERVICE_ACCOUNT_KEY.startsWith('{')
-      ? { credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY) }
-      : { keyFilename: process.env.GOOGLE_SERVICE_ACCOUNT_KEY }
-    : {}),
-})
 
 interface TranscriptSegment {
   speaker?: string
@@ -51,6 +42,26 @@ interface ClinicalNotesData {
   progressNotes: string
   sessionDate?: string
   generatedBy?: string
+}
+
+interface DocumentMetadata {
+  id: string
+  title: string
+  documentType: string
+  language?: string
+  createdAt: string
+  aiGenerated?: boolean
+  aiProvider?: string
+  patientName: string
+  patientId: string
+}
+
+interface APIResponse {
+  success: boolean
+  content?: any
+  contentType?: string
+  document?: DocumentMetadata
+  error?: string
 }
 
 function formatTimestamp(seconds: number): string {
@@ -264,59 +275,75 @@ function ClinicalNotesViewer({ notes }: { notes: ClinicalNotesData }) {
   )
 }
 
-export default async function SessionDocumentPage({
+export default function SessionDocumentPage({
   params,
 }: {
   params: Promise<{ documentId: string }>
 }) {
-  const { documentId } = await params
-  const session = await getServerSession(authOptions)
+  // Unwrap params Promise for Next.js 15
+  const { documentId } = use(params)
 
-  if (!session) {
-    redirect('/auth/signin')
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [documentData, setDocumentData] = useState<APIResponse | null>(null)
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin')
+      return
+    }
+
+    if (status === 'authenticated' && session?.user?.role !== 'THERAPIST') {
+      router.push('/dashboard')
+      return
+    }
+
+    if (status === 'authenticated') {
+      fetchDocumentContent()
+    }
+  }, [status, session, documentId])
+
+  const fetchDocumentContent = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch(`/api/session-documents/${documentId}/content`)
+      const data: APIResponse = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load document')
+      }
+
+      setDocumentData(data)
+    } catch (err: any) {
+      console.error('[Session Document Page] Error:', err)
+      setError(err.message || 'Failed to load document')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // Only therapists can access
-  if (session.user.role !== 'THERAPIST') {
-    redirect('/dashboard')
+  if (status === 'loading' || loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+          <p className="mt-4 text-gray-600">Loading document...</p>
+        </div>
+      </div>
+    )
   }
 
-  // Fetch document and verify ownership in a single query
-  // This ensures we only fetch documents the current user is authorized to view
-  const document = await prisma.sessionDocument.findFirst({
-    where: {
-      id: documentId,
-      appointment: {
-        therapist: {
-          userId: session.user.id,
-        },
-      },
-    },
-    include: {
-      appointment: {
-        include: {
-          patient: {
-            select: {
-              id: true,
-              user: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  })
-
-  if (!document) {
+  if (error || !documentData || !documentData.success) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6">
-          <h3 className="mb-2 text-lg font-semibold text-red-800">Document Not Found</h3>
+          <h3 className="mb-2 text-lg font-semibold text-red-800">Error Loading Document</h3>
           <p className="text-sm text-red-600">
-            The requested document could not be found or you do not have permission to view it.
+            {error || documentData?.error || 'The document could not be loaded.'}
           </p>
           <Link
             href="/dashboard"
@@ -329,59 +356,15 @@ export default async function SessionDocumentPage({
     )
   }
 
-  // Fetch document content from GCS
-  let transcriptData: TranscriptData | null = null
-  let clinicalNotesData: ClinicalNotesData | null = null
-  let plainTextContent: string | null = null
-  let error: string | null = null
+  const { content, contentType, document: doc } = documentData
 
-  const isTranscript = document.documentType === 'TRANSCRIPT'
-  const isClinicalNotes = ['SOAP_NOTES', 'DAP_NOTES', 'BIRP_NOTES'].includes(document.documentType)
-  const isPlainText = ['SUMMARY', 'TRANSLATION'].includes(document.documentType)
+  const isTranscript = contentType === 'transcript'
+  const isClinicalNotes = contentType === 'clinical_notes'
+  const isPlainText = contentType === 'plain_text'
 
-  try {
-    // For plain text documents stored in content field, use it directly
-    if (isPlainText && document.content && typeof document.content === 'string') {
-      plainTextContent = document.content
-    } else if (document.gcsPath) {
-      // Fetch from GCS for other document types
-      const bucketName = process.env.GCS_BUCKET_NAME
-      if (!bucketName) {
-        throw new Error('Storage not configured')
-      }
-
-      const bucket = storage.bucket(bucketName)
-      const file = bucket.file(document.gcsPath)
-
-      const [exists] = await file.exists()
-      if (!exists) {
-        throw new Error('Document file not found in storage')
-      }
-
-      const [fileContent] = await file.download()
-      const fileString = fileContent.toString('utf-8')
-
-      // Parse JSON for transcripts and clinical notes, keep as plain text for summaries/translations
-      if (isPlainText) {
-        plainTextContent = fileString
-      } else {
-        const parsedContent = JSON.parse(fileString)
-        if (isTranscript) {
-          transcriptData = parsedContent
-        } else if (isClinicalNotes) {
-          clinicalNotesData = parsedContent
-        }
-      }
-    } else {
-      throw new Error('Document has no content or file path')
-    }
-  } catch (err) {
-    console.error('[Session Document Page] Error fetching document:', err)
-    error = err instanceof Error ? err.message : 'Failed to load document'
-  }
-
-  const patientName = document.appointment.patient.user.name || 'Unknown Patient'
-  const patientId = document.appointment.patient.id
+  const transcriptData = isTranscript ? (content as TranscriptData) : null
+  const clinicalNotesData = isClinicalNotes ? (content as ClinicalNotesData) : null
+  const plainTextContent = isPlainText ? (content as string) : null
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -389,7 +372,7 @@ export default async function SessionDocumentPage({
         {/* Header */}
         <div className="mb-6">
           <Link
-            href={`/dashboard/patients/${patientId}/documents`}
+            href={`/dashboard/patients/${doc?.patientId}/documents`}
             className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
           >
             <ArrowLeftIcon className="h-4 w-4" />
@@ -405,15 +388,15 @@ export default async function SessionDocumentPage({
                 <DocumentTextIcon className="h-8 w-8 text-white" />
               </div>
               <div className="flex-1">
-                <h1 className="text-2xl font-bold text-white">{document.title}</h1>
+                <h1 className="text-2xl font-bold text-white">{doc?.title}</h1>
                 <div className="mt-2 flex flex-wrap gap-3 text-sm text-white/90">
-                  <span>Patient: {patientName}</span>
+                  <span>Patient: {doc?.patientName}</span>
                   <span>•</span>
-                  <span>{new Date(document.createdAt).toLocaleDateString()}</span>
-                  {document.language && (
+                  <span>{doc?.createdAt && new Date(doc.createdAt).toLocaleDateString()}</span>
+                  {doc?.language && (
                     <>
                       <span>•</span>
-                      <span>Language: {document.language.toUpperCase()}</span>
+                      <span>Language: {doc.language.toUpperCase()}</span>
                     </>
                   )}
                   {transcriptData?.duration && (
@@ -423,10 +406,10 @@ export default async function SessionDocumentPage({
                     </>
                   )}
                 </div>
-                {document.aiGenerated && document.aiProvider && (
+                {doc?.aiGenerated && doc?.aiProvider && (
                   <div className="mt-3">
                     <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
-                      🤖 AI Generated ({document.aiProvider})
+                      🤖 AI Generated ({doc.aiProvider})
                     </span>
                   </div>
                 )}
@@ -438,7 +421,7 @@ export default async function SessionDocumentPage({
           <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">
-                Document Type: <span className="text-gray-900">{document.documentType}</span>
+                Document Type: <span className="text-gray-900">{doc?.documentType}</span>
               </span>
               {transcriptData?.segments && (
                 <span className="text-sm text-gray-600">
@@ -448,14 +431,6 @@ export default async function SessionDocumentPage({
             </div>
           </div>
         </div>
-
-        {/* Error State */}
-        {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-            <h3 className="mb-1 font-semibold text-red-800">Error Loading Document</h3>
-            <p className="text-sm text-red-600">{error}</p>
-          </div>
-        )}
 
         {/* Transcript Content */}
         {isTranscript && transcriptData && transcriptData.segments && transcriptData.segments.length > 0 && (
@@ -476,10 +451,10 @@ export default async function SessionDocumentPage({
             </div>
 
             <div className="divide-y divide-gray-100 px-6 py-4">
-              {transcriptData.segments.map((segment) => {
+              {transcriptData.segments.map((segment, index) => {
                 const speakerInfo = getSpeakerInfo(segment.speaker)
                 return (
-                  <div key={segment.start} className="flex gap-4 py-4 first:pt-0 last:pb-0">
+                  <div key={`${segment.start}-${index}`} className="flex gap-4 py-4 first:pt-0 last:pb-0">
                     {/* Timestamp */}
                     <div className="flex-shrink-0 pt-1">
                       <span className="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
@@ -517,12 +492,12 @@ export default async function SessionDocumentPage({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">
-                    {document.documentType === 'SUMMARY' ? 'Session Summary' : 'Translation'}
+                    {doc?.documentType === 'SUMMARY' ? 'Session Summary' : 'Translation'}
                   </h2>
                   <p className="mt-1 text-sm text-gray-600">
-                    {document.documentType === 'SUMMARY'
+                    {doc?.documentType === 'SUMMARY'
                       ? 'AI-generated summary of the therapy session'
-                      : `Translated to ${document.language?.toUpperCase() || 'target language'}`}
+                      : `Translated to ${doc?.language?.toUpperCase() || 'target language'}`}
                   </p>
                 </div>
                 <CopyButton content={plainTextContent} />
@@ -550,17 +525,6 @@ export default async function SessionDocumentPage({
           </div>
         )}
 
-        {/* Empty State for Clinical Notes */}
-        {isClinicalNotes && !clinicalNotesData && !error && (
-          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-            <DocumentTextIcon className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">No Clinical Notes Content</h3>
-            <p className="mt-2 text-sm text-gray-600">
-              This document appears to be empty.
-            </p>
-          </div>
-        )}
-
         {/* Footer Actions */}
         <div className="mt-6 flex justify-end gap-3">
           <Link
@@ -570,7 +534,7 @@ export default async function SessionDocumentPage({
             View Session Vault
           </Link>
           <Link
-            href={`/dashboard/patients/${patientId}/documents`}
+            href={`/dashboard/patients/${doc?.patientId}/documents`}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             View All Documents

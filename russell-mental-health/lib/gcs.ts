@@ -18,17 +18,97 @@ const storage = new Storage({
 const bucketName = process.env.GCS_BUCKET_NAME || ''
 
 /**
+ * Tiered expiration policies based on data sensitivity
+ * Following principle of least privilege - shorter expiration for more sensitive data
+ */
+const EXPIRATION_POLICIES = {
+  // 1 hour for highly sensitive PHI (recordings, clinical notes, transcripts)
+  PHI_CRITICAL: 60 * 60, // 3600 seconds
+
+  // 24 hours for moderate sensitivity (summaries, translations, general forms)
+  PHI_MODERATE: 24 * 60 * 60, // 86400 seconds
+
+  // 7 days for low sensitivity static documents (insurance cards, IDs)
+  PHI_LOW: 7 * 24 * 60 * 60, // 604800 seconds
+} as const
+
+/**
+ * Document type classification for expiration policy
+ */
+type DocumentCategory =
+  | 'RECORDING'           // Video/audio session recordings
+  | 'TRANSCRIPT'          // AI-generated transcripts
+  | 'CLINICAL_NOTES'      // SOAP/DAP/BIRP notes
+  | 'SOAP_NOTES'
+  | 'DAP_NOTES'
+  | 'BIRP_NOTES'
+  | 'SUMMARY'             // Session summaries
+  | 'TRANSLATION'         // Translated documents
+  | 'TREATMENT_PLAN'      // Treatment plans
+  | 'ANALYSIS'            // Session analysis
+  | 'INTAKE_FORM'         // Patient intake forms
+  | 'CONSENT_FORM'        // Consent documents
+  | 'INSURANCE_CARD'      // Insurance card images
+  | 'ID_DOCUMENT'         // ID scans
+  | 'PROGRESS_NOTE'       // Progress notes
+  | 'ASSESSMENT_REPORT'   // Assessments
+  | 'OTHER'               // Other documents
+
+/**
+ * Determine expiration time based on document type and sensitivity
+ * @param documentType - Type of document being accessed
+ * @returns Expiration time in seconds
+ */
+export function getExpirationTime(documentType?: DocumentCategory): number {
+  if (!documentType) {
+    // Default to moderate for unknown types (24 hours)
+    return EXPIRATION_POLICIES.PHI_MODERATE
+  }
+
+  switch (documentType) {
+    // PHI CRITICAL (1 hour) - Active session data, highly sensitive
+    case 'RECORDING':
+    case 'TRANSCRIPT':
+    case 'CLINICAL_NOTES':
+    case 'SOAP_NOTES':
+    case 'DAP_NOTES':
+    case 'BIRP_NOTES':
+      return EXPIRATION_POLICIES.PHI_CRITICAL
+
+    // PHI LOW (7 days) - Static documents, don't change
+    case 'INSURANCE_CARD':
+    case 'ID_DOCUMENT':
+      return EXPIRATION_POLICIES.PHI_LOW
+
+    // PHI MODERATE (24 hours) - All other documents
+    case 'SUMMARY':
+    case 'TRANSLATION':
+    case 'TREATMENT_PLAN':
+    case 'ANALYSIS':
+    case 'INTAKE_FORM':
+    case 'CONSENT_FORM':
+    case 'PROGRESS_NOTE':
+    case 'ASSESSMENT_REPORT':
+    case 'OTHER':
+    default:
+      return EXPIRATION_POLICIES.PHI_MODERATE
+  }
+}
+
+/**
  * Upload a file to Google Cloud Storage with HIPAA-compliant signed URL
  * @param file - File buffer to upload
  * @param fileName - Name to save the file as (will be sanitized)
  * @param contentType - MIME type of the file
- * @returns Signed URL with 7-day expiration
+ * @param documentType - Optional document type for tiered expiration
+ * @returns Object with signedUrl (temporary) and gcsPath (permanent for DB storage)
  */
 export async function uploadToGCS(
   file: Buffer,
   fileName: string,
-  contentType: string
-): Promise<string> {
+  contentType: string,
+  documentType?: DocumentCategory
+): Promise<{ signedUrl: string; gcsPath: string }> {
   try {
     const bucket = storage.bucket(bucketName)
 
@@ -45,18 +125,23 @@ export async function uploadToGCS(
       metadata: {
         cacheControl: 'public, max-age=31536000',
         uploadedAt: new Date().toISOString(),
+        documentType: documentType || 'OTHER',
       },
     })
 
-    // Generate signed URL with 7-day expiration (HIPAA compliant)
-    // Files are NOT made public - only accessible via signed URLs
+    // Generate signed URL with tiered expiration based on document sensitivity
+    const expirationSeconds = getExpirationTime(documentType)
     const [signedUrl] = await blob.getSignedUrl({
       version: 'v4',
       action: 'read',
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+      expires: Date.now() + expirationSeconds * 1000,
     })
 
-    return signedUrl
+    // Return both temporary signed URL (for immediate display) and permanent GCS path (for database)
+    return {
+      signedUrl,              // Use this for immediate display after upload
+      gcsPath: uniqueFileName, // Store THIS in the database, not the signedUrl
+    }
   } catch (error) {
     console.error('❌ GCS Upload Error:', error)
     console.error('Project ID:', process.env.GCP_PROJECT_ID)
@@ -90,22 +175,47 @@ export async function deleteFromGCS(fileUrl: string): Promise<void> {
 /**
  * Generate a new signed URL for an existing file (useful for expired URLs)
  * @param fileName - Name of the file in GCS
- * @returns New signed URL with 7-day expiration
+ * @param documentType - Optional document type for tiered expiration
+ * @returns New signed URL with expiration based on document type
  */
-export async function getSignedUrl(fileName: string): Promise<string> {
+export async function getSignedUrl(
+  fileName: string,
+  documentType?: DocumentCategory
+): Promise<string> {
   try {
     const bucket = storage.bucket(bucketName)
     const blob = bucket.file(fileName)
 
+    // Use tiered expiration based on document type
+    const expirationSeconds = getExpirationTime(documentType)
     const [signedUrl] = await blob.getSignedUrl({
       version: 'v4',
       action: 'read',
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+      expires: Date.now() + expirationSeconds * 1000,
     })
 
     return signedUrl
   } catch (error) {
     console.error('Error generating signed URL:', error)
     throw error
+  }
+}
+
+/**
+ * Get expiration time in human-readable format for debugging
+ * @param documentType - Type of document
+ * @returns Human-readable expiration time
+ */
+export function getExpirationDescription(documentType?: DocumentCategory): string {
+  const seconds = getExpirationTime(documentType)
+  const hours = seconds / 3600
+
+  if (hours < 1) {
+    return `${Math.floor(seconds / 60)} minutes`
+  } else if (hours < 24) {
+    return `${hours} hour${hours !== 1 ? 's' : ''}`
+  } else {
+    const days = hours / 24
+    return `${days} day${days !== 1 ? 's' : ''}`
   }
 }

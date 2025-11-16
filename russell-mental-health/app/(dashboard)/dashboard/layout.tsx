@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import DashboardSidebar from '@/components/dashboard/Sidebar'
 import DashboardHeader from '@/components/dashboard/Header'
+import SessionMonitor from '@/components/SessionMonitor'
 
 export default async function DashboardLayout({
   children,
@@ -20,6 +21,9 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-gray-50">
+      {/* Session Timeout Monitor - Shows warning 5 minutes before expiration */}
+      <SessionMonitor />
+
       {/* Sidebar */}
       <DashboardSidebar />
 

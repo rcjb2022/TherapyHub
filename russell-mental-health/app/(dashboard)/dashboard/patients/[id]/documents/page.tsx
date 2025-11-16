@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeftIcon, DocumentIcon } from '@heroicons/react/24/outline'
+import { getSignedUrl } from '@/lib/gcs'
 
 // Type for session documents (transcripts, clinical notes, etc.)
 type SessionDoc = {
@@ -93,56 +94,83 @@ export default async function PatientDocumentsPage({
     createdAt: doc.createdAt,
   }))
 
-  patient.forms.forEach((form) => {
+  // Helper function to generate fresh signed URL from GCS path
+  const generateFreshUrl = async (gcsPath: string, documentType: 'INSURANCE_CARD' | 'ID_DOCUMENT' | 'OTHER') => {
+    try {
+      let fileName = gcsPath
+
+      // If it's an old signed URL (contains full URL), extract the filename
+      if (gcsPath.includes('https://storage.googleapis.com') || gcsPath.includes('X-Goog-Signature')) {
+        // Extract filename from URL: https://storage.googleapis.com/bucket-name/FILENAME.pdf?X-Goog-...
+        const urlParts = gcsPath.split('/')
+        const lastPart = urlParts[urlParts.length - 1]
+        fileName = lastPart.split('?')[0] // Remove query parameters
+      }
+
+      // Generate fresh signed URL from the filename (with tiered expiration)
+      return await getSignedUrl(fileName, documentType)
+    } catch (error) {
+      console.error('[Documents Page] Error generating signed URL:', error)
+      return gcsPath // Fallback to original if generation fails
+    }
+  }
+
+  // Process forms and generate fresh signed URLs
+  for (const form of patient.forms) {
     const formData = form.formData as Record<string, any>
 
-    // Insurance cards
+    // Insurance cards (7-day expiration)
     if (formData.insuranceCardFront) {
+      const url = await generateFreshUrl(formData.insuranceCardFront, 'INSURANCE_CARD')
       documents.insuranceCards.push({
         label: 'Insurance Card - Front',
-        url: formData.insuranceCardFront,
+        url,
         formType: form.formType,
         uploadedAt: form.createdAt,
       })
     }
     if (formData.insuranceCardBack) {
+      const url = await generateFreshUrl(formData.insuranceCardBack, 'INSURANCE_CARD')
       documents.insuranceCards.push({
         label: 'Insurance Card - Back',
-        url: formData.insuranceCardBack,
+        url,
         formType: form.formType,
         uploadedAt: form.createdAt,
       })
     }
 
-    // Identification documents
+    // Identification documents (7-day expiration)
     if (formData.idFront) {
       const idType = formData.idType === 'drivers-license' ? "Driver's License" : 'Passport'
+      const url = await generateFreshUrl(formData.idFront, 'ID_DOCUMENT')
       documents.identification.push({
         label: `${idType} - Front`,
-        url: formData.idFront,
+        url,
         formType: form.formType,
         uploadedAt: form.createdAt,
       })
     }
     if (formData.idBack) {
+      const url = await generateFreshUrl(formData.idBack, 'ID_DOCUMENT')
       documents.identification.push({
         label: "Driver's License - Back",
-        url: formData.idBack,
+        url,
         formType: form.formType,
         uploadedAt: form.createdAt,
       })
     }
 
-    // Legal documents
+    // Legal documents (24-hour expiration)
     if (formData.custodyDocument) {
+      const url = await generateFreshUrl(formData.custodyDocument, 'OTHER')
       documents.legalDocuments.push({
         label: 'Judicial Order / Legal Document',
-        url: formData.custodyDocument,
+        url,
         formType: form.formType,
         uploadedAt: form.createdAt,
       })
     }
-  })
+  }
 
   const totalDocuments =
     documents.insuranceCards.length +
