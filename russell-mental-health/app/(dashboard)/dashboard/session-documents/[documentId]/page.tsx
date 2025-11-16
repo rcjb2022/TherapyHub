@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon, DocumentTextIcon } from '@heroicons/react/24/outline'
@@ -278,8 +278,11 @@ function ClinicalNotesViewer({ notes }: { notes: ClinicalNotesData }) {
 export default function SessionDocumentPage({
   params,
 }: {
-  params: { documentId: string }
+  params: Promise<{ documentId: string }>
 }) {
+  // Unwrap params Promise for Next.js 15
+  const { documentId } = use(params)
+
   const { data: session, status } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -300,14 +303,14 @@ export default function SessionDocumentPage({
     if (status === 'authenticated') {
       fetchDocumentContent()
     }
-  }, [status, session, params.documentId])
+  }, [status, session, documentId])
 
   const fetchDocumentContent = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/session-documents/${params.documentId}/content`)
+      const response = await fetch(`/api/session-documents/${documentId}/content`)
       const data: APIResponse = await response.json()
 
       if (!response.ok) {
