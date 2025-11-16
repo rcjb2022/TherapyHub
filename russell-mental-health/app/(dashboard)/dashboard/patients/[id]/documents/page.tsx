@@ -97,12 +97,18 @@ export default async function PatientDocumentsPage({
   // Helper function to generate fresh signed URL from GCS path
   const generateFreshUrl = async (gcsPath: string, documentType: 'INSURANCE_CARD' | 'ID_DOCUMENT' | 'OTHER') => {
     try {
-      // If it's already a signed URL (old data), return as-is for now
+      let fileName = gcsPath
+
+      // If it's an old signed URL (contains full URL), extract the filename
       if (gcsPath.includes('https://storage.googleapis.com') || gcsPath.includes('X-Goog-Signature')) {
-        return gcsPath
+        // Extract filename from URL: https://storage.googleapis.com/bucket-name/FILENAME.pdf?X-Goog-...
+        const urlParts = gcsPath.split('/')
+        const lastPart = urlParts[urlParts.length - 1]
+        fileName = lastPart.split('?')[0] // Remove query parameters
       }
-      // Generate fresh signed URL with tiered expiration
-      return await getSignedUrl(gcsPath, documentType)
+
+      // Generate fresh signed URL from the filename (with tiered expiration)
+      return await getSignedUrl(fileName, documentType)
     } catch (error) {
       console.error('[Documents Page] Error generating signed URL:', error)
       return gcsPath // Fallback to original if generation fails
