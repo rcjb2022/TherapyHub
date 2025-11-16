@@ -101,14 +101,14 @@ export function getExpirationTime(documentType?: DocumentCategory): number {
  * @param fileName - Name to save the file as (will be sanitized)
  * @param contentType - MIME type of the file
  * @param documentType - Optional document type for tiered expiration
- * @returns Signed URL with expiration based on document type
+ * @returns Object with signedUrl (temporary) and gcsPath (permanent for DB storage)
  */
 export async function uploadToGCS(
   file: Buffer,
   fileName: string,
   contentType: string,
   documentType?: DocumentCategory
-): Promise<string> {
+): Promise<{ signedUrl: string; gcsPath: string }> {
   try {
     const bucket = storage.bucket(bucketName)
 
@@ -137,7 +137,11 @@ export async function uploadToGCS(
       expires: Date.now() + expirationSeconds * 1000,
     })
 
-    return signedUrl
+    // Return both temporary signed URL (for immediate display) and permanent GCS path (for database)
+    return {
+      signedUrl,              // Use this for immediate display after upload
+      gcsPath: uniqueFileName, // Store THIS in the database, not the signedUrl
+    }
   } catch (error) {
     console.error('❌ GCS Upload Error:', error)
     console.error('Project ID:', process.env.GCP_PROJECT_ID)

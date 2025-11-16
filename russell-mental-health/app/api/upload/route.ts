@@ -67,12 +67,15 @@ export async function POST(request: NextRequest) {
 
     // Upload to Google Cloud Storage with tiered expiration based on document type
     const documentCategory = getDocumentCategory(fileType)
-    const signedUrl = await uploadToGCS(buffer, fileName, file.type, documentCategory)
 
-    // Return the signed URL
+    // Upload and get both signed URL (for immediate use) and GCS path (for storage)
+    const { signedUrl, gcsPath } = await uploadToGCS(buffer, fileName, file.type, documentCategory)
+
+    // Return BOTH signed URL (temporary, for immediate display) and GCS path (permanent, for database storage)
     return NextResponse.json({
       success: true,
-      url: signedUrl,
+      url: signedUrl,           // Temporary signed URL for immediate use
+      gcsPath: gcsPath,          // Permanent GCS path for database storage
       fileName: file.name,
       fileType: file.type,
       fileSize: file.size,

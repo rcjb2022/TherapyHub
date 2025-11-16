@@ -31,7 +31,7 @@ export default function FileUpload({
   helpText,
 }: FileUploadProps) {
   const [uploading, setUploading] = useState(false)
-  const [fileUrl, setFileUrl] = useState(currentFileUrl || '')
+  const [fileUrl, setFileUrl] = useState(currentFileUrl || '') // For display only (preview image)
   const [fileName, setFileName] = useState('')
   const [error, setError] = useState('')
   const [isDragging, setIsDragging] = useState(false)
@@ -77,9 +77,13 @@ export default function FileUpload({
         throw new Error(data.error || 'Upload failed')
       }
 
+      // Use signedUrl for immediate display (preview image)
       setFileUrl(data.url)
       setFileName(file.name)
-      onUploadComplete(data.url)
+
+      // Store gcsPath in database (not the signed URL which expires)
+      // This allows generating fresh signed URLs when viewing documents later
+      onUploadComplete(data.gcsPath)
     } catch (err) {
       console.error('Upload error:', err)
       setError(err instanceof Error ? err.message : 'Upload failed. Please try again.')
