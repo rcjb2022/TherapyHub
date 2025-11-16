@@ -49,8 +49,25 @@ export async function POST(request: NextRequest) {
     const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
     const fileName = `${fileType}/${patientId}/${sanitizedFileName}`
 
-    // Upload to Google Cloud Storage and get signed URL
-    const signedUrl = await uploadToGCS(buffer, fileName, file.type)
+    // Map fileType to DocumentCategory for tiered expiration
+    const getDocumentCategory = (fileType: string) => {
+      switch (fileType) {
+        case 'insurance-card':
+          return 'INSURANCE_CARD' as const
+        case 'id-document':
+          return 'ID_DOCUMENT' as const
+        case 'consent-form':
+          return 'CONSENT_FORM' as const
+        case 'intake-form':
+          return 'INTAKE_FORM' as const
+        default:
+          return 'OTHER' as const
+      }
+    }
+
+    // Upload to Google Cloud Storage with tiered expiration based on document type
+    const documentCategory = getDocumentCategory(fileType)
+    const signedUrl = await uploadToGCS(buffer, fileName, file.type, documentCategory)
 
     // Return the signed URL
     return NextResponse.json({
