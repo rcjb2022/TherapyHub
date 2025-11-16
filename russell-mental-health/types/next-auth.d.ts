@@ -1,5 +1,5 @@
 // Extend NextAuth types to include custom fields
-// Adds role and id to session.user
+// Adds role, id, and session duration to session.user and JWT
 
 import NextAuth from 'next-auth'
 
@@ -12,6 +12,8 @@ declare module 'next-auth' {
       role: string
       image?: string
     }
+    expires: string // ISO string of when session expires
+    sessionDuration?: number // Duration in seconds based on role
   }
 
   interface User {
@@ -27,5 +29,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string
     role: string
+    exp?: number // Expiration timestamp
+    sessionDuration?: number // Duration in seconds based on role
   }
 }
