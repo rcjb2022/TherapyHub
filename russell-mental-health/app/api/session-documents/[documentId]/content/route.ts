@@ -70,8 +70,8 @@ export async function GET(
       data: {
         userId: session.user.id,
         action: 'VIEW',
-        entityType: 'SESSION_DOCUMENT',
-        entityId: document.id,
+        resource: 'SessionDocument',
+        resourceId: document.id,
         ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
         phi: true,
