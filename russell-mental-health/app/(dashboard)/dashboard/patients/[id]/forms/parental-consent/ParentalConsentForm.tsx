@@ -32,11 +32,9 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
     parentEmail: '',
     parentPhone: '',
     parentAddress: '',
-
-    // Custody Information
     custodyStatus: '',
     custodyDescription: '',
-    custodyDocument: '',
+    custodyDocumentUrl: '',
 
     // Consent Agreements
     consentToTreatment: false,
@@ -48,6 +46,10 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
     // Additional Consents
     consentToTelehealth: false,
     consentToLeaveVoicemail: false,
+    consentToAITranscriptions: false,
+
+    // Revocation Understanding
+    understandRevocation: false,
 
     // Electronic Signature
     signatureName: '',
@@ -81,7 +83,7 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
                 parentAddress: existingForm.formData.parentAddress || '',
                 custodyStatus: existingForm.formData.custodyStatus || '',
                 custodyDescription: existingForm.formData.custodyDescription || '',
-                custodyDocument: existingForm.formData.custodyDocument || '',
+                custodyDocumentUrl: existingForm.formData.custodyDocumentUrl || '',
                 consentToTreatment: existingForm.formData.consentToTreatment || false,
                 understandConfidentiality: existingForm.formData.understandConfidentiality || false,
                 understandMinorRights: existingForm.formData.understandMinorRights || false,
@@ -89,6 +91,8 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
                 consentToShareProgress: existingForm.formData.consentToShareProgress || false,
                 consentToTelehealth: existingForm.formData.consentToTelehealth || false,
                 consentToLeaveVoicemail: existingForm.formData.consentToLeaveVoicemail || false,
+                consentToAITranscriptions: existingForm.formData.consentToAITranscriptions || false,
+                understandRevocation: existingForm.formData.understandRevocation || false,
                 signatureName: existingForm.formData.signatureName || '',
                 signatureDate: existingForm.formData.signatureDate || '',
               })
@@ -458,6 +462,9 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
               <li>Abuse or neglect</li>
               <li>Court order requiring disclosure</li>
             </ul>
+            <p className="text-xs text-gray-600 italic">
+              This is pursuant to applicable Federal and State of Florida law.
+            </p>
           </div>
           <div className="space-y-3">
             <label className="flex items-start gap-3">
@@ -541,7 +548,43 @@ export default function ParentalConsentForm({ patientId }: ParentalConsentFormPr
                 I consent to voicemail messages being left on my phone regarding my child's appointments
               </span>
             </label>
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                name="consentToAITranscriptions"
+                checked={formData.consentToAITranscriptions}
+                onChange={handleChange}
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">
+                I consent to AI-enhanced transcriptions and suggestions based upon telehealth sessions for my child (Therapist use only).
+              </span>
+            </label>
           </div>
+        </div>
+
+        {/* Revocation and Custody Change Notice */}
+        <div className="mb-8">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Revocation & Custody Change Notice</h2>
+          <div className="rounded-lg bg-gray-50 p-4 mb-4">
+            <p className="text-sm text-gray-700">
+              I understand that I may revoke this authorization at any time in writing. I also understand that should custody or
+              guardianship change as determined by a Court of Law, if applicable, I will notify Russell Mental Health within 10 business days.
+            </p>
+          </div>
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              name="understandRevocation"
+              checked={formData.understandRevocation}
+              onChange={handleChange}
+              required
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-700">
+              <strong>I understand my right to revoke this authorization and my duty to notify of custody changes *</strong>
+            </span>
+          </label>
         </div>
 
         {/* Electronic Signature */}

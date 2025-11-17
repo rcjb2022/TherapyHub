@@ -25,10 +25,11 @@ export default function MedicalHistoryForm({ patientId }: MedicalHistoryFormProp
   const [nextForm, setNextForm] = useState<{ type: string; title: string } | null>(null)
   const [completedCount, setCompletedCount] = useState(0)
   const [formData, setFormData] = useState({
-    // Current Medications
+ // Current Medications
     currentMedications: '',
 
     // Allergies
+    hasAllergies: '',
     drugAllergies: '',
     foodAllergies: '',
     otherAllergies: '',
@@ -36,6 +37,8 @@ export default function MedicalHistoryForm({ patientId }: MedicalHistoryFormProp
     // Medical Conditions
     currentConditions: '',
     chronicIllnesses: '',
+    treatingPhysicianName: '',
+    treatingPhysicianPhone: '',
 
     // Surgical History
     pastSurgeries: '',
@@ -83,11 +86,14 @@ export default function MedicalHistoryForm({ patientId }: MedicalHistoryFormProp
             if (existingForm.formData) {
               setFormData({
                 currentMedications: existingForm.formData.currentMedications || '',
+                hasAllergies: existingForm.formData.hasAllergies || '',
                 drugAllergies: existingForm.formData.drugAllergies || '',
                 foodAllergies: existingForm.formData.foodAllergies || '',
                 otherAllergies: existingForm.formData.otherAllergies || '',
                 currentConditions: existingForm.formData.currentConditions || '',
                 chronicIllnesses: existingForm.formData.chronicIllnesses || '',
+                treatingPhysicianName: existingForm.formData.treatingPhysicianName || '',
+                treatingPhysicianPhone: existingForm.formData.treatingPhysicianPhone || '',
                 pastSurgeries: existingForm.formData.pastSurgeries || '',
                 hospitalizations: existingForm.formData.hospitalizations || '',
                 familyHeartDisease: existingForm.formData.familyHeartDisease || false,
@@ -235,50 +241,69 @@ export default function MedicalHistoryForm({ patientId }: MedicalHistoryFormProp
           </div>
         </div>
 
-        {/* Allergies */}
+       {/* Allergies */}
         <div className="mb-8">
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Allergies</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Drug/Medication Allergies
-              </label>
-              <textarea
-                name="drugAllergies"
-                rows={2}
-                value={formData.drugAllergies}
-                onChange={handleChange}
-                placeholder="List any medications you're allergic to and the reaction"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Food Allergies
-              </label>
-              <input
-                type="text"
-                name="foodAllergies"
-                value={formData.foodAllergies}
-                onChange={handleChange}
-                placeholder="Example: Peanuts, Shellfish, Dairy"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Other Allergies (Environmental, Latex, etc.)
-              </label>
-              <input
-                type="text"
-                name="otherAllergies"
-                value={formData.otherAllergies}
-                onChange={handleChange}
-                placeholder="Example: Pollen, Latex, Pet dander"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Do you have any allergies? *
+            </label>
+            <select
+              name="hasAllergies"
+              required
+              value={formData.hasAllergies}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Select...</option>
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
           </div>
+
+          {formData.hasAllergies === 'yes' && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Drug/Medication Allergies (Optional)
+                </label>
+                <textarea
+                  name="drugAllergies"
+                  rows={2}
+                  value={formData.drugAllergies}
+                  onChange={handleChange}
+                  placeholder="List any medications you're allergic to and the reaction"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Food Allergies (Optional)
+                </label>
+                <input
+                  type="text"
+                  name="foodAllergies"
+                  value={formData.foodAllergies}
+                  onChange={handleChange}
+                  placeholder="Example: Peanuts, Shellfish, Dairy"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Other Allergies (Environmental, Latex, etc.) (Optional)
+                </label>
+                <input
+                  type="text"
+                  name="otherAllergies"
+                  value={formData.otherAllergies}
+                  onChange={handleChange}
+                  placeholder="Example: Pollen, Latex, Pet dander"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Medical Conditions */}
@@ -310,6 +335,35 @@ export default function MedicalHistoryForm({ patientId }: MedicalHistoryFormProp
                 placeholder="Example: Diabetes, Hypertension, Asthma, Heart disease"
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Treating Physician Name (if applicable)
+                </label>
+                <input
+                  type="text"
+                  name="treatingPhysicianName"
+                  value={formData.treatingPhysicianName}
+                  onChange={handleChange}
+                  placeholder="Dr. Smith (for chronic illness treatment)"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">Contact info for treating physician if we need to coordinate care</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Treating Physician Phone (if applicable)
+                </label>
+                <input
+                  type="tel"
+                  name="treatingPhysicianPhone"
+                  value={formData.treatingPhysicianPhone}
+                  onChange={handleChange}
+                  placeholder="(239) 555-0100"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
           </div>
         </div>

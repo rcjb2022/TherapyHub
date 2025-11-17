@@ -542,7 +542,7 @@ export default function PatientInformationForm({ patientId }: PatientInformation
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Employer
+                Employer or School Name (if a student)
               </label>
               <input
                 type="text"

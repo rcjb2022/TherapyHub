@@ -68,6 +68,13 @@ export default function MentalHealthHistoryForm({ patientId }: MentalHealthHisto
     currentStressors: '',
     recentTrauma: '',
 
+    // Social Media & Technology Use
+    socialMediaFrequency: '',
+    socialMediaPlatforms: '',
+    usedChatbotForMentalHealth: '',
+    currentlyUseChatbot: '',
+    chatbotUsageDescription: '',
+
     // Goals for Therapy
     therapyGoals: '',
     whatHelpLooksLike: '',
@@ -119,6 +126,11 @@ export default function MentalHealthHistoryForm({ patientId }: MentalHealthHisto
                 familySuicideHistory: existingForm.formData.familySuicideHistory || '',
                 currentStressors: existingForm.formData.currentStressors || '',
                 recentTrauma: existingForm.formData.recentTrauma || '',
+                socialMediaFrequency: existingForm.formData.socialMediaFrequency || '',
+                socialMediaPlatforms: existingForm.formData.socialMediaPlatforms || '',
+                usedChatbotForMentalHealth: existingForm.formData.usedChatbotForMentalHealth || '',
+                currentlyUseChatbot: existingForm.formData.currentlyUseChatbot || '',
+                chatbotUsageDescription: existingForm.formData.chatbotUsageDescription || '',
                 therapyGoals: existingForm.formData.therapyGoals || '',
                 whatHelpLooksLike: existingForm.formData.whatHelpLooksLike || '',
                 additionalMentalHealthInfo: existingForm.formData.additionalMentalHealthInfo || '',
@@ -642,6 +654,97 @@ export default function MentalHealthHistoryForm({ patientId }: MentalHealthHisto
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Social Media & Technology Use */}
+        <div className="mb-8">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Social Media & Technology Use</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                How often do you use social media?
+              </label>
+              <select
+                name="socialMediaFrequency"
+                value={formData.socialMediaFrequency}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select...</option>
+                <option value="never">Never</option>
+                <option value="rarely">Rarely (few times a month)</option>
+                <option value="occasionally">Occasionally (few times a week)</option>
+                <option value="daily">Daily</option>
+                <option value="multiple-daily">Multiple times per day</option>
+                <option value="constantly">Almost constantly</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Which social media platforms do you use?
+              </label>
+              <input
+                type="text"
+                name="socialMediaPlatforms"
+                value={formData.socialMediaPlatforms}
+                onChange={handleChange}
+                placeholder="Example: Instagram, TikTok, Facebook, Twitter/X, etc."
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        </div>
+
+ {/* Chatbot Use for Mental Health */}
+        <div className="mb-8">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Chatbot Use for Mental Health & Wellness</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Have you used a chatbot for mental health or wellness purposes in the past?
+              </label>
+              <select
+                name="usedChatbotForMentalHealth"
+                value={formData.usedChatbotForMentalHealth}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select...</option>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Do you currently use a chatbot for mental health or wellness?
+              </label>
+              <select
+                name="currentlyUseChatbot"
+                value={formData.currentlyUseChatbot}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select...</option>
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+            {(formData.usedChatbotForMentalHealth === 'yes' || formData.currentlyUseChatbot === 'yes') && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  How do you use chatbots for mental health or wellness?
+                </label>
+                <textarea
+                  name="chatbotUsageDescription"
+                  rows={4}
+                  value={formData.chatbotUsageDescription}
+                  onChange={handleChange}
+                  placeholder="Examples: Companionship, research questions about mental health, logging dreams, sleep help, eating habits, emotional support, crisis support, etc."
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
           </div>
         </div>
 

@@ -310,7 +310,7 @@ export default function InsuranceInformationForm({ patientId }: InsuranceInforma
                 fileType="insurance-card"
                 currentFileUrl={formData.insuranceCardFront}
                 onUploadComplete={(url) => setFormData(prev => ({ ...prev, insuranceCardFront: url }))}
-                helpText="Upload a clear photo of the front of your insurance card"
+                helpText="Upload a clear photo of the front of your insurance card (JPG, PNG, GIF, or PDF)"
               />
             </div>
 
@@ -323,7 +323,7 @@ export default function InsuranceInformationForm({ patientId }: InsuranceInforma
                 fileType="insurance-card"
                 currentFileUrl={formData.insuranceCardBack}
                 onUploadComplete={(url) => setFormData(prev => ({ ...prev, insuranceCardBack: url }))}
-                helpText="Upload a clear photo of the back of your insurance card"
+                helpText="Upload a clear photo of the back of your insurance card (JPG, PNG, GIF, or PDF)"
               />
             </div>
 

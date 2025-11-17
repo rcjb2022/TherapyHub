@@ -5,7 +5,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon, DocumentIcon }  from '@heroicons/react/24/outline'
 import Link from 'next/link'
 
 interface UniversalFormReviewProps {
@@ -46,6 +46,7 @@ const FIELD_LABELS: Record<string, string> = {
   occupation: 'Occupation',
   employer: 'Employer',
   referredBy: 'Referred By',
+  idType: 'ID Type',
 
   // Medical History
   currentMedications: 'Current Medications',
@@ -160,6 +161,8 @@ const FIELD_LABELS: Record<string, string> = {
   consentToEmergencyContact: 'Consents to Emergency Contact',
   consentToShareProgress: 'Consents to Share Progress',
   consentToLeaveVoicemail: 'Consents to Leave Voicemail',
+  custodyStatus: 'Custody Status',
+  custodyDescription: 'Custody Description',
 }
 
 export default function UniversalFormReview({
@@ -232,6 +235,49 @@ export default function UniversalFormReview({
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
           <label className="text-sm text-gray-700">{label}</label>
+        </div>
+      )
+    }
+
+    // Uploaded files (images and PDFs)
+    if (typeof value === 'string' && value.startsWith('data:')) {
+      const isImage = value.startsWith('data:image/')
+      const isPDF = value.startsWith('data:application/pdf')
+
+      return (
+        <div key={key}>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {label}
+          </label>
+          <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+            {isImage && (
+              <div>
+                <img
+                  src={value}
+                  alt={label}
+                  className="max-h-64 rounded border border-gray-300"
+                />
+                <p className="text-xs text-gray-500 mt-2">Image uploaded successfully</p>
+              </div>
+            )}
+            {isPDF && (
+              <div className="flex items-center gap-3">
+                <DocumentIcon className="w-12 h-12 text-red-500 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">PDF Document</p>
+                  <p className="text-xs text-gray-500 mt-1">PDF file uploaded successfully</p>
+                  <a
+                    href={value}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-block"
+                  >
+                    Open PDF in new tab
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )
     }
