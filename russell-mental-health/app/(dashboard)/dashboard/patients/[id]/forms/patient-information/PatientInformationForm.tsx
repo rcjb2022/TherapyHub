@@ -560,7 +560,7 @@ export default function PatientInformationForm({ patientId }: PatientInformation
           <h2 className="mb-4 text-lg font-semibold text-gray-900">Referral Information</h2>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              How did you hear about us?
+              How did you hear about us? 
             </label>
             <input
               type="text"
